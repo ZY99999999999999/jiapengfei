@@ -249,67 +249,6 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     return relief;
   }
 
-  function sculptedFigureFromArt(totemMotion, spec, texture, source, crop, angle, y, scale, kind) {
-    const { pixels, width, height } = source;
-    const mount = new THREE.Group();
-    const r = spec.radius + 4.0;
-    mount.position.set(Math.sin(angle) * r, y, Math.cos(angle) * r);
-    mount.rotation.y = 0;
-    mount.scale.setScalar(scale);
-    totemMotion.totem.add(mount);
-    totemMotion.actors.push({ mount, baseY: y, angle });
-    const p = [], c = [];
-    const [left, top, right, bottom] = crop.map((value, i) => value / 3);
-    const x0 = Math.max(0, Math.floor(left)), x1 = Math.min(width - 1, Math.floor(right));
-    const y0 = Math.max(0, Math.floor(top)), y1 = Math.min(height - 1, Math.floor(bottom));
-    const sizeX = kind === 'dragon' ? 6.4 : 6.9, sizeY = kind === 'dragon' ? 10.1 : 9.7;
-    const motifColor = (x, y) => {
-      if (x < x0 || x > x1 || y < y0 || y > y1) return false;
-      const i = (y * width + x) * 4;
-      const red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
-      return kind === 'dragon'
-        ? green > 61 && blue > 60 && green > red * 1.16
-        : red > 100 && red > green * 1.18;
-    };
-    const visible = (x, y) => {
-      if (x < x0 || x > x1 || y < y0 || y > y1) return false;
-      const i = (y * width + x) * 4;
-      const red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
-      const artY = y * 3;
-      const slope = Math.max(0, Math.min(1, (artY - 310) / 712));
-      const mountainLeft = 550 - 250 * slope, mountainRight = 985 + 235 * slope;
-      if (kind === 'dragon' && x * 3 > mountainLeft - 12) return false;
-      if (kind === 'phoenix' && x * 3 < mountainRight + 12) return false;
-      if (motifColor(x, y)) return true;
-      // 原画米白描边只保留贴近龙/凤主体的部分；避免把邻近山坡误采成矩形白边。
-      if (!(red > 175 && green > 160 && blue > 112)) return false;
-      for (const dx of [-4, -2, 0, 2, 4]) for (const dy of [-4, -2, 0, 2, 4]) {
-        if (motifColor(x + dx, y + dy)) return true;
-      }
-      return false;
-    };
-    for (let row = y0; row <= y1; row += 2) for (let col = x0; col <= x1; col += 2) {
-      if (!visible(col, row)) continue;
-      const u = (col - x0) / Math.max(1, x1 - x0), v = (row - y0) / Math.max(1, y1 - y0);
-      const x = (u - .5) * sizeX, yy = (.5 - v) * sizeY;
-      // 原画轮廓只决定龙凤的彩色外形；多层椭圆截面构成实体，侧面也有可见体积。
-      const bulge = Math.max(0, Math.sin(u * Math.PI) * Math.sin(v * Math.PI));
-      const depth = 1.05 + bulge * 1.15;
-      const pixel = (row * width + col) * 4;
-      const rgb = [pixels[pixel] / 225, pixels[pixel + 1] / 225, pixels[pixel + 2] / 225]
-        .map(value => Math.min(1, value));
-      for (const slice of [-1, -.55, 0, .55, 1]) {
-        const shade = slice > .8 ? 1 : slice < -.8 ? .66 : .75 + (1 - Math.abs(slice)) * .15;
-        const rib = Math.sin(u * Math.PI * 2.5 + v * Math.PI) * .12;
-        push(p, c, x + rib * (1 - Math.abs(slice)), yy, depth * slice,
-          rgb.map(value => value * shade));
-      }
-    }
-    if (p.length) mount.add(cloud(p, c, { texture, size: .19, opacity: .98 }));
-    mount.name = `立体${kind === 'dragon' ? '龙' : '凤'}·原画轮廓雕塑`;
-    return mount;
-  }
-
   function star(parent, y, radius, petals, color, texture, tilt = 0) {
     const group = new THREE.Group();
     group.position.y = y;
@@ -441,18 +380,20 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     const group = new THREE.Group();
     group.position.set(x, y, z);
     parent.add(group);
-    const spine = t => [Math.sin(t * Math.PI * 3.1) * .94 - .32 + t * .6,
-      (t - .5) * 6.1, Math.cos(t * Math.PI * 3.1) * .84];
+    // 横向盘绕的脊柱从左向右抬升，避免原先竖直蛇身读成一根悬空立柱。
+    const spine = t => [(t - .5) * 7.2,
+      .10 + Math.sin(t * TAU * 1.05) * .52 + Math.sin(t * Math.PI) * .25,
+      Math.sin(t * TAU * 1.55) * .95];
     const p = [], c = [];
     const sections = dense ? 270 : 175, sides = dense ? 14 : 10;
     for (let i = 0; i < sections; i++) {
       const t = i / (sections - 1);
       const [cx, cy, cz] = spine(t);
       const radius = (.18 + Math.sin(t * Math.PI) * .25) * (t < .12 ? t / .12 : 1);
-      for (let j = 0; j < sides; j++) {
+      for (const layer of [.48, 1]) for (let j = 0; j < sides; j++) {
         const a = j / sides * TAU;
-        push(p, c, cx + Math.cos(a) * radius, cy + Math.sin(a * 2) * .045,
-          cz + Math.sin(a) * radius, j < 2 || i % 11 === 0 ? C.cream : i % 5 ? C.teal : C.cyan);
+        push(p, c, cx, cy + Math.cos(a) * radius * layer,
+          cz + Math.sin(a) * radius * layer, layer > .9 && j % 5 === 0 ? C.cream : i % 5 ? C.teal : C.cyan);
       }
     }
     for (let k = 2; k < 19; k++) {
@@ -464,10 +405,10 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     for (const t of [.31, .58, .80]) {
       const [cx, cy, cz] = spine(t);
       for (const side of [-1, 1]) {
-        curve(group, u => [cx + side * (.16 + u * .95), cy - u * .82,
-          cz + .22 + Math.sin(u * Math.PI) * .34], 35, C.teal, texture, .22, .04);
-        for (let claw = 0; claw < 3; claw++) curve(group, u => [cx + side * (1.0 + u * .42),
-          cy - .83 - u * .23 + claw * .15, cz + .23 + claw * .12], 13, C.cream, texture, .19, .02);
+        curve(group, u => [cx + Math.sin(u * Math.PI) * .10, cy - u * .92,
+          cz + side * (.22 + u * .48)], 35, C.teal, texture, .22, .04);
+        for (let claw = 0; claw < 3; claw++) curve(group, u => [cx - .14 + claw * .14 + u * .32,
+          cy - .92 - u * .23, cz + side * (.68 + u * .25)], 13, C.cream, texture, .19, .02);
       }
     }
     const [hx, hy, hz] = spine(1);
@@ -560,10 +501,14 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
         }, dense ? 350 : 170, level % 2 ? C.gold : C.cream, texture, .20, .03);
       }
     } else if (index === 2) {
-      dragon(anchor(-.92, spec.height * .71, 3.8), 0, 0, 0, texture);
+      const nearDragon = anchor(-.08, spec.height * .71, 3.8);
+      nearDragon.rotation.y = 0;
+      dragon(nearDragon, 0, 0, 0, texture);
       const farDragon = dragon(anchor(2.3, spec.height * .68, 3.7), 0, 0, 0, texture);
       farDragon.scale.setScalar(.73);
-      wings.push(...phoenix(anchor(.94, spec.height * .71, 3.8), 0, 0, 0, texture));
+      const nearPhoenix = anchor(.54, spec.height * .71, 3.8);
+      nearPhoenix.rotation.y = Math.PI;
+      wings.push(...phoenix(nearPhoenix, 0, 0, 0, texture));
       const farPhoenix = anchor(-2.3, spec.height * .69, 3.7);
       farPhoenix.scale.setScalar(.75);
       wings.push(...phoenix(farPhoenix, 0, 0, 0, texture));
@@ -618,21 +563,15 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     // 远峰先读作山体，接近时才逐渐显露悬浮图腾；不隐藏原画山身纹样。
     const ornamentOpacities = new WeakMap();
     let lastOrnamentFade = -Infinity;
-    const referenceRelief = sculptFromReference(group, spec, index, texture, source => {
+    const referenceRelief = sculptFromReference(group, spec, index, texture, () => {
       // 原画浮雕给颜色与形态，程序纹带补足环山的真实三维走势和持续旋转。
       if (index !== 0) shellMotion.bands.visible = false;
       if (index === 2 && totemMotion) {
         const fallback = [...totemMotion.actors];
-        const forms = [
-          { crop: [36, 90, 520, 940], angle: -.92, kind: 'dragon', scale: 1 },
-          { crop: [1010, 92, 1510, 945], angle: .94, kind: 'phoenix', scale: 1 }
-        ];
-        const extruded = forms.map(form => sculptedFigureFromArt(totemMotion, spec, texture, source,
-          form.crop, form.angle, spec.height * .69, form.scale, form.kind));
-        if (extruded.every(form => form.children.length)) fallback.forEach(({ mount }, i) => {
-          // 留下内部立体骨架，侧视时龙凤不会退化为一张剪影；远侧重复装饰隐藏。
+        fallback.forEach(({ mount }, i) => {
+          // 使用横向的程序化立体龙凤，避免把参考画的二维色块挤成悬空厚片。
           mount.visible = i === 0 || i === 2;
-          if (mount.visible) mount.scale.setScalar(.68);
+          if (mount.visible) mount.scale.setScalar(.88);
         });
       }
     });

@@ -3,7 +3,7 @@ import { installLibraryMotifs } from './motifs.js?v=4';
 import { installLivingMotifs } from './living-motifs.js?v=22';
 import { createGestureControl } from './gesture-control.js?v=1';
 import { createVideoParticlePlayer } from './video-particles.js?v=6';
-import { installFiveVolcanoes } from './volcano-world.js?v=31';
+import { installFiveVolcanoes } from './volcano-world.js?v=35';
 
 const canvas = document.querySelector('#world');
 const playButton = document.querySelector('#play');
@@ -159,7 +159,7 @@ try {
   const discoveries = {
     path: ['步道 · 盘长结', '盘长结的连续结构转化为引导观众穿行的步道。', '../wenyang_svg/rel/盘长结变体F1.svg'],
     grass: ['草地 · 卷草纹微粒', '以平台的卷草纹变体为微观单元，沿草地起伏和随风的方向重复生长；不再把盘长结误当草叶。', '../wenyang_svg/bio/卷草纹变体F1.svg'],
-    river: ['河流 · 哈木尔纹', '哈木尔纹现代结构示意的曲线，成为水流的微观节奏。', '../pattern_visuals/hamuur-modern-v1.svg'],
+    river: ['河流 · 流水与踏石', '河面保留蓝青色流动粒子和浅色踏石，不叠加纹样。', '../pattern_visuals/hamuur-modern-v1.svg'],
     cloud: ['云层 · 哈木尔纹', '云团由细小曲线纹样铺开，缓缓漂移；这是一种现代转译。', '../pattern_visuals/hamuur-modern-v1.svg'],
     volcano: ['五座纹样火山', '五张设计图分别转译为可环看的三维粒子火山；相对位置参考景区导览图与地质资料，非精确地理复原。', '../wenyang_svg/rel/盘长结变体F1.svg'],
     herd: ['五畜 · 彩色粒子群', '马、牛、绵羊、山羊、骆驼从你提供的五张设计图提取形态与颜色，用微纹样粒子聚形；目前是有厚度的粒子雕塑，并非完整360°动物建模。', './reference-frames/horse.jpg'],
@@ -208,7 +208,8 @@ try {
       : [0.27, 0.34, 0.40];
     const brightness = Math.max(r, g, b);
     zoneColors.push(...palette.map(value => value * brightness * 1.18));
-    glyphs.push(zone === 'grass' ? 7 : zone === 'path' || zone === 'volcano' || zone === 'lava' ? 0 : variation > 0.35 ? 1 : 0);
+    glyphs.push(zone === 'river' || zone === 'path' || zone === 'volcano' || zone === 'lava' ? 0
+      : zone === 'grass' ? 7 : variation > 0.35 ? 1 : 0);
     zoneIds.push(({ rock: 0, grass: 1, river: 2, cloud: 3, volcano: 4, lava: 5, path: 6, sky: 7, redbed: 0 })[zone] ?? 0);
   }
 
@@ -478,6 +479,7 @@ try {
       varying vec3 vColor;
       varying float vDepth;
       varying float vGlyph;
+      varying float vZone;
       varying float vPointSize;
       varying float vPulse;
       varying float vGlow;
@@ -510,6 +512,7 @@ try {
         vDepth = -view.z;
         vColor = mix(color, zoneColor, uPaletteMix) + vec3(.38, .27, .11) * vPulse;
         vGlyph = glyph;
+        vZone = zoneId;
         vGlow = zoneId > 4.5 && zoneId < 5.5 ? .27 + .22 * sin(uTime * 2.7 + position.y * 3.1)
           : zoneId > 1.5 && zoneId < 2.5 ? .22 + .24 * sin(uTime * 3.2 - position.z * 1.3) : 0.0;
         gl_Position = projectionMatrix * view;
@@ -521,6 +524,7 @@ try {
       varying vec3 vColor;
       varying float vDepth;
       varying float vGlyph;
+      varying float vZone;
       varying float vPointSize;
       varying float vPulse;
       varying float vGlow;
@@ -533,7 +537,7 @@ try {
         if (r > .48) discard;
         float core = 1.0 - smoothstep(.09, .48, r);
         float shape = core;
-        if (uGlyphReady > .5 && uGlyphMix > .01) {
+        if (vZone < 1.5 || vZone > 2.5) if (uGlyphReady > .5 && uGlyphMix > .01) {
           vec2 local = vec2(.04) + gl_PointCoord * .92;
           vec2 uv = (vec2(mod(vGlyph, 4.0), floor(vGlyph / 4.0)) + local) / vec2(4.0, 2.0);
           float motif = texture2D(uMotifAtlas, uv).a;
@@ -581,7 +585,7 @@ try {
       console.error('五座火山载入失败', error);
       statusLabel.textContent = '五座火山未能载入';
     }
-    motifsButton.title = '草地为卷草纹，步道为盘长结，河流与云层为哈木尔纹；点击可对照普通圆点';
+    motifsButton.title = '草地为卷草纹、步道为盘长结、云层为哈木尔纹；河流只保留水流粒子与踏石';
     installLivingMotifs(world, terrainHeight, result.atlas).then(living => {
       livingLayer = living;
       livingNames = living.loaded;
@@ -793,7 +797,7 @@ try {
     const ease = 1 - Math.pow(1 - Math.min(1, age / (form.userData.kind === 'volcano' ? 2.25 : 1.45)), 3);
     const narrow = window.innerWidth < 900;
     const volcano = form.userData.kind === 'volcano';
-    const distance = volcano ? (narrow ? 104 : form.userData.index === 2 ? 105 : 90) : form.userData.kind === 'sun' ? 22 : form.userData.kind === 'emblem' ? 12.5 : narrow ? 10.8 : form.userData.animal ? 9.5 : 9.2;
+    const distance = volcano ? (form.userData.index === 2 ? narrow ? 96 : 92 : narrow ? 104 : 90) : form.userData.kind === 'sun' ? 22 : form.userData.kind === 'emblem' ? 12.5 : narrow ? 10.8 : form.userData.animal ? 9.5 : 9.2;
     const targetY = form.position.y + (volcano ? form.userData.height * .63 : 0);
     // 先留出正面辨认原画的时间，再慢速环看背面与浮雕厚度。
     const orbit = volcano ? state.focusManual ? state.focusOrbitYaw : Math.max(0, age - 5) * .024 : 0;
@@ -801,7 +805,8 @@ try {
       targetY + (volcano ? 15.9 + state.focusOrbitPitch * distance * .32 + Math.sin(age * .31) * .75 : form.userData.animal ? .35 : .1),
       form.position.z + Math.cos(orbit) * distance);
     camera.position.copy(state.focusFrom).lerp(destination, ease);
-    camera.lookAt(form.position.x - (narrow ? volcano ? 5.5 : 2.8 : 0), targetY, form.position.z);
+    const horizontalAim = narrow ? volcano ? form.userData.index === 2 ? 9.5 : 5.5 : 2.8 : 0;
+    camera.lookAt(form.position.x - horizontalAim, targetY, form.position.z);
     statusLabel.textContent = `观察 · ${form.name}`;
   }
   function pickLivingForm(clientX, clientY) {
