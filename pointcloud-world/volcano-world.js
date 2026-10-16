@@ -1,10 +1,10 @@
 import * as THREE from '../lib/three/three.module.js';
-import '../co-create-sculptures.js';
+import './co-create-sculptures.js?v=1';
 
 // 五张设计图的图腾次序沿用 creator.html；这里生成可环看的粒子结构，而非图像平面。
 const SPECS = [
-  { name: '01 · 蝶莲焰', x: 0, z: -247, height: 14.0, radius: 10.2, lip: 3.45, tint: [0.10, 0.23, 0.46], glyph: 7,
-    art: { top: 408, bottom: 806, half: 550 }, profile: [[0, 10.2], [.48, 7.35], [.82, 4.6], [1, 3.45]],
+  { name: '01 · 蝶莲焰', x: 0, z: -247, height: 11.6, radius: 10.2, lip: 1.55, tint: [0.10, 0.23, 0.46], glyph: 7,
+    art: { top: 408, bottom: 806, half: 550 }, profile: [[0, 10.2], [.48, 7.8], [.82, 4.25], [1, 1.55]],
     note: '双蝶绕山、莲焰从火口升起；云纹、回纹持续沿山身流转。' },
   { name: '02 · 双翼宝石', x: 45, z: -212, height: 14.5, radius: 9.1, lip: 1.95, tint: [0.10, 0.17, 0.39], glyph: 0,
     art: { top: 356, bottom: 865, half: 480 }, profile: [[0, 9.1], [.48, 6.0], [.83, 3.0], [1, 1.95]],

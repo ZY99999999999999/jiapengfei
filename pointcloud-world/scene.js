@@ -3,7 +3,7 @@ import { installLibraryMotifs } from './motifs.js?v=4';
 import { installLivingMotifs } from './living-motifs.js?v=20';
 import { createGestureControl } from './gesture-control.js?v=1';
 import { createVideoParticlePlayer } from './video-particles.js?v=6';
-import { installFiveVolcanoes } from './volcano-world.js?v=25';
+import { installFiveVolcanoes } from './volcano-world.js?v=26';
 
 const canvas = document.querySelector('#world');
 const playButton = document.querySelector('#play');

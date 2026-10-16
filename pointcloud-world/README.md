@@ -34,3 +34,10 @@
 介绍卡事实依据：内蒙古自治区农牧厅[蒙古羊](https://nmt.nmg.gov.cn/yw/pzzy/cqpz/202502/t20250227_2673221.html)、[蒙古牛](https://nmt.nmg.gov.cn/yw/nszd/xlgl/202205/t20220525_2061381.html)、[蒙古马](https://nmt.nmg.gov.cn/xw/msdt/xlgl/202510/t20251031_2810851.html)，锡林郭勒盟农牧局[绒山羊](https://nmj.xlgl.gov.cn/nmj/nmyw/syjs/dea954244c2f47bab7a40f7ce3c49dc3/index.html)，苏尼特左旗政府[双峰驼](https://www.sntzq.gov.cn/eportal/ui?articleKey=7977af9c2e8b469781ed16a32f2eca94b5&columnId=bd9019f528324c03ad77bc5f2eca94b5&pageId=96e9e64587e3455aa7cc4b5ef92ee23a)，[乌兰哈达火山群报道](https://www.spp.gov.cn/spp/zdgz/202410/t20241031_670524.shtml)。文案中的动物学/地貌事实与对用户设计图的视觉解读是两类内容，不将后者作为史实。
 
 最近复核：五峰入口与 05 夜翼回纹放大特写正常；蒙古牛、绵羊、山羊的个别说明及牛的逐帧视频状态正常；蝴蝶高密度粒子形体可辨。浏览器本轮错误/警告日志为空，`scene.js`、`living-motifs.js`、`volcano-world.js` 通过 Node 语法检查。仍未量化不同显卡的实际帧率，也未验证真实摄像头。
+
+## 2026-10-16｜五畜动作浏览器复核与第一峰比例调整
+
+- 仅修改独立原型 `pointcloud-world` 与其上游第一峰雕塑参数。马、牛近景轮廓可辨；牛特写视频在浏览器中显示“视频已载入”。自动穿行完成从高空到草原、再到五峰远眺的路线。动作是 2.5D 粒子位移，镜头掠过时是否稳定触发每种动物的回望，需要更多路线段与设备复验；当前浏览器复核不能证明摄像头或跨显卡性能。
+- 第一峰正面检视显示山体原比例显得偏高、上缘过宽，双蝶与山肩间距过大。调整艺术峰 01 高度 14.0→11.6、顶部 lip 半径 3.45→1.55、坡面 profile；双蝶锚点从山体外侧移到上部坡肩并放大 1.1 倍。底部半径保持不变，不改变其他四峰。第一峰重新加载后目视检查正面与拖拽侧向，山体更宽缓、双蝶靠近上缘，侧向仍有体积。该处理仅提升设计图相似度，不代表真实火山形态。
+- 缓存版本：`scene.js?v=77`、`volcano-world.js?v=26`、`pointcloud-world/co-create-sculptures.js?v=1`。改前副本保留为 `pointcloud-world/volcano-world.js.bak-20261016-first-peak-shape` 和`pointcloud-world/co-create-sculptures.js.bak-20261016-first-peak-shape`。
+- 已核对五张参考图；第一峰调整按其宽缓梯形山坡、上缘成对蝶翼构图进行。02–05 的轮廓与装饰位置仍需逐峰对照，不以第一峰参数套用。没有修改正式 `creator.html`、论文或小红书文件。摄像头手势、长期帧率、自动路线内逐只回望时机仍待验证。
