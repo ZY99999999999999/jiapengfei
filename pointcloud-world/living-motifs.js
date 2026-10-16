@@ -11,14 +11,14 @@ const animals = [
 
 // 依据场景草地留白补充的远景牧群，复用原物种点阵几何，保持五个主特写入口不变。
 const ambientHerd = [
-  { source: '绵羊', name: '草地牧群 · 绵羊 01', x: -18, z: 34, scale: .68 },
-  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 01', x: 18, z: 22, scale: .70 },
-  { source: '绵羊', name: '草地牧群 · 绵羊 02', x: -19, z: 5, scale: .66 },
-  { source: '山羊', name: '草地牧群 · 山羊 01', x: 19, z: -12, scale: .64 },
-  { source: '骆驼', name: '草地牧群 · 骆驼 01', x: -19, z: -30, scale: .68 },
-  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 02', x: 19, z: -47, scale: .70 },
-  { source: '绵羊', name: '草地牧群 · 绵羊 03', x: -19, z: -68, scale: .66 },
-  { source: '蒙古马', name: '草地牧群 · 蒙古马 01', x: 19, z: -78, scale: .68 }
+  { source: '绵羊', name: '草地牧群 · 绵羊 01', x: -18, z: 34, scale: .68, yaw: .62, tint: [1.10, 1.04, .91] },
+  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 01', x: 18, z: 22, scale: .70, yaw: -.95, tint: [.91, 1.05, 1.12] },
+  { source: '绵羊', name: '草地牧群 · 绵羊 02', x: -19, z: 5, scale: .66, yaw: 1.15, tint: [1.12, .97, .84] },
+  { source: '山羊', name: '草地牧群 · 山羊 01', x: 19, z: -12, scale: .64, yaw: -.38, tint: [.91, 1.10, .96] },
+  { source: '骆驼', name: '草地牧群 · 骆驼 01', x: -19, z: -30, scale: .68, yaw: -.72, tint: [1.13, 1.00, .84] },
+  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 02', x: 19, z: -47, scale: .70, yaw: 1.05, tint: [.91, .99, 1.12] },
+  { source: '绵羊', name: '草地牧群 · 绵羊 03', x: -19, z: -68, scale: .66, yaw: .18, tint: [1.08, 1.10, .91] },
+  { source: '蒙古马', name: '草地牧群 · 蒙古马 01', x: 19, z: -78, scale: .68, yaw: -1.30, tint: [1.14, .99, .86] }
 ];
 
 const motionClips = [
@@ -72,7 +72,7 @@ function makeMaterial(atlas, glyphMix) {
     transparent: true, depthTest: true, depthWrite: true,
     blending: THREE.NormalBlending,
     uniforms: { uTime: { value: 0 }, uAtlas: { value: atlas }, uMotifMix: { value: glyphMix }, uRate: { value: 0.5 }, uOffset: { value: 0 }, uAnimal: { value: 0 }, uEmblem: { value: 0 }, uFocus: { value: 0 }, uFocusStart: { value: -100 },
-      uGaze: { value: 0 }, uGaitRate: { value: 1 }, uStride: { value: 0 }, uNod: { value: 0 } },
+      uGaze: { value: 0 }, uGaitRate: { value: 1 }, uStride: { value: 0 }, uNod: { value: 0 }, uTint: { value: new THREE.Vector3(1, 1, 1) } },
     vertexShader: `
       attribute vec3 color0;
       attribute vec3 color1;
@@ -94,12 +94,13 @@ function makeMaterial(atlas, glyphMix) {
       uniform float uGaitRate;
       uniform float uStride;
       uniform float uNod;
+      uniform vec3 uTint;
       void main() {
         float cycle = mod(uTime * uRate + uOffset, 3.0);
         vec3 ca = cycle < 1.0 ? color0 : cycle < 2.0 ? color1 : color2;
         vec3 cb = cycle < 1.0 ? color1 : cycle < 2.0 ? color2 : color0;
         float blend = smoothstep(0.0, 1.0, fract(cycle));
-        vColor = mix(ca, cb, blend);
+        vColor = mix(ca, cb, blend) * uTint;
         vLight = max(max(vColor.r, vColor.g), vColor.b);
         vGlyph = glyph;
         vec3 p = position;
@@ -257,9 +258,10 @@ export async function installLivingMotifs(scene, terrainHeight, atlas) {
     form.userData = { ...source.userData, ambientPlacement: true, order: source.userData.order + index * .37,
       width: source.userData.width * placement.scale, height: source.userData.height * placement.scale };
     form.material.uniforms.uOffset.value += index * .83;
+    form.material.uniforms.uTint.value.set(...placement.tint);
     form.scale.setScalar(placement.scale);
     form.position.set(placement.x, terrainHeight(placement.x, placement.z) + form.userData.height * .5 + .15, placement.z);
-    form.rotation.y = placement.x > 0 ? -.22 : .22;
+    form.rotation.y = placement.yaw;
     form.userData.baseX = placement.x;
     form.userData.baseY = form.position.y;
     form.userData.baseRotationY = form.rotation.y;

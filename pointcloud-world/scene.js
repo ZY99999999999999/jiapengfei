@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three/three.module.js';
 import { installLibraryMotifs } from './motifs.js?v=4';
-import { installLivingMotifs } from './living-motifs.js?v=21';
+import { installLivingMotifs } from './living-motifs.js?v=22';
 import { createGestureControl } from './gesture-control.js?v=1';
 import { createVideoParticlePlayer } from './video-particles.js?v=6';
 import { installFiveVolcanoes } from './volcano-world.js?v=31';
@@ -190,6 +190,9 @@ try {
     return canyon * (1 - blend) + prairie * blend;
   }
 
+  const pathCentreAt = z => Math.sin(z * 0.095) * 2.5;
+  const riverCentreAt = z => 8 + Math.sin(z * 0.09 + 0.8) * 2.3;
+
   function add(x, y, z, r, g, b, zone = 'rock') {
     positions.push(x, y, z);
     colors.push(r, g, b);
@@ -229,9 +232,9 @@ try {
     const lightPool = gaussian(x, z, 10, -28, 13, 20) * 1.2 + gaussian(x, z, -7, 9, 11, 15) * 0.65;
     const value = facing * ripple * shine * (1 + lightPool);
     const warm = Math.sin(x * 0.12 - z * 0.045) > 0.22;
-    const pathCentre = Math.sin(z * 0.095) * 2.5;
-    const riverCentre = 8 + Math.sin(z * 0.09 + 0.8) * 2.3;
-    const zone = Math.abs(x - riverCentre) < 2.5 ? 'river' : Math.abs(x - pathCentre) < 3.2 ? 'path' : Math.abs(x) < 24 ? 'grass' : 'rock';
+    const pathCentre = pathCentreAt(z);
+    const riverCentre = riverCentreAt(z);
+    const zone = Math.abs(x - riverCentre) < 1.8 ? 'river' : Math.abs(x - pathCentre) < 2.5 ? 'path' : Math.abs(x) < 24 ? 'grass' : 'rock';
     add(x, y, z, value * (warm ? 1.02 : 0.83), value * (warm ? 0.94 : 0.89), value * (warm ? 0.73 : 1.02), zone);
   }
 
@@ -319,21 +322,57 @@ try {
   }
 
   // 岩谷与开阔草原由纹样粒子汇成水流、卷草纹草地、蓝白云和五峰基底。
+  // 将步道作为连续的暖赭色粒子带单独铺出，和草地粒点拉开色相、明度与边界。
+  const pathCount = dense ? 24000 : 11200;
+  for (let i = 0; i < pathCount; i += 1) {
+    const z = -80 + random() * 123;
+    const centre = pathCentreAt(z);
+    const across = (random() - 0.5) * 5.0;
+    const wheelRuts = Math.abs(Math.abs(across) - 0.88) < 0.12;
+    const x = centre + across + (random() - 0.5) * 0.04;
+    const y = terrainHeight(x, z) + 0.075 + (random() - 0.5) * 0.035;
+    const grit = wheelRuts ? 0.84 + random() * 0.18 : 0.62 + random() * 0.25;
+    add(x, y, z, grit, grit * (wheelRuts ? 0.50 : 0.56), grit * 0.25, 'path');
+  }
+
   const riverCount = dense ? 32000 : 12000;
   for (let i = 0; i < riverCount; i += 1) {
     const z = -77 + random() * 118;
-    const centre = 8 + Math.sin(z * 0.09 + 0.8) * 2.3;
-    const x = centre + (random() - 0.5) * 5.1;
+    const centre = riverCentreAt(z);
+    const x = centre + (random() - 0.5) * 3.6;
     const y = terrainHeight(x, z) + 0.06 + Math.sin(z * 1.9 + x * 2) * 0.04;
-    const sparkle = random() < 0.11 ? 1.35 : 0.6 + random() * 0.35;
-    add(x, y, z, sparkle * 0.38, sparkle * 0.72, sparkle, 'river');
+    const sparkle = random() < 0.16 ? 1.40 : 0.68 + random() * 0.42;
+    add(x, y, z, sparkle * 0.26, sparkle * 0.79, sparkle, 'river');
   }
+
+  // 三处错落的浅色踏石让河面多一个可读的尺度，也呼应草原步道的穿行关系。
+  for (let crossing = 0; crossing < 3; crossing += 1) {
+    const z = [-57, -17, 23][crossing];
+    const centre = riverCentreAt(z);
+    for (let stone = 0; stone < 3; stone += 1) {
+      const lateral = (stone - 1) * 1.05 + (crossing % 2 ? 0.18 : -0.12);
+      const cx = centre + lateral;
+      const cz = z + (stone - 1) * 0.20;
+      const radius = 0.39 + random() * 0.10;
+      const count = dense ? 210 : 105;
+      for (let i = 0; i < count; i += 1) {
+        const angle = random() * Math.PI * 2;
+        const r = Math.sqrt(random());
+        const x = cx + Math.cos(angle) * radius * r;
+        const zz = cz + Math.sin(angle) * radius * r * 0.76;
+        const y = terrainHeight(x, zz) + 0.14 + (1 - r) * 0.12 + (random() - 0.5) * 0.04;
+        const shade = 0.64 + random() * 0.26;
+        add(x, y, zz, shade, shade * 0.92, shade * 0.78, 'rock');
+      }
+    }
+  }
+
   const grassCount = dense ? 19500 : 7300;
   for (let i = 0; i < grassCount; i += 1) {
     const x = (random() - 0.5) * 34;
     const z = -73 + random() * 110;
-    const riverCentre = 8 + Math.sin(z * 0.09 + 0.8) * 2.3;
-    if (Math.abs(x - riverCentre) < 3.4 || Math.abs(x - Math.sin(z * 0.095) * 2.5) < 3.7) continue;
+    const riverCentre = riverCentreAt(z);
+    if (Math.abs(x - riverCentre) < 2.25 || Math.abs(x - pathCentreAt(z)) < 3.0) continue;
     const h = 0.13 + random() * 0.56;
     const y = terrainHeight(x, z) + h;
     add(x + Math.sin(z * 3.2) * h * 0.3, y, z, 0.24, 0.53 + random() * 0.22, 0.35, 'grass');
