@@ -570,8 +570,8 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
       crown(totem, spec, index, texture);
     } else if (index === 3) {
       for (const [a, y, s] of [[-.8, spec.height * .98, .8], [.8, spec.height * .98, .8],
-        [-2.4, spec.height * .43, .72], [2.4, spec.height * .43, .72]]) {
-        wings.push(...wingedFigure(anchor(a, y), [0, 0, 0], C.orange, texture, { scale: s }));
+        [-.8, spec.height * .43, .72], [.8, spec.height * .43, .72]]) {
+        wings.push(...wingedFigure(anchor(a, y, y > spec.height * .8 ? -1.2 : 1.2), [0, 0, 0], C.orange, texture, { scale: s }));
       }
       for (const side of [-1, 1]) curve(totem, t => {
         const h = 1 - t;
