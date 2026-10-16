@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three/three.module.js';
 import { installLibraryMotifs } from './motifs.js?v=4';
-import { installLivingMotifs } from './living-motifs.js?v=20';
+import { installLivingMotifs } from './living-motifs.js?v=21';
 import { createGestureControl } from './gesture-control.js?v=1';
 import { createVideoParticlePlayer } from './video-particles.js?v=6';
 import { installFiveVolcanoes } from './volcano-world.js?v=31';
@@ -298,7 +298,10 @@ try {
 
   const boulders = [
     [-33, 19, 3.0, 2.8], [32, 8, 2.7, 3.1], [-36, -8, 3.2, 3.3],
-    [35, -37, 3.6, 3.5], [-37, -63, 2.9, 3.0]
+    [35, -37, 3.6, 3.5], [-37, -63, 2.9, 3.0],
+    // Smaller low stones sit along the grass edges, between the new grazing groups.
+    [-22, 16, 1.6, 1.05], [22, 2, 1.5, 1.1], [-22, -18, 1.8, 1.2],
+    [22, -36, 1.6, 1.05], [-22, -53, 1.8, 1.15], [22, -70, 1.6, 1.0]
   ];
   for (let k = 0; k < boulders.length; k += 1) {
     const [cx, cz, radius, height] = boulders[k];
@@ -547,6 +550,7 @@ try {
       living.setMotifs(motifsButton.getAttribute('aria-pressed') === 'true');
       sightlineList.replaceChildren();
       for (const form of living.group.children) {
+        if (form.userData.ambientPlacement) continue;
         if (form.userData.kind === 'emblem' && !sightlineList.querySelector('.emblem-group-title')) {
           const title = document.createElement('span');
           title.className = 'sightline-group-title emblem-group-title';
@@ -767,7 +771,7 @@ try {
     let best = null, bestScore = Infinity;
     const candidates = [...(livingLayer?.group.visible ? livingLayer.group.children : []), ...(volcanoLayer?.peaks || [])];
     for (const form of candidates) {
-      if (!form.visible) continue;
+      if (!form.visible || form.userData.ambientPlacement) continue;
       const centre = form.getWorldPosition(new THREE.Vector3());
       if (form.userData.kind === 'volcano') centre.y += form.userData.height * .55;
       const projected = centre.clone().project(camera);

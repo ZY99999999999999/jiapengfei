@@ -9,6 +9,18 @@ const animals = [
   { name: '骆驼', file: 'camel.jpg', video: 'camel.mp4', crop: [0.04, 0.05, 0.64, 0.61], x: -5.5, z: -63, width: 9.1, height: 6.1, glyph: 4, head: [.18, .22, .23, .29], gait: 1.35, stride: .095, nod: .10 }
 ];
 
+// 依据场景草地留白补充的远景牧群，复用原物种点阵几何，保持五个主特写入口不变。
+const ambientHerd = [
+  { source: '绵羊', name: '草地牧群 · 绵羊 01', x: -18, z: 34, scale: .68 },
+  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 01', x: 18, z: 22, scale: .70 },
+  { source: '绵羊', name: '草地牧群 · 绵羊 02', x: -19, z: 5, scale: .66 },
+  { source: '山羊', name: '草地牧群 · 山羊 01', x: 19, z: -12, scale: .64 },
+  { source: '骆驼', name: '草地牧群 · 骆驼 01', x: -19, z: -30, scale: .68 },
+  { source: '蒙古牛', name: '草地牧群 · 蒙古牛 02', x: 19, z: -47, scale: .70 },
+  { source: '绵羊', name: '草地牧群 · 绵羊 03', x: -19, z: -68, scale: .66 },
+  { source: '蒙古马', name: '草地牧群 · 蒙古马 01', x: 19, z: -78, scale: .68 }
+];
+
 const motionClips = [
   { name: '花形与幼虫', key: 'caterpillar-flower', x: 10, y: 10.0, z: 9, width: 6.3, glyph: 7, speed: 0.52 },
   { name: '骆驼行进', key: 'camel-motion', video: 'camel-motion.mp4', x: 10, y: 7.5, z: -67, width: 7.7, glyph: 4, speed: 0.57 }
@@ -236,6 +248,27 @@ export async function installLivingMotifs(scene, terrainHeight, atlas) {
     if (item.status === 'fulfilled') group.add(item.value);
     else failed.push(`${definitions[index].name}: ${item.reason.message}`);
   });
+  const sourceForms = new Map(group.children.filter(form => form.userData.animal).map(form => [form.name, form]));
+  ambientHerd.forEach((placement, index) => {
+    const source = sourceForms.get(placement.source);
+    if (!source) return;
+    const form = new THREE.Points(source.geometry, source.material.clone());
+    form.name = placement.name;
+    form.userData = { ...source.userData, ambientPlacement: true, order: source.userData.order + index * .37,
+      width: source.userData.width * placement.scale, height: source.userData.height * placement.scale };
+    form.material.uniforms.uOffset.value += index * .83;
+    form.scale.setScalar(placement.scale);
+    form.position.set(placement.x, terrainHeight(placement.x, placement.z) + form.userData.height * .5 + .15, placement.z);
+    form.rotation.y = placement.x > 0 ? -.22 : .22;
+    form.userData.baseX = placement.x;
+    form.userData.baseY = form.position.y;
+    form.userData.baseRotationY = form.rotation.y;
+    form.userData.wasNearby = false;
+    form.userData.reactionStart = -100;
+    form.userData.lastUpdate = 0;
+    form.frustumCulled = false;
+    group.add(form);
+  });
   const sunForm = group.children.find(object => object.userData.kind === 'sun');
   if (sunForm) {
     const canvas = document.createElement('canvas');
@@ -324,7 +357,7 @@ export async function installLivingMotifs(scene, terrainHeight, atlas) {
       group.visible = enabled;
     },
     getAnimalStates() {
-      return group.children.filter(form => form.userData.animal).map(form => ({
+      return group.children.filter(form => form.userData.animal && !form.userData.ambientPlacement).map(form => ({
         name: form.name, gaze: form.material.uniforms.uGaze.value,
         reactionStart: form.userData.reactionStart, visible: form.visible
       }));
