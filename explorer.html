@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>纹样探索 - 蒙古族纹样数字化平台</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+    :root {
+      --deep-bg: #0a0e1a;
+      --card-bg: rgba(14, 25, 50, 0.75);
+      --card-border: rgba(201, 168, 76, 0.18);
+      --gold: #c9a84c;
+      --gold-dim: rgba(201, 168, 76, 0.5);
+      --gold-glow: rgba(201, 168, 76, 0.15);
+      --text-white: #f0ece4;
+      --text-dim: rgba(240, 236, 228, 0.5);
+      --topbar-h: 56px;
+      --detail-w: 380px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+      background: var(--deep-bg);
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(15,25,60,0.8) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(10,20,50,0.5) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 50%, rgba(20,30,70,0.4) 0%, transparent 40%);
+      color: var(--text-white);
+      min-height: 100vh;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cdefs%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ===== 顶部导航栏 ===== */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--topbar-h);
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .topbar-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text-white);
+    }
+    .topbar-logo-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #d4a017);
+    }
+    .topbar-logo span {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px; font-weight: 600; letter-spacing: 1px;
+    }
+    .topbar-nav { display: flex; gap: 2px; margin-left: 24px; }
+    .topbar-link {
+      padding: 6px 16px; border-radius: 6px;
+      font-size: 13px; color: rgba(240,236,228,0.5);
+      text-decoration: none; transition: all 0.3s;
+      letter-spacing: 1px;
+    }
+    .topbar-link:hover { color: var(--text-white); background: rgba(201,168,76,0.08); }
+    .topbar-link.active { color: var(--gold); background: rgba(201,168,76,0.1); }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+    /* ===== 页面标题 ===== */
+    .page-title-section {
+      padding-top: calc(var(--topbar-h) + 36px);
+      text-align: center; margin-bottom: 32px;
+      animation: fadeUp 0.7s both;
+    }
+    .page-title-section h1 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 44px; font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 12px; margin-bottom: 10px;
+      text-shadow: 0 2px 40px rgba(201,168,76,0.3), 0 0 80px rgba(201,168,76,0.1);
+    }
+    .title-ornament {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      margin-top: 14px;
+    }
+    .title-ornament .line {
+      width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .title-ornament .diamond {
+      width: 8px; height: 8px; background: var(--gold);
+      transform: rotate(45deg); opacity: 0.7;
+      box-shadow: 0 0 8px rgba(201,168,76,0.4);
+    }
+
+    /* ===== 三栏布局：左侧分类 + 中间网格 + 右侧详情 ===== */
+    .content-layout {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 24px 36px;
+      display: flex; gap: 20px;
+      animation: fadeUp 0.7s 0.1s both;
+    }
+
+    /* 左侧分类面板 */
+    .sidebar {
+      width: 180px; min-width: 180px; flex-shrink: 0;
+    }
+    .sidebar-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px) saturate(1.2);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 14px;
+      position: sticky; top: calc(var(--topbar-h) + 20px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(201,168,76,0.06);
+    }
+    .sidebar-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 13px; font-weight: 700;
+      color: var(--gold); letter-spacing: 2px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-title::before {
+      content: ''; display: block;
+      width: 3px; height: 14px; border-radius: 2px;
+      background: var(--gold);
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 12px; border-radius: 10px;
+      cursor: pointer; transition: all 0.3s;
+      margin-bottom: 4px;
+      font-size: 13px; color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+    .sidebar-item:hover {
+      color: var(--text-white);
+      background: rgba(201,168,76,0.06);
+    }
+    .sidebar-item.active {
+      color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      font-weight: 600;
+    }
+    .sidebar-item .icon {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0;
+    }
+    .sidebar-item.active .icon {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--deep-bg);
+    }
+
+    /* 中间主内容 */
+    .main-area { flex: 1; min-width: 0; }
+
+    /* 文化背景 */
+    .culture-intro {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px) saturate(1.2);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px 24px; margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(201,168,76,0.05);
+    }
+    .culture-intro h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--gold); letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+    .culture-intro p {
+      font-size: 13px; color: rgba(240,236,228,0.65);
+      line-height: 1.9; letter-spacing: 0.5px;
+    }
+    .culture-intro p + p { margin-top: 6px; }
+
+    /* 恢复默认按钮 */
+    .restore-btn {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 14px;
+      padding: 6px 16px; border-radius: 8px;
+      font-size: 12px; color: var(--text-dim);
+      background: transparent; border: none;
+      cursor: pointer; transition: all 0.3s;
+      font-family: inherit;
+    }
+    .restore-btn:hover {
+      color: var(--gold);
+      background: rgba(201,168,76,0.06);
+    }
+    .restore-btn svg { width: 14px; height: 14px; }
+
+    /* ===== 纹样网格 ===== */
+    .patterns-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    /* ===== 纹样卡片 ===== */
+    .pattern-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px) saturate(1.3);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+      animation: fadeUp 0.6s both;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .pattern-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(201,168,76,0.5);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.5),
+                  0 0 40px rgba(201,168,76,0.12),
+                  inset 0 1px 0 rgba(201,168,76,0.1);
+    }
+    .pattern-card::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; bottom: 0;
+      width: 300%; z-index: 5;
+      background: linear-gradient(115deg,
+        transparent 0%, transparent 40%,
+        rgba(201,168,76,0.08) 45%,
+        rgba(255,220,130,0.15) 50%,
+        rgba(201,168,76,0.08) 55%,
+        transparent 60%, transparent 100%);
+      transform: translateX(-100%);
+      opacity: 0; transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .pattern-card:hover::before {
+      opacity: 1;
+      animation: sweepAcross 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards;
+    }
+    @keyframes sweepAcross {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(40%); }
+    }
+
+    /* 图片区域 */
+    .pattern-img {
+      width: 100%; height: 180px;
+      background: rgba(10,16,30,0.7);
+      background-image: radial-gradient(ellipse at center, rgba(201,168,76,0.03) 0%, transparent 70%);
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--card-border);
+      position: relative; overflow: hidden;
+    }
+    .pattern-img::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(201,168,76,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      opacity: 0; transition: opacity 0.5s;
+    }
+    .pattern-card:hover .pattern-img::after { opacity: 1; }
+    .pattern-img img {
+      max-width: 85%; max-height: 85%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 12px rgba(201,168,76,0.15));
+      transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), filter 0.5s;
+    }
+    .pattern-img img[src$=".svg"] {
+      filter: invert(1) brightness(0.9) drop-shadow(0 2px 12px rgba(201,168,76,0.15));
+    }
+    .pattern-img img[src*="pattern_visuals/"] {
+      filter: drop-shadow(0 2px 12px rgba(201,168,76,0.15));
+    }
+    .pattern-card:hover .pattern-img img {
+      transform: scale(1.05);
+      filter: drop-shadow(0 4px 20px rgba(201,168,76,0.25));
+    }
+    .pattern-card:hover .pattern-img img[src$=".svg"] {
+      transform: scale(1.05);
+      filter: invert(1) brightness(0.9) drop-shadow(0 4px 20px rgba(201,168,76,0.25));
+    }
+    .pattern-card:hover .pattern-img img[src*="pattern_visuals/"] {
+      filter: drop-shadow(0 4px 20px rgba(201,168,76,0.25));
+    }
+    .modern-badge {
+      position: absolute; left: 10px; bottom: 10px; z-index: 3;
+      padding: 3px 7px; border-radius: 9px;
+      background: rgba(5,12,25,.82); border: 1px solid rgba(214,184,95,.38);
+      color: #e5c874; font-size: 10px; letter-spacing: .05em;
+    }
+
+    /* hover 时的操作按钮 */
+    .card-actions {
+      position: absolute; top: 8px; left: 8px;
+      display: flex; gap: 5px;
+      opacity: 0; transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .pattern-card:hover .card-actions { opacity: 1; }
+    .action-btn {
+      padding: 4px 12px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer; border: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .action-btn.replace {
+      background: rgba(201,168,76,0.85); color: var(--deep-bg);
+    }
+    .action-btn.replace:hover { background: var(--gold); }
+    .action-btn.edit {
+      background: rgba(240,236,228,0.15); color: var(--text-white);
+    }
+    .action-btn.edit:hover { background: rgba(240,236,228,0.25); }
+
+    /* 信息区域 - 简化版 */
+    .pattern-info {
+      padding: 14px 16px 12px;
+    }
+    .pattern-info h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px; font-weight: 700;
+      color: var(--text-white);
+      letter-spacing: 2px; margin-bottom: 4px;
+    }
+    .pattern-info .desc {
+      font-size: 12px; color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ===== 右侧详情面板（玻璃拟态） ===== */
+    .detail-panel {
+      width: var(--detail-w); min-width: var(--detail-w); flex-shrink: 0;
+      position: sticky; top: calc(var(--topbar-h) + 20px);
+      height: calc(100vh - var(--topbar-h) - 60px);
+      overflow: hidden;
+    }
+    .detail-card {
+      height: 100%;
+      background: rgba(14, 22, 45, 0.65);
+      backdrop-filter: blur(30px) saturate(1.4);
+      -webkit-backdrop-filter: blur(30px) saturate(1.4);
+      border: 1px solid rgba(201, 168, 76, 0.2);
+      border-radius: 20px;
+      padding: 28px 24px;
+      overflow-y: auto;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.4),
+                  inset 0 1px 0 rgba(255,255,255,0.05),
+                  inset 0 -1px 0 rgba(0,0,0,0.2);
+      transition: all 0.4s cubic-bezier(0.23,1,0.32,1);
+    }
+    .detail-card::-webkit-scrollbar { width: 4px; }
+    .detail-card::-webkit-scrollbar-track { background: transparent; }
+    .detail-card::-webkit-scrollbar-thumb {
+      background: rgba(201,168,76,0.2); border-radius: 4px;
+    }
+    .detail-card::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.4); }
+
+    /* 详情面板内容样式 */
+    .detail-placeholder {
+      height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; color: var(--text-dim);
+    }
+    .detail-placeholder .icon-large {
+      width: 64px; height: 64px; margin-bottom: 16px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--gold-dim);
+    }
+    .detail-placeholder p {
+      font-size: 13px; line-height: 1.6;
+      color: var(--text-dim);
+    }
+
+    .detail-content { display: none; }
+    .detail-content.active { display: block; }
+
+    .detail-header {
+      text-align: center; margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+    }
+    .detail-header h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 22px; font-weight: 900;
+      color: var(--gold); letter-spacing: 4px;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 20px rgba(201,168,76,0.2);
+    }
+    .detail-header .mongol-name {
+      font-size: 13px; color: rgba(201,168,76,0.6);
+      letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .detail-header .category-tag {
+      display: inline-block;
+      padding: 3px 12px; border-radius: 20px;
+      font-size: 11px; letter-spacing: 1px;
+      background: rgba(201,168,76,0.1);
+      color: var(--gold-dim);
+      border: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .detail-section {
+      margin-bottom: 20px;
+    }
+    .detail-section-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 13px; font-weight: 700;
+      color: var(--gold); letter-spacing: 2px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .detail-section-title::before {
+      content: '';
+      width: 3px; height: 12px; border-radius: 2px;
+      background: var(--gold); display: block;
+    }
+    .detail-section p {
+      font-size: 13px; color: rgba(240,236,228,0.7);
+      line-height: 1.85; letter-spacing: 0.3px;
+    }
+
+    .detail-info-list {
+      list-style: none; padding: 0;
+    }
+    .detail-info-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px; margin-bottom: 6px;
+      background: rgba(201,168,76,0.04);
+      border-radius: 10px;
+      border-left: 2px solid rgba(201,168,76,0.25);
+      transition: background 0.2s;
+    }
+    .detail-info-list li:hover {
+      background: rgba(201,168,76,0.08);
+    }
+    .detail-info-list .label {
+      font-size: 11px; font-weight: 600;
+      color: var(--gold-dim); white-space: nowrap;
+      min-width: 48px; padding-top: 1px;
+    }
+    .detail-info-list .value {
+      font-size: 12px; color: rgba(240,236,228,0.7);
+      line-height: 1.6;
+    }
+
+    .usage-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 6px;
+    }
+    .usage-tag {
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; letter-spacing: 0.5px;
+      background: rgba(201,168,76,0.08);
+      color: rgba(240,236,228,0.7);
+      border: 1px solid rgba(201,168,76,0.12);
+    }
+
+    .taboo-note {
+      margin-top: 6px; padding: 10px 12px;
+      background: rgba(200,60,60,0.06);
+      border: 1px solid rgba(200,80,80,0.12);
+      border-radius: 10px;
+    }
+    .taboo-note p {
+      font-size: 12px !important; color: rgba(240,180,180,0.7) !important;
+      line-height: 1.6;
+    }
+    .taboo-note .label {
+      font-size: 11px; font-weight: 600;
+      color: rgba(200,120,120,0.8); margin-bottom: 4px;
+    }
+
+    /* ===== 五色体系 ===== */
+    .color-system {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px) saturate(1.2);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px; margin-bottom: 28px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(201,168,76,0.05);
+    }
+    .color-system h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 18px; font-weight: 700;
+      color: var(--gold); letter-spacing: 3px;
+      text-align: center; margin-bottom: 20px;
+    }
+    .five-colors {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+    .color-item { text-align: center; }
+    .color-circle {
+      width: 48px; height: 48px; border-radius: 50%;
+      margin: 0 auto 8px;
+      border: 2px solid rgba(201,168,76,0.2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .color-item h3 {
+      font-size: 14px; font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 2px; letter-spacing: 2px;
+    }
+    .color-item .meaning {
+      font-size: 11px; color: var(--gold-dim);
+    }
+    .color-item .sub {
+      font-size: 10px; color: var(--text-dim);
+    }
+
+    /* ===== 编辑弹窗 ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #111827;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px;
+      padding: 28px 32px; width: 90%; max-width: 480px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    }
+    .modal-box h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 20px; letter-spacing: 2px;
+    }
+    .modal-box label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--text-dim); margin-bottom: 5px; margin-top: 14px;
+      letter-spacing: 1px;
+    }
+    .modal-box input, .modal-box textarea {
+      width: 100%; padding: 10px 14px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 8px; font-size: 14px;
+      color: var(--text-white);
+      outline: none; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .modal-box input:focus, .modal-box textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+    .modal-box textarea { resize: vertical; min-height: 70px; }
+    .modal-actions {
+      display: flex; justify-content: flex-end;
+      gap: 10px; margin-top: 22px;
+    }
+    .modal-actions button {
+      padding: 10px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s;
+      letter-spacing: 1px;
+    }
+    .modal-actions .cancel {
+      background: rgba(240,236,228,0.08);
+      color: var(--text-dim);
+    }
+    .modal-actions .cancel:hover { background: rgba(240,236,228,0.15); }
+    .modal-actions .save {
+      background: linear-gradient(135deg, var(--gold), #d4a017);
+      color: var(--deep-bg);
+    }
+    .modal-actions .save:hover { filter: brightness(1.1); }
+
+    /* ===== 底部五色色条 ===== */
+    .five-color-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 5px; display: flex; z-index: 99;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+    }
+    .five-color-bar span {
+      flex: 1; display: block; position: relative;
+    }
+    .five-color-bar span::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, transparent, rgba(255,255,255,0.1));
+    }
+
+    /* ===== 动画 ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes panelFadeIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ===== 右键菜单 ===== */
+    .context-menu {
+      display: none; position: fixed;
+      z-index: 500;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 12px;
+      padding: 6px 0;
+      min-width: 160px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .context-menu.show { display: block; }
+    .context-menu-title {
+      padding: 8px 16px 6px;
+      font-size: 11px; color: var(--gold-dim);
+      letter-spacing: 1px; font-weight: 600;
+    }
+    .context-menu-item {
+      padding: 9px 16px;
+      font-size: 13px; color: var(--text-white);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .context-menu-item:hover {
+      background: rgba(201,168,76,0.12);
+      color: var(--gold);
+    }
+    .context-menu-item.active {
+      color: var(--gold); font-weight: 600;
+    }
+    .context-menu-item .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); opacity: 0;
+    }
+    .context-menu-item.active .dot { opacity: 1; }
+    .context-menu-divider {
+      height: 1px; margin: 4px 12px;
+      background: rgba(201,168,76,0.12);
+    }
+
+    /* ===== 新增纹样按钮 ===== */
+    .add-pattern-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px;
+      background: rgba(201,168,76,0.06);
+      border: 2px dashed rgba(201,168,76,0.25);
+      border-radius: 14px;
+      color: var(--gold-dim); font-size: 14px;
+      cursor: pointer; transition: all 0.3s;
+      margin-top: 8px; font-family: inherit;
+      letter-spacing: 1px;
+    }
+    .add-pattern-btn:hover {
+      background: rgba(201,168,76,0.1);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ===== 新增纹样弹窗 ===== */
+    .add-modal-box {
+      background: #111827;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px;
+      padding: 28px 32px; width: 90%; max-width: 600px;
+      max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    }
+    .add-modal-box h3 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 20px; letter-spacing: 2px;
+    }
+    .add-modal-box label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--text-dim); margin-bottom: 5px; margin-top: 14px;
+      letter-spacing: 1px;
+    }
+    .add-modal-box label .required {
+      color: #e05050; margin-left: 2px;
+    }
+    .add-modal-box input, .add-modal-box textarea, .add-modal-box select {
+      width: 100%; padding: 10px 14px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 8px; font-size: 14px;
+      color: var(--text-white);
+      outline: none; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .add-modal-box input:focus, .add-modal-box textarea:focus, .add-modal-box select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+    .add-modal-box textarea { resize: vertical; min-height: 60px; }
+    .add-modal-box select { appearance: auto; }
+    .form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .form-section-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px; color: var(--gold);
+      margin-top: 20px; margin-bottom: 4px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(201,168,76,0.1);
+      letter-spacing: 2px;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 1200px) {
+      .detail-panel { display: none; }
+      .patterns-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 1000px) {
+      .patterns-grid { grid-template-columns: repeat(2, 1fr); }
+      .content-layout { flex-direction: column; }
+      .sidebar { width: 100%; min-width: auto; }
+      .sidebar-card { position: static; }
+      .sidebar-item { display: inline-flex; }
+    }
+    @media (max-width: 600px) {
+      .patterns-grid { grid-template-columns: 1fr; }
+      .five-colors { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+  <link rel="stylesheet" href="platform-ui.css?v=1.1">
+</head>
+<body>
+
+  <!-- 顶部导航栏 -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="topbar-logo">
+        <div class="topbar-logo-dot"></div>
+        <span>蒙古族纹样平台</span>
+      </a>
+      <nav class="topbar-nav">
+        <a href="index.html" class="topbar-link">首页</a>
+        <a href="explorer.html" class="topbar-link active">纹样探索</a>
+        <a href="fingerweave.html" class="topbar-link">指尖纹韵</a>
+      <a href="creator.html" class="topbar-link">创意共创</a>
+        <a href="recommend.html" class="topbar-link">智慧推荐</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- 页面标题 -->
+  <div class="page-title-section">
+    <h1>纹样探索</h1>
+    <div class="title-ornament">
+      <div class="line"></div>
+      <div class="diamond"></div>
+      <div class="line"></div>
+    </div>
+  </div>
+
+  <!-- 主内容区：三栏布局 -->
+  <div class="content-layout">
+
+    <!-- 左侧分类面板 -->
+    <div class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-title">纹样分类</div>
+        <div class="sidebar-item active" id="btn-geometric" onclick="switchCategory('geometric')">
+          <div class="icon">●</div>
+          几何纹样
+        </div>
+        <div class="sidebar-item" id="btn-religious" onclick="switchCategory('religious')">
+          <div class="icon">◎</div>
+          宗教纹样
+        </div>
+        <div class="sidebar-item" id="btn-nature" onclick="switchCategory('nature')">
+          <div class="icon">❀</div>
+          动植物纹样
+        </div>
+      </div>
+    </div>
+
+    <!-- 中间主内容 -->
+    <div class="main-area">
+
+      <!-- 文化背景 -->
+      <div class="culture-intro">
+        <h2>蒙古族纹样文化背景</h2>
+        <p>蒙古族纹样（蒙语统称"贺·乌嘎拉吉"）是蒙古族人民在千年游牧生产生活中创造的视觉艺术体系。"贺"（xe）意为花纹、图案，"乌嘎拉吉"（uγalǰa）源于"盘羊犄角"的卷曲造型。这些纹样广泛装饰于蒙古袍、蒙古包围毡、马鞍、银器、家具之上，不仅承载装饰功能，更寄托着蒙古族对长生天的敬畏、对五畜兴旺的祈愿和对吉祥幸福的追求。</p>
+        <p>蒙古族纹样可划分为三大类别：几何纹样（回纹、万字纹、盘长纹等）、宗教纹样（卷草纹、莲花纹、宝相花纹等）、动植物纹样（哈木尔鼻纹、额布尔犄纹、五畜纹等）。每种纹样都有独特的文化寓意、使用规范和骨骼结构。</p>
+      </div>
+
+      <!-- 恢复默认 -->
+      <button class="restore-btn" onclick="restoreDefaults()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9"/><polyline points="3 3 3 12 9 12"/></svg>
+        恢复默认内容
+      </button>
+
+      <!-- 纹样展示网格 -->
+      <div class="patterns-grid" id="patterns-grid"></div>
+
+      <!-- 新增纹样按钮 -->
+      <button class="add-pattern-btn" onclick="openAddModal()">＋ 添加新纹样</button>
+
+      <!-- 隐藏文件上传 -->
+      <input type="file" id="replaceFileInput" accept="image/*" style="display:none;" onchange="handleReplaceImage(event)">
+      <input type="file" id="addPatternFileInput" accept="image/*,.svg" style="display:none;" onchange="handleAddPatternImage(event)">
+
+      <!-- 编辑弹窗 -->
+      <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+          <h3>编辑纹样信息</h3>
+          <label>名称</label>
+          <input type="text" id="edit-name">
+          <label>描述</label>
+          <textarea id="edit-desc"></textarea>
+          <label>骨骼结构</label>
+          <input type="text" id="edit-structure">
+          <label>构成法则</label>
+          <input type="text" id="edit-principle">
+          <label>使用场景</label>
+          <input type="text" id="edit-usage">
+          <div class="modal-actions">
+            <button class="cancel" onclick="closeEditModal()">取消</button>
+            <button class="save" onclick="saveEdit()">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新增纹样弹窗 -->
+      <div class="modal-overlay" id="addModal">
+        <div class="add-modal-box">
+          <h3>添加新纹样</h3>
+          
+          <div class="form-row">
+            <div>
+              <label>纹样名称 <span class="required">*</span></label>
+              <input type="text" id="add-name" placeholder="如：哈木尔纹">
+            </div>
+            <div>
+              <label>分类 <span class="required">*</span></label>
+              <select id="add-category">
+                <option value="geometric">几何纹样</option>
+                <option value="religious">宗教纹样</option>
+                <option value="nature">动植物纹样</option>
+              </select>
+            </div>
+          </div>
+
+          <label>蒙古语名称</label>
+          <input type="text" id="add-mongolName" placeholder="如：哈木尔·乌嘎拉吉（xamar uγalǰa）">
+
+          <label>简短描述 <span class="required">*</span></label>
+          <input type="text" id="add-desc" placeholder="一句话描述纹样特征">
+
+          <label>图片</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="action-btn replace" style="position:static;opacity:1;" onclick="document.getElementById('addPatternFileInput').click()">选择图片</button>
+            <span id="add-img-name" style="font-size:12px;color:var(--text-dim);">未选择</span>
+          </div>
+
+          <div class="form-section-title">文化信息（右侧面板展示）</div>
+
+          <label>文化溯源</label>
+          <textarea id="add-origin" placeholder="纹样的历史来源与发展脉络"></textarea>
+
+          <label>文化寓意</label>
+          <textarea id="add-meaning" placeholder="纹样的象征含义"></textarea>
+
+          <label>使用场景（逗号分隔）</label>
+          <input type="text" id="add-usage" placeholder="如：蒙古袍装饰, 银器, 建筑彩绘">
+
+          <label>使用规范</label>
+          <textarea id="add-rules" placeholder="使用时的规范与讲究"></textarea>
+
+          <label>使用禁忌</label>
+          <textarea id="add-taboo" placeholder="使用时的禁忌事项"></textarea>
+
+          <div class="form-row">
+            <div>
+              <label>骨骼结构</label>
+              <input type="text" id="add-structure" placeholder="如：双曲内旋对称">
+            </div>
+            <div>
+              <label>构成法则</label>
+              <input type="text" id="add-principle" placeholder="如：对称渐变">
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="cancel" onclick="closeAddModal()">取消</button>
+            <button class="save" onclick="saveNewPattern()">添加</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右键分类菜单 -->
+      <div class="context-menu" id="contextMenu">
+        <div class="context-menu-title">移动到分类</div>
+        <div class="context-menu-item" data-cat="geometric" onclick="movePatternToCategory('geometric')">
+          <span class="dot"></span>几何纹样
+        </div>
+        <div class="context-menu-item" data-cat="religious" onclick="movePatternToCategory('religious')">
+          <span class="dot"></span>宗教纹样
+        </div>
+        <div class="context-menu-item" data-cat="nature" onclick="movePatternToCategory('nature')">
+          <span class="dot"></span>动植物纹样
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" style="color:rgba(220,80,80,0.8);" onclick="deletePattern()">
+          <span class="dot" style="background:rgba(220,80,80,0.8);"></span>删除纹样
+        </div>
+      </div>
+
+      <!-- 五色体系 -->
+      <div class="color-system">
+        <h2>蒙古族传统五色体系</h2>
+        <div class="five-colors">
+          <div class="color-item">
+            <div class="color-circle" style="background:#0066CC;"></div>
+            <h3>蓝色</h3>
+            <div class="meaning">长生天</div>
+            <div class="sub">天空与永恒</div>
+          </div>
+          <div class="color-item">
+            <div class="color-circle" style="background:#FFFFFF; border-color: rgba(200,200,200,0.3);"></div>
+            <h3>白色</h3>
+            <div class="meaning">纯洁</div>
+            <div class="sub">云朵与牛奶</div>
+          </div>
+          <div class="color-item">
+            <div class="color-circle" style="background:#CC0000;"></div>
+            <h3>红色</h3>
+            <div class="meaning">火与生命</div>
+            <div class="sub">太阳与热情</div>
+          </div>
+          <div class="color-item">
+            <div class="color-circle" style="background:#FFCC00;"></div>
+            <h3>黄色</h3>
+            <div class="meaning">大地</div>
+            <div class="sub">草原与丰收</div>
+          </div>
+          <div class="color-item">
+            <div class="color-circle" style="background:#00CC66;"></div>
+            <h3>绿色</h3>
+            <div class="meaning">水与生命</div>
+            <div class="sub">河流与生机</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右侧详情面板 -->
+    <div class="detail-panel">
+      <div class="detail-card" id="detail-card">
+        <!-- 默认占位 -->
+        <div class="detail-placeholder" id="detail-placeholder">
+          <div class="icon-large">纹</div>
+          <p>将鼠标悬停在左侧纹样卡片上<br>即可查看详细文化信息</p>
+        </div>
+        <!-- 详情内容 -->
+        <div class="detail-content" id="detail-content"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部五色色条 -->
+  <div class="five-color-bar">
+    <span style="background:linear-gradient(90deg, #003d7a, #0066CC);"></span>
+    <span style="background:linear-gradient(90deg, #CC0000, #e03030);"></span>
+    <span style="background:linear-gradient(90deg, #FFCC00, #ffe033);"></span>
+    <span style="background:linear-gradient(90deg, #00CC66, #00e070);"></span>
+    <span style="background:linear-gradient(90deg, #1a1a2e, #0a0e1a);"></span>
+  </div>
+
+  <script>
+    // ===== 权威纹样文化数据库 =====
+    // 数据来源：中国国家地理《中华遗产》2019年第07期、中国工艺美术学会2026年研究论文
+    // 《蒙古族八种常见传统纹样称谓及命名认知研究》（呼斯乐等）、内蒙古画报
+    const patternCulturalData = {
+      // ===== 几何纹样 =====
+      huiwen: {
+        name: '回纹',
+        mongolName: '阿鲁哈·贺（alux_a xe）',
+        category: '几何纹样',
+        origin: '回纹是蒙古族最古老的几何纹样之一，其造型源自草原上连绵起伏的山脉轮廓与流水回旋的自然形态。蒙古语称"阿鲁哈·贺"，意为"锤子纹"，因其形态如同锤击花纹而得名。回纹整齐端庄，曲折回旋，具有明显的"数"和"律"的几何造型基础。',
+        meaning: '回纹寓意"连绵不断、富贵不断"，象征着坚韧顽强的生命力和绵延不绝的福运。在蒙古族文化中，它体现了游牧民族对永恒循环的哲学认知——草枯草荣、四季轮回、生生不息。',
+        usage: [
+          '蒙古袍的领口、袖口镶边',
+          '地毯与毡毯的边缘装饰',
+          '银器、铜壶的器身环带',
+          '蒙古包门框装饰',
+          '家具的边框刻花'
+        ],
+        rules: '回纹使用时必须保持连续不断，断裂的回纹被认为不吉利。在蒙古袍镶边中，回纹通常以"万字不断头"的连续形式出现。庄重场合多用黑、红、金三色组合。',
+        taboo: '忌将回纹图案中途截断（寓意"断路"），忌用于丧葬用品（因其本意为绵长福寿）。',
+        structure: '方形回旋、连续折线',
+        principle: '二方连续重复'
+      },
+      panchang: {
+        name: '盘长纹',
+        mongolName: '乌力吉·疆嘎（ölǰei ǰanggiy_a）',
+        category: '几何纹样',
+        origin: '盘长纹是蒙古族最核心的传统纹样之一，蒙古语称"乌力吉·疆嘎"，其中"乌力吉"（ölǰei）意为"吉祥"，"疆嘎"指"结"。其造型源自古老的绳结艺术——蒙古族牧民在日常生活中系绳打结的实践。符号经由古印度教"室利靺瑳"、藏传佛教"吉祥犊"发展为蒙古族"乌力吉"的三阶段演变而成。',
+        meaning: '盘长纹无首无端，象征"福寿绵长、家族世代繁衍不断"，寄寓无穷无尽的吉祥与财富。它是蒙古族应用最广、组合形式最多的核心纹样，拥有菱形、方形、椭圆形等50余种变体。',
+        usage: [
+          '蒙古袍绸制腰带（布斯）的结法',
+          '婚礼头饰中象征永结同心',
+          '蒙古包顶部装饰',
+          '宗教法器与经书封面',
+          '银器与珠宝的中心纹样',
+          '礼帽帽顶与帽檐内侧暗绣'
+        ],
+        rules: '乌力吉纹在蒙古族图案中常作为"中心纹样"出现。蒙古族晚间宽衣时将腰带结成两个类似乌力吉纹的活结，具有吉祥入眠之意。非常忌讳将腰带系成死扣，认为会做噩梦、有不祥之兆。',
+        taboo: '严禁将盘长纹系成死结（寓意死路）。在婚礼中盘长纹必须与"哈敦绥·贺"搭配使用，分别代表新郎新娘，中间置盘长纹象征永结同心。',
+        structure: '婉蜒交叉盘结、无首无端闭合',
+        principle: '连续对称、圆角与直角变化'
+      },
+      wanzi: {
+        name: '万字纹',
+        mongolName: '哈斯·贺 / 图门·贺（xas xe / tamag_a xe）',
+        category: '几何纹样',
+        origin: '万字纹蒙古语称"哈斯·贺"或"图门·贺"。"哈斯"意为"玉"，"图门"意为"万"。这是一个源自远古太阳崇拜的符号，最早被认定为"火的标志"，代表太阳运行的轨迹。它也是草原游牧民族对宇宙永恒运转的观察记录。',
+        meaning: '万字纹代表光明与四季轮回，象征永恒、繁盛与吉祥。蒙古族牧民认为圆形图案是太阳和阳性的象征，寓意生命永恒。万字纹常以"万字不断头"的连续形式出现，表达无尽繁荣。',
+        usage: [
+          '蒙古袍的袖口与下摆边饰',
+          '毡房围毡的连续花边',
+          '佛教寺庙建筑装饰',
+          '传统家具的雕花图案',
+          '银器和铜器的装饰带'
+        ],
+        rules: '万字纹分为左旋（卍）和右旋（卐）两种，在蒙古族传统中两者均可使用。连续使用时必须方向统一，不可左右混杂。宗教场合多用金色万字纹。',
+        taboo: '不可将万字纹倒置或歪斜使用。在丧葬场合一般不使用万字纹。',
+        structure: '正方旋转、四臂等长',
+        principle: '旋转对称、二方连续'
+      },
+      harmuur: {
+        name: '哈木尔纹（鼻纹/云纹）',
+        mongolName: '哈木尔·乌嘎拉吉（xamar uγalǰa）',
+        category: '几何纹样',
+        origin: '哈木尔纹是蒙古族最具代表性和使用频率最高的传统纹样。蒙古语"哈木尔"（xamar）意为"鼻子"，因其造型模仿牛鼻子形状——两条对称的内旋曲线如同牛的鼻孔，曲线延长部分闭合形成牛的鼻梁。据中国国家地理《中华遗产》记载，其历史可追溯至4000年前夏家店遗址出土的彩陶纹样。民间传说：一头牛在蒙古包毡壁上蹭出的灰印被主人视为吉祥之兆，遂成为最受欢迎的纹样。',
+        meaning: '哈木尔纹象征牧业丰收、五畜兴旺和吉祥如意。牛是蒙古族游牧生活中最重要的牲畜之一，以牛鼻为原型体现了蒙古族对牲畜的珍视与对丰裕生活的向往。哈木尔纹也是蒙古族各种图案纹样中形成最多变体的基本纹样。',
+        usage: [
+          '蒙古包顶毡和围毡的主体装饰（蓝白配色）',
+          '蒙古袍的领口与袖口',
+          '帽子的装饰纹样',
+          '建筑外墙与内壁装饰',
+          '日常生活用品和器皿',
+          '马鞍银饰'
+        ],
+        rules: '哈木尔纹有团状（从中心向周围层层扩展）和勾联式（从中心向两边卷曲）两种典型形制。蒙古包装饰时蓝色花纹配白色底为经典搭配，象征蓝天白云。常与额布尔犄纹组合使用形成更复杂图案。',
+        taboo: '哈木尔纹的卷曲方向应保持对称，不可一侧卷曲一侧平直（被认为破坏和谐）。用于蒙古包装饰时需保持完整，不可残缺。',
+        structure: '双曲内旋对称、卷曲线条',
+        principle: '对称渐变、中心扩展或勾联'
+      },
+      ebuir: {
+        name: '额布尔纹（犄角纹）',
+        mongolName: '额布尔·乌嘎拉吉（eber uγalǰa）',
+        category: '几何纹样',
+        origin: '额布尔纹蒙古语称"额布尔·乌嘎拉吉"，"额布尔"（eber）意为"角、犄角"。其造型源自对公盘羊犄角的模仿，是人类以兽角作装饰这一古老传统在游牧文化中的延续。据考证，以兽角为装饰在北方游牧民族中有数千年历史，阴山、贺兰山岩画中已有鹿角反复描绘。蒙古族中"角"被视为源自灵魂深处的神秘物质，具有保护、护身功能。',
+        meaning: '额布尔纹是力量与雄性气概的象征。在游牧生活中，它代表"五畜兴旺"的朴素愿望，同时也是图腾崇拜的体现——游牧民族认为"角"源自兽类头部的神秘力量，是灵魂的守护神。',
+        usage: [
+          '蒙古族妇女头饰的主要造型',
+          '蒙古包门框与立柱装饰',
+          '马鞍与马具装饰',
+          '蒙古袍的肩部与背部纹饰',
+          '银器与珠宝的核心造型元素'
+        ],
+        rules: '额布尔纹是唯一与"乌嘎拉吉"（而非"贺"）组词的纹样类型，凸显其与卷曲造型的深度关联。在使用时通常成对出现，以保持视觉对称。婚礼中常用于新郎相关物品。',
+        taboo: '蒙古族严格忌讳跨过帽子或垫坐帽子（头部是灵魂栖息之地），佩戴有额布尔纹的头饰时更需恭敬。犄纹不可倒置使用。',
+        structure: '螺旋卷曲、如盘羊角渐开',
+        principle: '对称镜像、由根部向外卷展'
+      },
+
+      // ===== 宗教纹样 =====
+      juancaowen: {
+        name: '卷草纹',
+        mongolName: '哈敦·绥贺（xatun süixe）',
+        category: '宗教纹样',
+        origin: '卷草纹蒙古语称"哈敦·绥贺"，其中"哈敦"意为"皇后、贵妇"，"绥贺"意为"编花"。其形态以"S"形曲线为主骨架，模拟草的柔美形态，通过不断连续构建富有韵律与节奏感的图案。卷草纹既是蒙古族民间的植物造型代表，也受到佛教文化的深远影响，在寺庙建筑装饰中极为常见。',
+        meaning: '卷草纹象征生生不息、万物繁荣。草是蒙古族生存的根本——"草原是蒙古人的命脉"，以草的蜿蜒卷曲表达对生命延续的美好祈愿。在宗教语境中，卷草纹象征佛法的无尽流传。',
+        usage: [
+          '佛教寺庙的梁柱、壁画装饰',
+          '经书装帧与法器表面',
+          '蒙古袍的整体面料图案',
+          '高级家具的雕花',
+          '银器的缠绕式装饰带'
+        ],
+        rules: '卷草纹被归为"贺"类（有装饰的、装点了的），常与宗教器物搭配。使用时线条必须流畅连贯，不可出现断裂。传统上卷草纹多用于女性用品和贵族物品（因其名"哈敦"即"贵妇"之意）。',
+        taboo: '不宜用于男性专属的军事用品。在宗教场所使用须保持庄重，不可过于花哨。',
+        structure: 'S形波浪卷曲、连续蔓延',
+        principle: '连续渐变、节奏韵律'
+      },
+      lianhua: {
+        name: '莲花纹',
+        mongolName: '莲花·贺（lingqu_a xe）',
+        category: '宗教纹样',
+        origin: '莲花纹随藏传佛教传入蒙古草原，成为蒙古族宗教纹样的重要组成部分。莲花在佛教中是"八吉祥"之一，象征出淤泥而不染的品格。蒙古族接受藏传佛教后，莲花纹被广泛应用于宗教建筑、法器和贵族生活用品中。',
+        meaning: '莲花纹象征纯洁、超脱与觉悟。在蒙古族文化中，它代表精神的高洁与对佛法的虔诚。莲花开放的不同阶段（花蕾、半开、全开）分别象征过去、现在、未来三世。',
+        usage: [
+          '佛教寺庙的莲台与壁画',
+          '唐卡绘画的基础元素',
+          '法器（佛像底座、净瓶）',
+          '贵族女性的刺绣装饰',
+          '出生礼仪中的祝福图案'
+        ],
+        rules: '莲花纹在宗教场合必须完整呈现，花瓣数目有讲究（通常为八瓣或十二瓣）。世俗使用时可简化。颜色以粉、白、金为正统。',
+        taboo: '莲花纹不可用于地面或脚踏之处（因其神圣性）。不可用于丧葬相关物品。',
+        structure: '花瓣放射状展开、多层环绕',
+        principle: '中心对称、放射均衡'
+      },
+      baoxiang: {
+        name: '宝相花纹',
+        mongolName: '宝日·贺（baγur xe）',
+        category: '宗教纹样',
+        origin: '宝相花纹是一种理想化的复合花卉图案，融合了莲花、牡丹、菊花等多种花卉的特征，创造出自然界并不存在的"完美之花"。它经丝绸之路传入蒙古地区，在元代皇室中得到极高推崇，成为宫廷装饰的标志性图案。',
+        meaning: '宝相花纹象征"圆满、富贵、庄严"。其层层花瓣的完美对称表达了对宇宙秩序的理想化追求。在蒙古族文化中，它是最高等级的装饰纹样之一，代表尊贵身份。',
+        usage: [
+          '皇室与贵族专用装饰',
+          '寺庙的天花板与藻井',
+          '高级织物与锦缎面料',
+          '重要仪式中的器物装饰',
+          '官方文书的边框纹饰'
+        ],
+        rules: '宝相花纹传统上属于高等级纹样，平民慎用。颜色以红、金、青为主，体现华贵庄严。构图必须完美对称，任何不对称都被视为瑕疵。',
+        taboo: '普通牧民传统上不在日常用品中使用完整宝相花纹。不可将其用于厨房或牲畜用具。',
+        structure: '多层花瓣、中心圆满放射',
+        principle: '旋转对称、多重环绕'
+      },
+
+      // ===== 动植物纹样 =====
+      hudie: {
+        name: '蝴蝶纹',
+        mongolName: '额日贝·贺（erbe xe）',
+        category: '动植物纹样',
+        origin: '蝴蝶纹是蒙古族民间最受女性喜爱的装饰纹样之一。蝴蝶的蜕变过程（毛虫化蛹成蝶）被视为生命蜕变、美丽新生的象征。在蒙古草原上，夏季的蝴蝶是大自然生机盎然的标志。',
+        meaning: '蝴蝶纹象征爱情、自由与美丽的蜕变。在婚俗中常用于女方嫁妆装饰，寓意新娘如蝶般美丽绽放。也象征夫妻恩爱（因蝴蝶常成双出现）。',
+        usage: [
+          '女性蒙古袍的刺绣装饰',
+          '婚庆嫁妆和喜帐',
+          '女性头饰与首饰',
+          '儿童服饰与摇篮装饰',
+          '香囊与荷包'
+        ],
+        rules: '蝴蝶纹多用彩色配金银色，强调华丽。通常成双出现，单只蝴蝶较少单独使用。婚礼场合必须以红色或金色为主色调。',
+        taboo: '蝴蝶纹不用于老年人丧服。不宜用于男性专属物品（传统观念中属女性纹样）。',
+        structure: '双翅对称展开',
+        principle: '镜像对称、色彩渐变'
+      },
+      longwen: {
+        name: '龙纹',
+        mongolName: '鲁·贺（luu xe）',
+        category: '动植物纹样',
+        origin: '龙纹在蒙古族文化中有独特地位。蒙古族的龙文化受中原文化影响但有自身特色——蒙古龙更多与天象、水神相关联，被视为"长生天"的使者。元代时期龙纹在蒙古皇室中获得最高礼遇，成为皇权象征。',
+        meaning: '龙纹象征权威、阳刚之气与天神庇佑。在蒙古族文化中，龙也是水的精灵和雷电的化身，代表强大的自然力量。五爪龙为最高等级，四爪为次。',
+        usage: [
+          '皇室和那颜（贵族）专用服饰',
+          '旗帜与战旗图腾',
+          '寺庙的柱体雕刻',
+          '重大庆典的仪式用品',
+          '官方印信装饰'
+        ],
+        rules: '传统上龙纹有严格的等级规范：五爪龙仅皇帝可用，四爪蟒纹为王公贵族所用，三爪龙民间可适度使用。龙首朝向有讲究，一般面朝左（象征东方日出）。',
+        taboo: '平民不得随意使用五爪龙纹。龙纹不可用于地面或坐垫（对龙不敬）。不可将龙纹图案倒置。',
+        structure: '蜿蜒蛇形、云中穿行',
+        principle: '动态平衡、螺旋环绕'
+      },
+      mawen: {
+        name: '马纹',
+        mongolName: '莫日·贺（mori xe）',
+        category: '动植物纹样',
+        origin: '马纹是蒙古族最具民族特色的动物纹样。蒙古人被称为"马背上的民族"，马是蒙古族的精神图腾——成吉思汗的蒙古帝国依靠骑兵征服了欧亚大陆。"马头琴"的传说更赋予马以灵魂与忠诚的象征。',
+        meaning: '马纹象征速度、力量、忠诚与自由。奔腾的骏马代表蒙古族不屈不挠的民族精神和对广阔天地的向往。白马在蒙古文化中尤为尊贵，象征纯洁与神圣。',
+        usage: [
+          '马具（马鞍、辔头）的装饰',
+          '男性蒙古袍的背部刺绣',
+          '那达慕大会的旗帜与奖品',
+          '部落旗帜与标识',
+          '马头琴等乐器装饰'
+        ],
+        rules: '马纹以奔腾姿态最为常见，寓意积极向上。白色骏马纹样最为尊贵。用于那达慕等竞技场合时常配合火焰纹或云纹。',
+        taboo: '不可将马纹用于脚踏或坐垫之处（对马的不尊重）。马纹不可呈现跌倒或受伤的姿态。',
+        structure: '奔腾动态侧影',
+        principle: '动态造型、力量美学'
+      },
+      wushu: {
+        name: '五畜纹',
+        mongolName: '塔本·玛拉·贺（tabun mal xe）',
+        category: '动植物纹样',
+        origin: '五畜纹源于蒙古族"五畜"概念——马、牛、绵羊、山羊、骆驼，这五种牲畜是游牧经济的支柱，也是蒙古族物质生活的根本。五畜纹的历史与蒙古族游牧文明同样悠久，是对生产生活的直接艺术再现。',
+        meaning: '五畜纹象征"五畜兴旺、牧业丰收"，是蒙古族最朴素也最真切的生活愿望。五种牲畜各有象征：马代表速度、牛代表勤劳、绵羊代表温顺、山羊代表机敏、骆驼代表坚韧。',
+        usage: [
+          '牧民日常用品的装饰',
+          '节庆（那达慕、祭敖包）场合',
+          '儿童服饰的祝福图案',
+          '毡毯与壁挂的主题纹样',
+          '银碗与木碗的雕花'
+        ],
+        rules: '五畜纹通常五种动物一起出现，象征完整的畜牧业。也可单独使用某一动物纹样。在新年（白月节）期间广泛使用，寓意来年牧业丰收。',
+        taboo: '五畜纹中的动物不可呈现死亡、受伤或屠宰姿态。不宜只出现其中一两种而明确标注"五畜纹"之名。',
+        structure: '五种动物轮廓组合',
+        principle: '写实概括、并列或环形排列'
+      },
+      luwen: {
+        name: '鹿纹',
+        mongolName: '布古·贺（buγu xe）',
+        category: '动植物纹样',
+        origin: '鹿纹在北方游牧民族中有极其悠久的历史。蒙古高原上的鹿石（立于墓葬旁的刻有鹿形象的石碑）可追溯至公元前1000年左右。鹿被蒙古族视为天神的使者、森林的精灵，与萨满教的天界信仰密切相关。',
+        meaning: '鹿纹象征福禄（鹿与"禄"谐音）、长寿与祥瑞。在蒙古族萨满传统中，鹿是沟通天界与人间的神圣动物。鹿角的分叉也被认为象征家族的枝繁叶茂。',
+        usage: [
+          '祭祀用品与萨满法器',
+          '部落图腾与家族标识',
+          '婚礼中寓意子孙兴旺',
+          '高级皮革制品的压花',
+          '壁画与唐卡中的祥瑞元素'
+        ],
+        rules: '鹿纹通常呈昂首或奔跑姿态，表现生机活力。母鹿与幼鹿组合象征母爱与家庭和睦。雄鹿突出鹿角表现力量与尊贵。',
+        taboo: '不可将鹿呈现为被猎杀的姿态。鹿纹不宜用于地面或低处（因鹿属天界神物）。',
+        structure: '优雅侧面、鹿角上扬',
+        principle: '曲线造型、动静结合'
+      },
+      luolian: {
+        name: '鹿衔莲纹',
+        mongolName: '布古·林古·贺',
+        category: '动植物纹样',
+        origin: '鹿衔莲纹融合了蒙古族本土的鹿崇拜与藏传佛教的莲花象征，是两种文化交融的产物。神鹿口衔莲花的形象最早出现在元代蒙古族佛教艺术中，体现了萨满信仰与佛教信仰的和谐共存。',
+        meaning: '鹿衔莲纹象征"佛法无边与长生"，鹿代表世俗界的灵性存在，莲花代表超越的佛法智慧，二者结合表达了众生皆可通过修行获得解脱的佛教理念。',
+        usage: [
+          '寺庙壁画与门楣装饰',
+          '唐卡绘画的主题元素',
+          '佛教仪式用品',
+          '贵族府邸的照壁',
+          '高级织物的图案'
+        ],
+        rules: '鹿衔莲纹属于宗教与吉祥兼具的纹样，使用场合较为正式。鹿的朝向一般面朝佛像方向。莲花必须完整不可残缺。',
+        taboo: '不可用于世俗商业场合。不可将此纹样用于地面或卫生间装饰。',
+        structure: '鹿首仰起、口衔莲枝',
+        principle: '动静相融、神圣与自然统一'
+      },
+      fengwen: {
+        name: '凤纹',
+        mongolName: '嘎鲁达·贺（garud_a xe）',
+        category: '动植物纹样',
+        origin: '蒙古族凤纹融合了中原凤凰文化和藏传佛教的大鹏金翅鸟（嘎鲁达）形象。嘎鲁达是佛教护法神之一，而凤凰则代表中原文化中的阴性之美。两种传统的融合赋予了蒙古族凤纹独特的双重象征。',
+        meaning: '凤纹象征美好、高贵与重生。与龙纹配合使用时代表阴阳和合、夫妻美满。单独使用时象征女性的高贵品德和美好前程。',
+        usage: [
+          '婚庆用品（喜帐、嫁衣）',
+          '贵族女性的服饰与首饰',
+          '皇后与王妃专用物品',
+          '寺庙中的护法形象',
+          '高级织物与缂丝'
+        ],
+        rules: '凤纹常与龙纹配对使用（龙凤呈祥）。单独使用时以女性物品为主。颜色以红、金、紫为正统配色。',
+        taboo: '凤纹不可单独用于男性物品（除非龙凤搭配）。不可将凤呈现为低飞或落地姿态（应为展翅高飞）。',
+        structure: '展翅翱翔、尾羽卷曲',
+        principle: '动态平衡、华丽舒展'
+      },
+      hewen: {
+        name: '鹤纹',
+        mongolName: '特格力·贺（toγuruu xe）',
+        category: '动植物纹样',
+        origin: '鹤纹在蒙古族文化中主要来源于中原文化影响。蒙古族将鹤视为长寿之鸟，也与萨满教中的天界鸟类信仰相关联。白色的鹤在蒙古族的色彩观念中象征纯净和神圣。',
+        meaning: '鹤纹象征长寿、清雅与高洁。仙鹤立于云间的形象表达对延年益寿的祈愿。蒙古族文化中白鹤也被视为携带灵魂升天的神鸟。',
+        usage: [
+          '祝寿礼物的装饰纹样',
+          '老年人服饰的吉祥图案',
+          '文人用品（书房装饰）',
+          '寺庙的壁画元素',
+          '陶瓷与银器装饰'
+        ],
+        rules: '鹤纹多与松、云搭配（松鹤延年、云鹤仙境）。用于祝寿场合效果最佳。白色或银色的鹤纹最为正统。',
+        taboo: '不宜用于婴幼儿物品或婚庆场合（因鹤主要象征"长寿"，用于年轻人不太合适）。',
+        structure: '垂直站立或展翅',
+        principle: '简洁概括、高雅留白'
+      },
+
+      // ===== 几何纹样·变体 =====
+      huiwen_v1: {
+        name: '回纹变体·单回',
+        mongolName: '阿鲁哈·贺（变体一）',
+        category: '几何纹样',
+        origin: '回纹的最基本形式——单层方形回旋。这是回纹家族的"母体"，一个方向的连续折转形成最简洁的回字形。在蒙古族早期岩画和彩陶中已可见此形态。',
+        meaning: '单回形式象征最纯粹的"往复循环"，代表四季轮回、周而复始的自然规律。',
+        usage: ['蒙古袍单层镶边', '简约器物装饰', '儿童服饰边饰'],
+        rules: '单回纹通常作为连续带状出现，数量不少于四个重复单元。可作为复杂回纹的基础模块。',
+        taboo: '同回纹总则——不可中途截断。',
+        structure: '单层方形回旋',
+        principle: '平移重复'
+      },
+      huiwen_v2: {
+        name: '回纹变体·双回',
+        mongolName: '阿鲁哈·贺（变体二）',
+        category: '几何纹样',
+        origin: '双层嵌套的回纹形式，在单回基础上增加一层内旋，形成更为密实的视觉效果。双回纹在蒙古族地毯编织中极为常见。',
+        meaning: '双层嵌套寓意"好事成双"、"双重福运"。',
+        usage: ['蒙古族地毯边缘', '毡房围毡装饰', '高级袍服镶边'],
+        rules: '双回纹的两层旋转方向可同向或反向，反向（内外对旋）较为庄重。',
+        taboo: '同回纹总则。',
+        structure: '双层嵌套方形',
+        principle: '嵌套重复'
+      },
+      huiwen_v3: {
+        name: '回纹变体·斜回',
+        mongolName: '阿鲁哈·贺（变体三）',
+        category: '几何纹样',
+        origin: '将传统正交回纹旋转45度，形成菱形框架内的回旋纹样。这种变体常见于蒙古族银器和铜器的装饰。',
+        meaning: '斜回纹增添了动态感，象征突破常规、锐意进取。',
+        usage: ['银器錾花', '铜壶装饰带', '木质家具角花'],
+        rules: '斜回纹使用时注意与正交回纹区分，不宜在同一装饰带中混用。',
+        taboo: '同回纹总则。',
+        structure: '45度旋转菱形回旋',
+        principle: '旋转平移'
+      },
+      huiwen_v4: {
+        name: '回纹变体·连锁回',
+        mongolName: '阿鲁哈·贺（变体四）',
+        category: '几何纹样',
+        origin: '多个回纹单元彼此勾连、共享边线的复合形式，类似中原"万字不断头"的蒙古族本地演绎。此形式在蒙古族传统建筑彩绘中占有重要地位。',
+        meaning: '连锁形式强调"绵延不绝"的含义，比独立回纹更强烈地表达永恒与团结。',
+        usage: ['蒙古包门框上方横梁', '寺庙建筑彩绘', '大型地毯整幅边框'],
+        rules: '连锁回纹强调完整闭合，通常以四方连续形式出现。起止处需巧妙衔接，不可露出断口。',
+        taboo: '断裂处理同回纹总则，连锁形式更忌讳脱节（象征关系破裂）。',
+        structure: '互锁连续方形',
+        principle: '四方连续'
+      },
+      jihe_f1: {
+        name: '几何菱形纹',
+        mongolName: '德勒贝·贺（dörbelǰin xe）',
+        category: '几何纹样',
+        origin: '菱形（蒙古语"德勒贝"意为"四方形"）是蒙古族几何纹样中的基础形态之一。菱形纹源自对蒙古包天窗（陶脑）的俯视轮廓抽象，也是编织、刺绣中最容易实现的几何形状。',
+        meaning: '菱形纹象征大地与天空的交汇（四角指向四方），代表宇宙的完整与平衡。在日常使用中寓意"四平八稳"。',
+        usage: ['毡毯编织的基础单元', '刺绣底纹填充', '腰带装饰', '鞋靴面料图案'],
+        rules: '菱形纹可单独使用也可组合成连续图案。尖角朝上下时象征天地，朝左右时象征东西方向。',
+        taboo: '菱形纹不可出现不完整的半菱形（在边缘处应当以完整菱形结尾或采用对称截取）。',
+        structure: '正菱形或扁菱形',
+        principle: '平移对称、网格重复'
+      },
+      jihe_f2: {
+        name: '几何锯齿纹',
+        mongolName: '贺鲁·贺（xöröö xe）',
+        category: '几何纹样',
+        origin: '锯齿纹是蒙古族纹样中表现山脉和草原地平线的抽象几何形式。连续的三角锯齿模仿了阴山、大兴安岭等北方山脉的轮廓线，也被认为代表牙齿（力量的象征）。',
+        meaning: '锯齿纹象征山的伟岸、力量的坚韧。在蒙古族文化中，山是"天父"的化身，锯齿形表达对山神的崇敬。',
+        usage: ['毡毯边缘装饰', '服装下摆与袖口', '弓箭和刀鞘的装饰', '马鞍后桥'],
+        rules: '锯齿方向有讲究：朝上象征山峰（阳性、积极），朝下象征河谷（阴性、接纳）。通常保持方向一致。',
+        taboo: '不可锯齿朝下用于帽饰（因帽子代表头顶天空，锯齿朝下暗示天塌）。',
+        structure: '连续等腰三角形',
+        principle: '平移重复'
+      },
+      jihe_f3: {
+        name: '几何十字纹',
+        mongolName: '呼日乐·贺（xürel xe）',
+        category: '几何纹样',
+        origin: '十字纹是蒙古族古老的方位符号，代表"四方"。在萨满教传统中，十字代表宇宙的四个方向和中心点，是空间秩序的基本表达。在蒙古族岩画中可追溯至青铜时代。',
+        meaning: '十字纹象征四方平安、天地通达。中心交叉点被视为"世界之脐"（宇宙中心），四臂代表东西南北四方守护。',
+        usage: ['萨满法器装饰', '蒙古包顶部天窗（陶脑）结构暗示', '护身符图案', '方位标识'],
+        rules: '十字纹四臂应等长，倾斜45度则变为"X"形，含义略有不同（X形更多表示否定或封印）。',
+        taboo: '十字纹不可歪斜使用（暗示方位紊乱、秩序崩坏）。',
+        structure: '正交等臂十字',
+        principle: '旋转对称（90度）'
+      },
+
+      // ===== 宗教纹样·变体 =====
+      panchang_v1: {
+        name: '盘长纹变体·菱形盘长',
+        mongolName: '乌力吉·疆嘎（变体一）',
+        category: '宗教纹样',
+        origin: '盘长纹的菱形变体是50余种盘长变体中最常见的形式之一。其轮廓呈菱形，内部绳索仍保持无首无端的编织结构。菱形盘长在蒙古族银器和服饰中使用频率极高。',
+        meaning: '菱形盘长兼具盘长纹"福寿绵长"的核心寓意，菱形框架增添了"稳固"之意——象征家业稳固、福运长存。',
+        usage: ['银腰带扣', '帽顶装饰（尤其是女性尖顶帽）', '蒙古袍后背中心纹样'],
+        rules: '菱形盘长的尖角通常朝上下方向，象征天地贯通。编结线条交叉时"一压一"的规律必须严格遵守。',
+        taboo: '同盘长纹总则——不可系成死结。',
+        structure: '菱形框架内盘结',
+        principle: '中心对称、无端闭合'
+      },
+      panchang_v2: {
+        name: '盘长纹变体·方形盘长',
+        mongolName: '乌力吉·疆嘎（变体二）',
+        category: '宗教纹样',
+        origin: '方形盘长是盘长纹的正方形外廓变体，线条在方形框架内以规整的直角转折形成盘结。这种形式更接近汉地"如意结"，体现了蒙汉文化交融。',
+        meaning: '方形代表稳重与端正，方形盘长强调"规矩方正、福禄双全"。',
+        usage: ['家具雕花（桌面中心）', '门窗花格', '印章底纹'],
+        rules: '方形盘长的转角必须为直角，保持方正。通常以单独团花形式出现而非连续带状。',
+        taboo: '同盘长纹总则。',
+        structure: '方形框架内盘结',
+        principle: '直角对称、闭合无端'
+      },
+      panchang_v3: {
+        name: '盘长纹变体·圆形盘长',
+        mongolName: '乌力吉·疆嘎（变体三）',
+        category: '宗教纹样',
+        origin: '圆形盘长是盘长纹最具宗教意味的变体，外廓呈圆形，内部结构以弧线转折。圆形盘长与藏传佛教"法轮"造型有呼应关系，在寺庙装饰中极为多见。',
+        meaning: '圆形象征圆满、无缺，配合盘长的"无穷"含义，表达"功德圆满、福慧无量"的宗教祝愿。',
+        usage: ['寺庙天花板中心纹样', '佛教法器表面', '高级唐卡的装饰边框'],
+        rules: '圆形盘长在宗教场合使用时通常配合莲花底托。弧线转折必须圆润流畅。',
+        taboo: '同盘长纹总则。圆形盘长不宜用于世俗商业场合。',
+        structure: '圆形框架内弧线盘结',
+        principle: '旋转对称、圆弧闭合'
+      },
+      panchang_v4: {
+        name: '盘长纹变体·复合盘长',
+        mongolName: '乌力吉·疆嘎（变体四）',
+        category: '宗教纹样',
+        origin: '复合盘长是多个基本盘长单元组合而成的复杂形式。两个、四个或更多盘长纹相互勾连，形成"盘长串"或"盘长簇"。这是蒙古族匠人炫技的高难度形式。',
+        meaning: '复合盘长寓意"多福多寿、福上加福"。多重盘结的叠加表达了对福运层层累积的期望。',
+        usage: ['婚礼大型壁挂', '那颜贵族的全套马具装饰', '寺庙大殿的主体雕花'],
+        rules: '复合盘长的各单元之间连接线必须自然流畅，整体仍要保持"无首无端"的特征。制作难度极高，常由资深匠人完成。',
+        taboo: '同盘长纹总则。复合盘长因其复杂性，出错后不可勉强使用（需重做）。',
+        structure: '多单元互锁盘结',
+        principle: '多重对称、层叠闭合'
+      },
+      falun: {
+        name: '法轮纹',
+        mongolName: '库日德·贺（kürdün xe）',
+        category: '宗教纹样',
+        origin: '法轮纹随藏传佛教传入蒙古草原，是佛教"八吉祥"（蒙古语"奈木·塔克拉嘎"）之一。法轮象征佛陀的教法如轮转动、普度众生。蒙古族自16世纪全面接受藏传佛教后，法轮纹成为宗教装饰的核心元素。',
+        meaning: '法轮纹象征佛法永转、真理不灭。轮辐代表佛教的"八正道"，轮毂代表戒律，轮缘代表禅定。整体表达修行的完整体系。',
+        usage: ['寺庙屋脊（双鹿法轮造型）', '经幡与旗帜', '活佛法座装饰', '经书扉页', '宗教仪式用品'],
+        rules: '法轮通常与两只鹿配对出现（代表佛陀初转法轮时鹿野苑的两只鹿）。辐条数目以八为正统（对应八正道）。',
+        taboo: '法轮纹不可用于地面或脚踏之处。不可倒置或侧放。不可用于商业和娱乐场合。',
+        structure: '圆形轮辐放射',
+        principle: '旋转对称（八等分）'
+      },
+
+      // ===== 动植物纹样·变体 =====
+      yunwen: {
+        name: '云纹',
+        mongolName: '额格勒·贺（egüle xe）',
+        category: '动植物纹样',
+        origin: '云纹是蒙古族最古老的自然纹样之一。蒙古族崇拜"长生天"（腾格里），云是天与地之间的使者。云纹的造型来源于草原上千变万化的云彩形态，经过数千年的艺术提炼形成了卷云、朵云、流云等多种形式。',
+        meaning: '云纹象征天界祥瑞、吉祥如意。云"从天而降"的特性使其成为天神赐福的视觉表达。蒙古族认为祥云笼罩之处必有福运。',
+        usage: ['蒙古袍的肩部与背部', '蒙古包天窗周围装饰', '马鞍装饰', '银器表面', '佛教壁画背景'],
+        rules: '云纹有"如意头"（朵云）和"飘带"（流云）两种基本形式。朵云用于静态装饰，流云用于表现动态。颜色以蓝、白、金为主。',
+        taboo: '云纹不可呈现黑色下沉状态（象征灾祸降临）。不宜用于地面装饰。',
+        structure: '卷曲朵状或流线带状',
+        principle: '自由对称、S形延展'
+      },
+      yunwen_v1: {
+        name: '云纹变体·如意云',
+        mongolName: '额格勒·贺（如意式）',
+        category: '动植物纹样',
+        origin: '如意云头是云纹最庄重的变体，造型取云朵的正面轮廓，形似灵芝或如意头部。这种形式在蒙元时期宫廷艺术中得到高度发展，是元代织金锦上最常见的纹样之一。',
+        meaning: '如意云象征"称心如意"，是祝福语的视觉化表达。其饱满圆润的造型传递富足安康之意。',
+        usage: ['织金锦面料', '高级袍服的团花', '寺庙壁画的祥云', '器物的主体装饰'],
+        rules: '如意云头必须饱满圆润，不可干瘪。通常以三个圆弧组成头部（代表过去、现在、未来）。',
+        taboo: '同云纹总则。',
+        structure: '三圆弧如意头',
+        principle: '中心对称'
+      },
+      yunwen_v2: {
+        name: '云纹变体·流云',
+        mongolName: '额格勒·贺（流动式）',
+        category: '动植物纹样',
+        origin: '流云纹是云纹的动态变体，以修长的S形曲线表现云在风中飘移的状态。这种形式在蒙古族壁画和织物中常用作背景填充，营造"天界"氛围。',
+        meaning: '流云象征变化与自由，代表不拘一格的草原精神。流云环绕的事物被赋予"升天"的神圣感。',
+        usage: ['壁画背景', '龙凤纹的配景', '旗帜飘带装饰', '乐器（马头琴）琴身彩绘'],
+        rules: '流云纹方向应统一（通常从左向右，象征东风吉祥）。密度不宜过高，需留白呼吸。',
+        taboo: '同云纹总则。流云不可呈螺旋下坠状。',
+        structure: 'S形流线飘带',
+        principle: '平移重复、方向统一'
+      },
+      juancao_v1: {
+        name: '卷草纹变体·缠枝式',
+        mongolName: '哈敦·绥贺（缠枝式）',
+        category: '动植物纹样',
+        origin: '缠枝式卷草纹是卷草纹的繁密变体，主茎不断分枝、分枝又缠绕回主茎，形成密不透风的装饰效果。这种形式受波斯"阿拉伯花纹"（Arabesque）影响，经丝绸之路传入蒙古地区。',
+        meaning: '缠枝象征"瓜瓞绵绵、子孙繁衍"。密密麻麻的枝叶表达家族兴旺、后代昌盛的祝愿。',
+        usage: ['高级织物的满地花', '经书的装饰边框', '寺庙柱体的通体装饰', '贵族家具的满雕'],
+        rules: '缠枝纹必须保持"一笔连续"的感觉，枝叶之间不可出现孤立元素。密度均匀、分布对称。',
+        taboo: '同卷草纹总则。缠枝纹因密度高，不宜用于小面积装饰（会显得杂乱）。',
+        structure: '主茎分枝缠绕',
+        principle: '连续繁衍、填满空间'
+      },
+      juancao_v2: {
+        name: '卷草纹变体·折枝式',
+        mongolName: '哈敦·绥贺（折枝式）',
+        category: '动植物纹样',
+        origin: '折枝式是卷草纹的简化变体，截取一段枝条加以艺术化处理，不追求连续无端。这种"折枝"手法更接近中国画的花鸟画传统，在蒙古族刺绣中发展出独特风格。',
+        meaning: '折枝象征"采撷美好"，如同从大自然中摘取一枝花草。寓意把握当下、珍惜眼前的幸福。',
+        usage: ['女性荷包刺绣', '枕面装饰', '手帕角花', '信封或礼品包装'],
+        rules: '折枝纹通常只取一枝或几枝，构图上讲究疏朗有致。花朵数目以奇数为吉（一、三、五）。',
+        taboo: '折枝纹的断口处应自然，不可呈现"被折断"的粗暴感（应如同自然生长末端）。',
+        structure: '单枝曲线加花朵',
+        principle: '自由构图、虚实对比'
+      },
+      tuowen: {
+        name: '骆驼纹',
+        mongolName: '铁木·贺（temege xe）',
+        category: '动植物纹样',
+        origin: '骆驼纹是蒙古族"五畜"纹样中独立使用频率较高的一种。骆驼在蒙古族生活中有"沙漠之舟"的美誉，是戈壁地区牧民最重要的运输工具和生活伙伴。双峰驼（蒙古驼）是蒙古高原的特有品种。',
+        meaning: '骆驼纹象征坚忍不拔、能负重行远。骆驼耐渴耐寒的品质被蒙古族视为最可贵的生存智慧。',
+        usage: ['戈壁地区牧民的日用品装饰', '驼毛织品的图案', '运输行业标识', '蒙古族剪纸'],
+        rules: '骆驼纹以双峰侧面行走姿态最为典型。驼峰必须饱满（象征物资丰沛）。通常面朝左方（象征西行丝路）。',
+        taboo: '骆驼纹不可呈现跪卧或疲惫姿态（暗示困顿）。驼峰不可萎缩下垂。',
+        structure: '双峰侧面剪影',
+        principle: '写实概括、动态平稳'
+      },
+      yangwen: {
+        name: '绵羊纹',
+        mongolName: '洪尼·贺（xonin xe）',
+        category: '动植物纹样',
+        origin: '绵羊纹是蒙古族日常生活中最亲切的动物纹样。绵羊是蒙古族牧民最主要的畜种，提供肉食、奶制品、羊毛和皮革。蒙古族有"羊群如白云落在草原上"的诗意比喻。',
+        meaning: '绵羊纹象征温顺、富足与和平。大群绵羊是牧民财富的直接体现，也象征生活的安宁祥和。',
+        usage: ['日常家居装饰', '儿童用品', '白月节（春节）装饰', '剪纸和窗花'],
+        rules: '绵羊纹以安静站立或低头吃草的姿态最常见，体现安逸。群羊构图时数量以奇数为佳。',
+        taboo: '绵羊纹不可呈现被宰杀或惊恐逃散的姿态。',
+        structure: '圆润侧面体态',
+        principle: '写实概括、圆润饱满'
+      }
+    };
+
+    // ===== 原有数据与逻辑 =====
+    let customEdits = {};
+    let customImages = {};
+    let editingPatternId = null;
+    let editingCategory = null;
+    let replacingPatternId = null;
+
+    function saveEdits() { try { localStorage.setItem('explorer_edits', JSON.stringify(customEdits)); } catch(e) {} }
+    function saveImages() { try { localStorage.setItem('explorer_images', JSON.stringify(customImages)); } catch(e) {} }
+
+    const defaultPatternData = {
+      geometric: {
+        name: '几何纹样', description: '基于几何形状的纹样，体现秩序与和谐',
+        patterns: [
+          { id: 'harmuur', name: '哈木尔纹（鼻纹）', description: '蒙古族最具代表性的纹样，源于牛鼻造型', structure: '双曲内旋对称', principle: '对称渐变', colors: ['蓝色','白色','金色'], usage: '蒙古包装饰、帽子、服饰' },
+          { id: 'ebuir', name: '额布尔纹（犄角纹）', description: '源自盘羊犄角，象征力量与护佑', structure: '螺旋卷曲', principle: '镜像对称', colors: ['金色','红色','蓝色'], usage: '头饰、马具、银器' },
+          { id: 'panchang', name: '盘长纹（乌力吉）', description: '无首无端的吉祥结，寓意福寿绵长', structure: '婉蜒交叉盘结', principle: '连续对称', colors: ['红色','金色','蓝色'], usage: '腰带、婚礼、银器' },
+          { id: 'huiwen', name: '回纹', description: '连绵不断的回旋图案，寓意富贵绵长', structure: '方形回旋折线', principle: '二方连续', colors: ['黑色','红色','金色'], usage: '袍边、地毯、器皿' },
+          { id: 'wanzi', name: '万字纹（图门贺）', description: '源自太阳崇拜，象征永恒光明', structure: '正方旋转四臂', principle: '旋转对称', colors: ['金色','红色','蓝色'], usage: '服饰边饰、佛寺、家具' },
+          { id: 'huiwen_v1', name: '回纹变体·单回', description: '回纹最基本形式，单层方形回旋', structure: '单层方形回旋', principle: '平移重复', colors: ['黑色','金色','红色'], usage: '袍服镶边、器物装饰' },
+          { id: 'huiwen_v2', name: '回纹变体·双回', description: '双层嵌套回纹，寓意好事成双', structure: '双层嵌套方形', principle: '嵌套重复', colors: ['蓝色','金色','红色'], usage: '地毯边缘、围毡装饰' },
+          { id: 'huiwen_v3', name: '回纹变体·斜回', description: '45度旋转的菱形回纹变体', structure: '菱形回旋', principle: '旋转平移', colors: ['金色','银色','黑色'], usage: '银器、铜器、家具角花' },
+          { id: 'huiwen_v4', name: '回纹变体·连锁回', description: '多单元互锁连续，万字不断头', structure: '互锁连续方形', principle: '四方连续', colors: ['红色','金色','蓝色'], usage: '建筑彩绘、大型地毯' },
+          { id: 'jihe_f1', name: '几何菱形纹', description: '基础菱形，象征天地交汇与平衡', structure: '正菱形网格', principle: '平移对称', colors: ['蓝色','白色','红色'], usage: '毡毯编织、刺绣底纹' },
+          { id: 'jihe_f2', name: '几何锯齿纹', description: '山脉轮廓的抽象，象征力量坚韧', structure: '连续等腰三角形', principle: '平移重复', colors: ['黑色','红色','白色'], usage: '毡毯边缘、弓箭装饰' },
+          { id: 'jihe_f3', name: '几何十字纹', description: '四方守护符号，象征天地通达', structure: '正交等臂十字', principle: '旋转对称', colors: ['金色','蓝色','白色'], usage: '萨满法器、护身符' }
+        ]
+      },
+      religious: {
+        name: '宗教纹样', description: '蕴含宗教寓意的纹样，体现精神信仰',
+        patterns: [
+          { id: 'juancaowen', name: '卷草纹（哈敦绥贺）', description: '藤蔓卷曲，象征生生不息', structure: 'S形波浪蔓延', principle: '连续渐变', colors: ['绿色','金色','红色'], usage: '经书、寺庙、家具' },
+          { id: 'lianhua', name: '莲花纹', description: '佛教圣花，象征纯洁超脱', structure: '花瓣放射展开', principle: '中心对称', colors: ['粉色','白色','金色'], usage: '法器、唐卡、寺庙' },
+          { id: 'baoxiang', name: '宝相花纹', description: '理想化完美之花，象征圆满庄严', structure: '多层花瓣放射', principle: '旋转对称', colors: ['红色','金色','青色'], usage: '皇室装饰、寺庙藻井' },
+          { id: 'panchang_v1', name: '盘长纹·菱形变体', description: '菱形外廓盘长，家业稳固', structure: '菱形框架盘结', principle: '中心对称', colors: ['金色','红色','蓝色'], usage: '银腰带扣、帽顶装饰' },
+          { id: 'panchang_v2', name: '盘长纹·方形变体', description: '方正盘长，规矩福禄', structure: '方形框架盘结', principle: '直角对称', colors: ['红色','金色','黑色'], usage: '家具雕花、门窗花格' },
+          { id: 'panchang_v3', name: '盘长纹·圆形变体', description: '圆满盘长，功德圆满', structure: '圆形弧线盘结', principle: '旋转对称', colors: ['金色','白色','蓝色'], usage: '寺庙天花板、法器' },
+          { id: 'panchang_v4', name: '盘长纹·复合变体', description: '多单元互锁，多福多寿', structure: '多单元互锁盘结', principle: '多重对称', colors: ['金色','红色','绿色'], usage: '婚礼壁挂、大殿雕花' },
+          { id: 'falun', name: '法轮纹', description: '佛法永转，八正道之轮', structure: '圆形轮辐放射', principle: '旋转对称', colors: ['金色','红色','蓝色'], usage: '寺庙屋脊、经幡旗帜' }
+        ]
+      },
+      nature: {
+        name: '动植物纹样', description: '源于自然界的纹样，体现生态智慧',
+        patterns: [
+          { id: 'mawen', name: '马纹', description: '草原宝马，象征速度与忠诚', structure: '奔腾动态侧影', principle: '动态造型', colors: ['棕色','金色','白色'], usage: '马具、旗帜、乐器' },
+          { id: 'wushu', name: '五畜纹', description: '马牛羊骆驼山羊，象征牧业兴旺', structure: '五种动物组合', principle: '并列排列', colors: ['棕色','白色','金色'], usage: '节庆、日用品、毡毯' },
+          { id: 'luwen', name: '鹿纹', description: '天神使者，象征福禄长寿', structure: '优雅侧面鹿角', principle: '曲线动静', colors: ['棕色','金色','白色'], usage: '祭祀、图腾、皮革' },
+          { id: 'luolian', name: '鹿衔莲纹', description: '神鹿口衔莲花，佛法与灵性的融合', structure: '鹿首仰起衔莲', principle: '动静相融', colors: ['金色','绿色','白色'], usage: '寺庙、唐卡、壁画' },
+          { id: 'longwen', name: '龙纹', description: '天之使者，象征权威阳刚', structure: '蜿蜒云中穿行', principle: '螺旋环绕', colors: ['金色','蓝色','红色'], usage: '皇室服饰、旗帜、寺庙' },
+          { id: 'fengwen', name: '凤纹', description: '高贵重生之鸟，象征女性美德', structure: '展翅尾羽卷曲', principle: '动态平衡', colors: ['红色','金色','紫色'], usage: '婚庆、女性服饰' },
+          { id: 'hewen', name: '鹤纹', description: '长寿仙鸟，象征清雅高洁', structure: '垂直站立或展翅', principle: '简洁留白', colors: ['白色','蓝色','金色'], usage: '祝寿、文房、陶瓷' },
+          { id: 'hudie', name: '蝴蝶纹', description: '蜕变之美，象征爱情与自由', structure: '双翅对称展开', principle: '镜像对称', colors: ['彩色','金色','红色'], usage: '婚庆、女性服饰、儿童' },
+          { id: 'yunwen', name: '云纹', description: '天界祥瑞之气，长生天的使者', structure: '卷曲朵状', principle: '自由对称', colors: ['蓝色','白色','金色'], usage: '蒙古袍、蒙古包、银器' },
+          { id: 'yunwen_v1', name: '云纹·如意云', description: '如意云头，称心如意的祝福', structure: '三圆弧如意头', principle: '中心对称', colors: ['金色','白色','蓝色'], usage: '织金锦、袍服团花' },
+          { id: 'yunwen_v2', name: '云纹·流云', description: '飘移流云，自由不羁的草原精神', structure: 'S形流线飘带', principle: '平移重复', colors: ['蓝色','白色','银色'], usage: '壁画背景、旗帜飘带' },
+          { id: 'juancao_v1', name: '卷草纹·缠枝式', description: '枝叶缠绕密布，子孙繁衍兴旺', structure: '主茎分枝缠绕', principle: '连续填满', colors: ['绿色','金色','红色'], usage: '织物满地花、寺庙柱体' },
+          { id: 'juancao_v2', name: '卷草纹·折枝式', description: '一枝独秀，采撷自然之美', structure: '单枝曲线加花', principle: '自由构图', colors: ['粉色','绿色','金色'], usage: '刺绣荷包、枕面装饰' },
+          { id: 'tuowen', name: '骆驼纹', description: '沙漠之舟，象征坚忍与远行', structure: '双峰侧面剪影', principle: '写实概括', colors: ['棕色','金色','白色'], usage: '日用品、驼毛织品、剪纸' },
+          { id: 'yangwen', name: '绵羊纹', description: '草原白云，象征温顺与富足', structure: '圆润侧面体态', principle: '写实概括', colors: ['白色','棕色','金色'], usage: '家居装饰、儿童用品' }
+        ]
+      }
+    };
+
+    const patternImages = {
+      // 新制素材均以“现代示意”标识，不冒充历史藏品原图。
+      // 几何纹样
+      panchang: 'wenyang_svg/rel/盘长结变体F1.svg', harmuur: 'pattern_visuals/hamuur-modern-v1.svg',
+      huiwen: 'wenyang_svg/geo/回纹变体F1.svg', ebuir: 'pattern_visuals/ebuir-modern-v1.svg',
+      wanzi: 'pattern_visuals/wanzi-modern-v1.svg',
+      huiwen_v1: 'wenyang_svg/geo/回纹变体F1.svg',
+      huiwen_v2: 'wenyang_svg/geo/回纹变体F2.svg',
+      huiwen_v3: 'wenyang_svg/geo/回纹变体F3.svg',
+      huiwen_v4: 'wenyang_svg/geo/回纹变体F4.svg',
+      jihe_f1: 'wenyang_svg/geo/几何纹样F1.svg',
+      jihe_f2: 'wenyang_svg/geo/几何纹样F2.svg',
+      jihe_f3: 'wenyang_svg/geo/几何纹样F3.svg',
+      // 宗教纹样
+      juancaowen: 'wenyang_svg/bio/卷草纹变体F1.svg',
+      lianhua: 'patterns_v2/lotus_mandala.png', baoxiang: 'patterns_v2/lotus_birds.png',
+      panchang_v1: 'wenyang_svg/rel/盘长结变体F1.svg',
+      panchang_v2: 'wenyang_svg/rel/盘长结变体F2.svg',
+      panchang_v3: 'wenyang_svg/rel/盘长结变体F3.svg',
+      panchang_v4: 'wenyang_svg/rel/盘长结变体F4.svg',
+      falun: 'pattern_visuals/falun-modern-v1.svg',
+      // 动植物纹样
+      mawen: 'patterns_v2/horse.png', wushu: 'pattern_visuals/five-livestock-modern-v1.png',
+      luwen: 'pattern_visuals/deer-modern-v1.png', luolian: 'pattern_visuals/deer-lotus-modern-v1.png',
+      longwen: 'pattern_visuals/dragon-modern-v1.png', fengwen: 'pattern_visuals/phoenix-modern-v1.png',
+      hewen: 'pattern_visuals/crane-modern-v1.png', hudie: 'patterns_v2/butterfly.png',
+      yunwen: 'wenyang_svg/bio/云纹变体F1.svg',
+      yunwen_v1: 'wenyang_svg/bio/云纹变体F2.svg',
+      yunwen_v2: 'wenyang_svg/bio/云纹变体F3.svg',
+      juancao_v1: 'wenyang_svg/bio/卷草纹变体F2.svg',
+      juancao_v2: 'wenyang_svg/bio/卷草纹变体F3.svg',
+      tuowen: 'pattern_visuals/camel-modern-v1.png',
+      yangwen: 'pattern_visuals/sheep-modern-v1.png'
+    };
+
+    function getPatternData() {
+      var data = JSON.parse(JSON.stringify(defaultPatternData));
+      for (var cat in data) {
+        data[cat].patterns = data[cat].patterns.map(function(p) {
+          if (customEdits[p.id]) return Object.assign({}, p, customEdits[p.id]);
+          return p;
+        });
+      }
+      return data;
+    }
+
+    function renderPatterns(category) {
+      var grid = document.getElementById('patterns-grid');
+      var data = getPatternData();
+      var cat = data[category];
+      grid.innerHTML = '';
+
+      cat.patterns.forEach(function(p, idx) {
+        var hasCustomImage = customImages[p.id];
+        var realImage = patternImages[p.id];
+        var imgSrc = hasCustomImage ? customImages[p.id] : (realImage || '');
+        var modernImage = !hasCustomImage && imgSrc.indexOf('pattern_visuals/') === 0;
+
+        var card = document.createElement('div');
+        card.className = 'pattern-card';
+        card.style.animationDelay = (idx * 0.06) + 's';
+        card.setAttribute('data-pattern-id', p.id);
+
+        var imageHTML = imgSrc
+          ? '<img src="' + imgSrc + '" alt="' + p.name + '">'
+          : '<div style="width:70px;height:70px;border-radius:50%;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:14px;">图待核</div>';
+
+        card.innerHTML =
+          '<div class="pattern-img">' +
+            imageHTML +
+            (modernImage ? '<span class="modern-badge">现代示意</span>' : '') +
+            '<div class="card-actions">' +
+              '<button class="action-btn replace" onclick="event.stopPropagation();startReplaceImage(\'' + p.id + '\',\'' + category + '\')">替换</button>' +
+              '<button class="action-btn edit" onclick="event.stopPropagation();openEditModal(\'' + p.id + '\',\'' + category + '\')">编辑</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="pattern-info">' +
+            '<h3>' + p.name + '</h3>' +
+            '<div class="desc">' + p.description + '</div>' +
+          '</div>';
+
+        // 悬停事件 -> 右侧面板（300ms 防抖，防止误触）
+        card.addEventListener('mouseenter', function() {
+          clearTimeout(window._hoverTimer);
+          window._hoverTimer = setTimeout(function() {
+            showDetailPanel(p.id);
+          }, 300);
+        });
+        card.addEventListener('mouseleave', function() {
+          clearTimeout(window._hoverTimer);
+        });
+
+        // 右键菜单 -> 切换分类
+        (function(patternId, cat) {
+          card.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            showContextMenu(e, patternId, cat);
+          });
+        })(p.id, category);
+
+        grid.appendChild(card);
+      });
+    }
+
+    // ===== 右侧详情面板逻辑 =====
+    function showDetailPanel(patternId) {
+      var data = patternCulturalData[patternId];
+      if (!data) return;
+
+      var placeholder = document.getElementById('detail-placeholder');
+      var content = document.getElementById('detail-content');
+
+      placeholder.style.display = 'none';
+      content.style.display = 'block';
+      content.className = 'detail-content active';
+      content.style.animation = 'panelFadeIn 0.3s ease both';
+
+      var usageHTML = data.usage.map(function(u) {
+        return '<span class="usage-tag">' + u + '</span>';
+      }).join('');
+
+      var tabooHTML = data.taboo ? 
+        '<div class="taboo-note"><div class="label">⚠ 使用禁忌</div><p>' + data.taboo + '</p></div>' : '';
+
+      content.innerHTML = 
+        '<div class="detail-header">' +
+          '<h2>' + data.name + '</h2>' +
+          '<div class="mongol-name">' + data.mongolName + '</div>' +
+          '<span class="category-tag">' + data.category + '</span>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+          '<div class="detail-section-title">文化溯源</div>' +
+          '<p>' + data.origin + '</p>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+          '<div class="detail-section-title">文化寓意</div>' +
+          '<p>' + data.meaning + '</p>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+          '<div class="detail-section-title">使用场景</div>' +
+          '<div class="usage-tags">' + usageHTML + '</div>' +
+        '</div>' +
+
+        '<div class="detail-section">' +
+          '<div class="detail-section-title">使用规范</div>' +
+          '<p>' + data.rules + '</p>' +
+          tabooHTML +
+        '</div>' +
+
+        '<div class="detail-section">' +
+          '<div class="detail-section-title">造型特征</div>' +
+          '<ul class="detail-info-list">' +
+            '<li><span class="label">骨骼</span><span class="value">' + data.structure + '</span></li>' +
+            '<li><span class="label">法则</span><span class="value">' + data.principle + '</span></li>' +
+          '</ul>' +
+        '</div>';
+    }
+
+    // ===== 分类切换 =====
+    var currentCategory = 'geometric';
+
+    function switchCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.sidebar-item').forEach(function(b) { b.classList.remove('active'); });
+      document.getElementById('btn-' + cat).classList.add('active');
+      renderPatterns(cat);
+      // 重置右侧面板
+      document.getElementById('detail-placeholder').style.display = 'flex';
+      document.getElementById('detail-content').style.display = 'none';
+    }
+
+    // ===== 图片替换 =====
+    function startReplaceImage(patternId, category) {
+      replacingPatternId = patternId;
+      editingCategory = category;
+      document.getElementById('replaceFileInput').click();
+    }
+
+    function handleReplaceImage(e) {
+      var file = e.target.files[0];
+      if (file && replacingPatternId) {
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          customImages[replacingPatternId] = ev.target.result;
+          saveImages();
+          renderPatterns(editingCategory || currentCategory);
+        };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+      replacingPatternId = null;
+    }
+
+    // ===== 编辑弹窗 =====
+    function openEditModal(patternId, category) {
+      editingPatternId = patternId;
+      editingCategory = category;
+      var data = getPatternData();
+      var cat = data[category];
+      var p = cat.patterns.find(function(x) { return x.id === patternId; });
+      if (!p) return;
+      document.getElementById('edit-name').value = p.name;
+      document.getElementById('edit-desc').value = p.description;
+      document.getElementById('edit-structure').value = p.structure;
+      document.getElementById('edit-principle').value = p.principle;
+      document.getElementById('edit-usage').value = p.usage;
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      editingPatternId = null;
+    }
+
+    function saveEdit() {
+      if (!editingPatternId) return;
+      customEdits[editingPatternId] = {
+        name: document.getElementById('edit-name').value,
+        description: document.getElementById('edit-desc').value,
+        structure: document.getElementById('edit-structure').value,
+        principle: document.getElementById('edit-principle').value,
+        usage: document.getElementById('edit-usage').value
+      };
+      saveEdits();
+      closeEditModal();
+      renderPatterns(editingCategory || currentCategory);
+    }
+
+    function restoreDefaults() {
+      if (confirm('确定要恢复所有内容为默认状态吗？自定义编辑和替换图片将被清除。')) {
+        customEdits = {};
+        customImages = {};
+        saveEdits(); saveImages();
+        renderPatterns(currentCategory);
+      }
+    }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeEditModal();
+    });
+    document.getElementById('addModal').addEventListener('click', function(e) {
+      if (e.target === this) closeAddModal();
+    });
+
+    // ===== 右键菜单：切换分类 =====
+    var contextMenuTarget = null; // { patternId, fromCategory }
+
+    function showContextMenu(e, patternId, fromCategory) {
+      e.preventDefault();
+      contextMenuTarget = { patternId: patternId, fromCategory: fromCategory };
+      var menu = document.getElementById('contextMenu');
+      // 标记当前分类
+      menu.querySelectorAll('.context-menu-item[data-cat]').forEach(function(item) {
+        item.classList.toggle('active', item.getAttribute('data-cat') === fromCategory);
+      });
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+      menu.classList.add('show');
+    }
+
+    function hideContextMenu() {
+      document.getElementById('contextMenu').classList.remove('show');
+      contextMenuTarget = null;
+    }
+
+    document.addEventListener('click', function() { hideContextMenu(); });
+    document.addEventListener('contextmenu', function(e) {
+      // 如果点击不在卡片上，隐藏菜单
+      if (!e.target.closest('.pattern-card')) { hideContextMenu(); }
+    });
+
+    function movePatternToCategory(targetCat) {
+      if (!contextMenuTarget) return;
+      var pid = contextMenuTarget.patternId;
+      var fromCat = contextMenuTarget.fromCategory;
+      if (fromCat === targetCat) { hideContextMenu(); return; }
+
+      // 获取分类移动记录
+      var moves = {};
+      try { moves = JSON.parse(localStorage.getItem('explorer_moves')) || {}; } catch(e) { moves = {}; }
+      moves[pid] = { from: fromCat, to: targetCat };
+      localStorage.setItem('explorer_moves', JSON.stringify(moves));
+
+      // 更新 defaultPatternData 运行时数据
+      var sourcePatterns = defaultPatternData[fromCat].patterns;
+      var idx = sourcePatterns.findIndex(function(p) { return p.id === pid; });
+      if (idx > -1) {
+        var pattern = sourcePatterns.splice(idx, 1)[0];
+        defaultPatternData[targetCat].patterns.push(pattern);
+      }
+
+      hideContextMenu();
+      renderPatterns(currentCategory);
+    }
+
+    function deletePattern() {
+      if (!contextMenuTarget) return;
+      if (!confirm('确定要删除这个纹样吗？')) { hideContextMenu(); return; }
+      var pid = contextMenuTarget.patternId;
+      var fromCat = contextMenuTarget.fromCategory;
+      
+      var sourcePatterns = defaultPatternData[fromCat].patterns;
+      var idx = sourcePatterns.findIndex(function(p) { return p.id === pid; });
+      if (idx > -1) { sourcePatterns.splice(idx, 1); }
+
+      // 记录删除
+      var deletes = [];
+      try { deletes = JSON.parse(localStorage.getItem('explorer_deletes')) || []; } catch(e) { deletes = []; }
+      deletes.push(pid);
+      localStorage.setItem('explorer_deletes', JSON.stringify(deletes));
+
+      hideContextMenu();
+      renderPatterns(currentCategory);
+    }
+
+    // ===== 新增纹样 =====
+    var addPatternImageData = '';
+
+    function openAddModal() {
+      document.getElementById('add-category').value = currentCategory;
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+      addPatternImageData = '';
+      document.getElementById('add-img-name').textContent = '未选择';
+    }
+
+    function handleAddPatternImage(e) {
+      var file = e.target.files[0];
+      if (file) {
+        document.getElementById('add-img-name').textContent = file.name;
+        var reader = new FileReader();
+        reader.onload = function(ev) { addPatternImageData = ev.target.result; };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+    }
+
+    function saveNewPattern() {
+      var name = document.getElementById('add-name').value.trim();
+      var desc = document.getElementById('add-desc').value.trim();
+      var category = document.getElementById('add-category').value;
+      if (!name || !desc) { alert('请填写纹样名称和描述'); return; }
+
+      // 生成唯一ID
+      var id = 'custom_' + Date.now();
+
+      // 添加到 defaultPatternData
+      defaultPatternData[category].patterns.push({
+        id: id, name: name, description: desc,
+        structure: document.getElementById('add-structure').value.trim() || '待补充',
+        principle: document.getElementById('add-principle').value.trim() || '待补充',
+        colors: ['金色','蓝色','红色'],
+        usage: document.getElementById('add-usage').value.trim() || '待补充'
+      });
+
+      // 添加到 patternCulturalData（右侧面板）
+      var mongolName = document.getElementById('add-mongolName').value.trim();
+      var origin = document.getElementById('add-origin').value.trim();
+      var meaning = document.getElementById('add-meaning').value.trim();
+      var usageStr = document.getElementById('add-usage').value.trim();
+      var rules = document.getElementById('add-rules').value.trim();
+      var taboo = document.getElementById('add-taboo').value.trim();
+      var structure = document.getElementById('add-structure').value.trim();
+      var principle = document.getElementById('add-principle').value.trim();
+
+      var catNames = { geometric: '几何纹样', religious: '宗教纹样', nature: '动植物纹样' };
+
+      patternCulturalData[id] = {
+        name: name,
+        mongolName: mongolName || '待补充',
+        category: catNames[category],
+        origin: origin || '待补充',
+        meaning: meaning || '待补充',
+        usage: usageStr ? usageStr.split(/[,，]/).map(function(s){return s.trim();}) : ['待补充'],
+        rules: rules || '待补充',
+        taboo: taboo || '',
+        structure: structure || '待补充',
+        principle: principle || '待补充'
+      };
+
+      // 保存图片
+      if (addPatternImageData) {
+        customImages[id] = addPatternImageData;
+        saveImages();
+      }
+
+      // 保存自定义纹样到 localStorage
+      var customPatterns = [];
+      try { customPatterns = JSON.parse(localStorage.getItem('explorer_custom_patterns')) || []; } catch(e) { customPatterns = []; }
+      customPatterns.push({
+        id: id, name: name, description: desc, category: category,
+        culturalData: patternCulturalData[id],
+        structure: structure, principle: principle
+      });
+      localStorage.setItem('explorer_custom_patterns', JSON.stringify(customPatterns));
+
+      // 清空表单并关闭
+      closeAddModal();
+      document.getElementById('add-name').value = '';
+      document.getElementById('add-desc').value = '';
+      document.getElementById('add-mongolName').value = '';
+      document.getElementById('add-origin').value = '';
+      document.getElementById('add-meaning').value = '';
+      document.getElementById('add-usage').value = '';
+      document.getElementById('add-rules').value = '';
+      document.getElementById('add-taboo').value = '';
+      document.getElementById('add-structure').value = '';
+      document.getElementById('add-principle').value = '';
+
+      // 切换到对应分类并渲染
+      switchCategory(category);
+    }
+
+    // ===== 加载自定义纹样 =====
+    function loadCustomPatterns() {
+      // 加载用户添加的纹样
+      var customPatterns = [];
+      try { customPatterns = JSON.parse(localStorage.getItem('explorer_custom_patterns')) || []; } catch(e) { customPatterns = []; }
+      customPatterns.forEach(function(cp) {
+        if (defaultPatternData[cp.category]) {
+          defaultPatternData[cp.category].patterns.push({
+            id: cp.id, name: cp.name, description: cp.description,
+            structure: cp.structure || '待补充', principle: cp.principle || '待补充',
+            colors: ['金色','蓝色','红色'], usage: cp.culturalData.usage ? cp.culturalData.usage.join('、') : '待补充'
+          });
+        }
+        if (cp.culturalData) {
+          patternCulturalData[cp.id] = cp.culturalData;
+        }
+      });
+
+      // 加载分类移动记录
+      var moves = {};
+      try { moves = JSON.parse(localStorage.getItem('explorer_moves')) || {}; } catch(e) { moves = {}; }
+      Object.keys(moves).forEach(function(pid) {
+        var move = moves[pid];
+        var fromPatterns = defaultPatternData[move.from] ? defaultPatternData[move.from].patterns : [];
+        var idx = fromPatterns.findIndex(function(p) { return p.id === pid; });
+        if (idx > -1) {
+          var pattern = fromPatterns.splice(idx, 1)[0];
+          if (defaultPatternData[move.to]) {
+            defaultPatternData[move.to].patterns.push(pattern);
+          }
+        }
+      });
+
+      // 加载删除记录
+      var deletes = [];
+      try { deletes = JSON.parse(localStorage.getItem('explorer_deletes')) || []; } catch(e) { deletes = []; }
+      deletes.forEach(function(pid) {
+        for (var cat in defaultPatternData) {
+          var patterns = defaultPatternData[cat].patterns;
+          var idx = patterns.findIndex(function(p) { return p.id === pid; });
+          if (idx > -1) { patterns.splice(idx, 1); break; }
+        }
+      });
+    }
+
+    // ===== 初始化 =====
+    try { customEdits = JSON.parse(localStorage.getItem('explorer_edits')) || {}; } catch(e) { customEdits = {}; }
+    try { customImages = JSON.parse(localStorage.getItem('explorer_images')) || {}; } catch(e) { customImages = {}; }
+    loadCustomPatterns();
+    renderPatterns('geometric');
+  </script>
+
+</body>
+</html>

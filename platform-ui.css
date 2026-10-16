@@ -1,0 +1,364 @@
+:root {
+  --platform-bg: #07101f;
+  --platform-surface: rgba(17, 27, 48, 0.88);
+  --platform-surface-strong: #111b30;
+  --platform-gold: #d6b85f;
+  --platform-gold-strong: #f0cf70;
+  --platform-text: #f5f0e8;
+  --platform-text-muted: rgba(245, 240, 232, 0.7);
+  --platform-border: rgba(214, 184, 95, 0.22);
+  --platform-focus: #79d8ff;
+  --platform-radius-sm: 10px;
+  --platform-radius-md: 16px;
+  --platform-space-1: 4px;
+  --platform-space-2: 8px;
+  --platform-space-3: 12px;
+  --platform-space-4: 16px;
+  --platform-space-6: 24px;
+}
+
+.topbar-logo-dot,
+.nav-logo-dot {
+  width: 34px !important;
+  height: 34px !important;
+  flex: none;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: url('lib/images/logo-jia-oracle-v1.png') center / contain no-repeat !important;
+  box-shadow: none !important;
+}
+
+:where(a, button, input, [role="button"]):focus-visible {
+  outline: 3px solid var(--platform-focus) !important;
+  outline-offset: 3px;
+}
+
+:where(button, .topbar-link, .nav-link, .action-btn, .topbar-btn, .sidebar-item) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.topbar-link, .nav-link, .action-btn, .topbar-btn, .repeat-btn, .input-btn) {
+  transition-duration: 180ms !important;
+}
+
+:where(.culture-intro p, .page-header p, .video-placeholder, .canvas-hint p) {
+  color: var(--platform-text-muted) !important;
+}
+
+/* 纹样创作页：把散落的绝对定位按钮整理为一组可响应的工具轨道。 */
+.creator-rail {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 48px);
+}
+
+.creator-rail .top-btn {
+  position: static !important;
+  min-height: 44px;
+  min-width: 132px;
+  justify-content: flex-start;
+}
+
+@media (hover: none), (pointer: coarse) {
+  :where(button, .topbar-link, .nav-link, .topbar-btn, .action-btn, .sidebar-item, .cat-tab) {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 820px) {
+  /* 探索页与指尖纹韵：第一行放品牌和动作，第二行放可横向滚动的导航。 */
+  .topbar {
+    height: auto !important;
+    min-height: 108px;
+    padding: 10px 12px !important;
+    align-content: center;
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .topbar-left {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px !important;
+  }
+
+  .topbar-logo {
+    flex: 0 0 auto;
+    min-height: 40px;
+  }
+
+  .topbar-logo span {
+    font-size: 14px !important;
+  }
+
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    margin: 2px 0 0 !important;
+    padding-bottom: 3px;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .topbar-nav::-webkit-scrollbar,
+  .nav-links::-webkit-scrollbar,
+  .creator-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px !important;
+  }
+
+  .topbar-right {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    gap: 6px !important;
+  }
+
+  .topbar-right .topbar-btn {
+    padding: 7px 10px !important;
+    letter-spacing: 0 !important;
+  }
+
+  /* 智慧推荐页使用另一套导航类名，行为与顶部栏保持一致。 */
+  .nav-bar {
+    height: auto !important;
+    min-height: 104px;
+    padding: 10px 12px !important;
+    flex-wrap: wrap;
+    align-content: center;
+  }
+
+  .nav-logo {
+    min-height: 40px;
+  }
+
+  .nav-links {
+    width: 100%;
+    margin: 4px 0 0 !important;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px !important;
+  }
+
+  .page-title-section {
+    padding-top: 136px !important;
+    margin-bottom: 22px !important;
+  }
+
+  .page-title-section h1 {
+    font-size: clamp(30px, 10vw, 40px) !important;
+    letter-spacing: 6px !important;
+  }
+
+  .content-layout {
+    flex-direction: column;
+    padding: 0 16px 28px !important;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sidebar-card {
+    position: static !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebar-card::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-title,
+  .sidebar-item {
+    flex: 0 0 auto;
+    margin-bottom: 0 !important;
+  }
+
+  .culture-intro {
+    padding: 20px !important;
+  }
+
+  .culture-intro p {
+    font-size: 15px !important;
+    line-height: 1.9 !important;
+  }
+
+  .detail-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .main-content {
+    padding: 132px 16px 44px !important;
+  }
+
+  .page-header {
+    margin-bottom: 30px !important;
+  }
+
+  .page-header h1 {
+    font-size: 30px !important;
+  }
+
+  .page-header p {
+    font-size: 15px !important;
+  }
+
+  .action-btns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .action-btn {
+    min-width: 0 !important;
+  }
+
+  .action-btn.primary {
+    grid-column: 1 / -1;
+  }
+
+  /* 指尖纹韵：窄屏改为“画布优先、素材其次、参数最后”的纵向任务流。 */
+  .main-layout {
+    display: flex !important;
+    flex-direction: column;
+    height: auto !important;
+    min-height: calc(100svh - 108px);
+    margin-top: 108px !important;
+  }
+
+  .canvas-area {
+    order: 1;
+    width: 100%;
+    height: 62svh;
+    min-height: 460px;
+    flex: none !important;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  .left-panel { order: 2; }
+  .right-panel { order: 3; }
+
+  .layer-panel {
+    position: static !important;
+  }
+
+  .canvas-toolbar {
+    bottom: 12px !important;
+    max-width: calc(100vw - 24px);
+  }
+
+  .pattern-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  /* 粒子创作：工具轨道移到底部，参数面板变为可收起的全高抽屉。 */
+  .creator-rail {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    max-height: none;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    background: rgba(5, 5, 12, 0.82);
+    backdrop-filter: blur(20px);
+  }
+
+  .creator-rail .top-btn {
+    min-width: max-content;
+    padding: 10px 14px !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  #panel {
+    width: min(92vw, 360px) !important;
+  }
+
+  .toggle-btn {
+    top: 14px !important;
+    right: 14px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  #gestureWrap {
+    left: 12px !important;
+    bottom: 86px !important;
+    width: min(220px, calc(100vw - 24px)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-logo span,
+  .nav-logo span {
+    max-width: 126px;
+    line-height: 1.25;
+  }
+
+  .pattern-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .five-colors,
+  .recommend-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

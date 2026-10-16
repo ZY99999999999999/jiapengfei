@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="-10 -10 570 709" 
+     class="mongolian-pattern">
+  <path d="M 247,326 L 303,326 L 303,342 L 247,342 Z M 287,326 L 303,326 L 303,382 L 287,382 Z M 219,298 L 331,298 L 331,314 L 219,314 Z M 315,298 L 331,298 L 331,410 L 315,410 Z M 191,270 L 359,270 L 359,286 L 191,286 Z M 343,270 L 359,270 L 359,438 L 343,438 Z M 163,242 L 387,242 L 387,258 L 163,258 Z M 371,242 L 387,242 L 387,466 L 371,466 Z M 135,214 L 415,214 L 415,230 L 135,230 Z M 399,214 L 415,214 L 415,494 L 399,494 Z " 
+        fill="currentColor" 
+        fill-rule="evenodd" 
+        class="pattern-path"/>
+</svg>

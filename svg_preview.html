@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SVG 纹样预览 - 换色测试</title>
+<style>
+body { background: #f5f0e8; font-family: sans-serif; padding: 20px; }
+h1 { text-align: center; color: #1a3a5c; }
+.grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+.card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+.card h3 { margin: 10px 0 5px; font-size: 14px; color: #333; }
+.card .svg-container { height: 250px; display: flex; align-items: center; justify-content: center; }
+.card .svg-container svg { max-width: 100%; max-height: 100%; }
+.colors { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+.colors button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ccc; cursor: pointer; }
+.colors button:hover { transform: scale(1.2); }
+.colors button.active { border-color: #333; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
+
+/* 蒙古族五色体系 */
+.mongolian-colors {
+  display: flex; gap: 5px; justify-content: center; margin: 15px 0;
+  padding: 10px; background: #f8f6f0; border-radius: 8px;
+}
+.mongolian-colors button { width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: all 0.2s; }
+.mongolian-colors button:hover { transform: scale(1.15); border-color: #333; }
+</style>
+</head>
+<body>
+<h1>蒙古族纹样 SVG 矢量预览</h1>
+<p style="text-align:center;color:#666;">点击下方色块切换纹样颜色 — 蒙古族传统五色体系</p>
+
+<div class="mongolian-colors" id="global-colors">
+  <button style="background:#1a5276" onclick="changeAll('#1a5276')" title="蓝 (苍天)"></button>
+  <button style="background:#0d6e6e" onclick="changeAll('#0d6e6e')" title="青 (草原)"></button>
+  <button style="background:#c0392b" onclick="changeAll('#c0392b')" title="红 (火焰)"></button>
+  <button style="background:#d4a017" onclick="changeAll('#d4a017')" title="黄 (大地)"></button>
+  <button style="background:#f5f5f5; border:1px solid #ccc" onclick="changeAll('#888')" title="白 (乳汁)"></button>
+  <button style="background:#1e8449" onclick="changeAll('#1e8449')" title="绿 (生命)"></button>
+  <button style="background:#2c3e50" onclick="changeAll('#2c3e50')" title="黑 (铁)"></button>
+  <button style="background:linear-gradient(135deg,#1a5276,#c0392b,#d4a017)" onclick="changeAll('#6c3483')" title="紫 (尊贵)"></button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const svgFiles = ['头饰元素提取B1', '头饰元素提取B15', '头饰元素提取B16', '头饰元素提取B17', '头饰元素提取B18'];
+
+async function loadSVGs() {
+  const grid = document.getElementById('grid');
+  for (const name of svgFiles) {
+    try {
+      const resp = await fetch(`wenyang_svg/${encodeURIComponent(name)}.svg`);
+      const svgText = await resp.text();
+      
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="svg-container">${svgText}</div>
+        <h3>${name}</h3>
+      `;
+      grid.appendChild(card);
+      
+      // Set initial color via currentColor
+      const svg = card.querySelector('svg');
+      if (svg) {
+        svg.style.color = '#1a5276';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+      }
+    } catch(e) {
+      console.error(`Failed to load ${name}:`, e);
+    }
+  }
+}
+
+function changeAll(color) {
+  document.querySelectorAll('.card svg').forEach(svg => {
+    svg.style.color = color;
+    // Also update path fill directly for paths that don't use currentColor
+    svg.querySelectorAll('.pattern-fill, .pattern-path, path[fill]').forEach(p => {
+      if (p.getAttribute('fill') !== 'white' && p.getAttribute('fill') !== 'none') {
+        p.setAttribute('fill', color);
+      }
+    });
+  });
+}
+
+loadSVGs();
+</script>
+</body>
+</html>

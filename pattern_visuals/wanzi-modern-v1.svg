@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">万字纹现代几何示意：四臂直角回旋</title>
+  <g fill="none" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M160 160V72H94M160 160H248V94M160 160V248H226M160 160H72V226" stroke="#24496f" stroke-width="35"/>
+    <path d="M160 160V72H94M160 160H248V94M160 160V248H226M160 160H72V226" stroke="#d7b45f" stroke-width="23"/>
+    <path d="M160 160V72H94M160 160H248V94M160 160V248H226M160 160H72V226" stroke="#f1dfad" stroke-width="4"/>
+  </g>
+</svg>

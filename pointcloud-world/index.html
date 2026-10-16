@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>纹样粒子世界 · 场景原型</title>
+  <link rel="stylesheet" href="./style.css?v=5">
+</head>
+<body>
+  <canvas id="world" aria-label="可穿行的纹样草原、红层崖体与五座火山空间"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="masthead">
+    <span class="eyebrow">SCENE STUDY 02 / MOTIF PARTICLE WORLD</span>
+    <h1>纹样粒子世界</h1>
+    <p>穿过纹样草原，辨认五畜与莲花、蝶翼、龙凤，抵达五座放大后的立体火山。点选形体可近看动作与造型。</p>
+  </header>
+  <div class="guide" aria-hidden="true"><span></span><b id="found">已发现 0 / 7 处纹样</b></div>
+  <details class="sightlines" id="sightlines">
+    <summary>定位形体 · 动物、生命与五峰</summary>
+    <div id="sightline-list"><span>粒子形体载入中…</span></div>
+  </details>
+  <button id="volcano-jump" class="volcano-shortcut" type="button">↝ 前往五座火山</button>
+  <aside class="focus-panel" id="focus-panel" hidden aria-live="polite">
+    <span>PARTICLE FOCUS / 粒子特写</span>
+    <h2 id="focus-title"></h2>
+    <div class="focus-copy" id="focus-copy"></div>
+    <a class="focus-source" id="focus-source" href="#" target="_blank" rel="noopener noreferrer" hidden>查看物种／地貌资料 ↗</a>
+    <div class="focus-actions"><button id="focus-replay" type="button">↺ 重播聚形</button><button id="focus-exit" type="button">退出特写 · Esc</button></div>
+  </aside>
+  <aside class="gesture-view" id="gesture-view" hidden>
+    <video id="gesture-video" autoplay muted playsinline aria-label="本地手势预览"></video>
+    <p id="gesture-status" role="status">张掌停止 · 握拳继续 · 捏合确认</p>
+  </aside>
+  <div class="gaze" id="gaze" hidden aria-hidden="true"><span>◌</span><small>捏合选择画面中心</small></div>
+  <aside class="discovery" id="discovery" hidden aria-live="polite">
+    <button class="discovery-close" id="discovery-close" type="button" aria-label="关闭纹样发现">×</button>
+    <img id="discovery-image" src="" alt="">
+    <div><small>纹样发现 · 来自平台素材库</small><h2 id="discovery-title"></h2><p id="discovery-copy"></p></div>
+  </aside>
+  <div class="controls" role="group" aria-label="场景漫游控制">
+    <button id="play" type="button">▶ 开始穿行</button>
+    <button id="restart" type="button">↺ 返回起点</button>
+    <button id="free" type="button" aria-pressed="false">✧ 自由遨游</button>
+    <button id="glide" type="button" hidden>■ 停止滑翔</button>
+    <button id="gesture" type="button" aria-pressed="false">手势：关</button>
+    <button id="motifs" type="button" aria-pressed="true">纹样：开</button>
+    <button id="palette" type="button" aria-pressed="true">环境色：开</button>
+    <div class="progress" aria-label="穿行进度"><i id="progress"></i></div>
+    <span id="status" role="status">场景准备中</span>
+  </div>
+  <div class="meta">点选形体进入特写 · 火山特写拖拽环看、重播回正面 · 遨游拖拽转向 / 空格停走 / 滚轮调速 / WASD 移动</div>
+  <div class="error" id="error" role="alert" hidden></div>
+  <script type="module" src="./scene.js?v=76"></script>
+</body>
+</html>

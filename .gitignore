@@ -1,0 +1,10 @@
+.DS_Store
+.idea/
+__MACOSX/
+__pycache__/
+*.pyc
+*.bak-*
+*.bak
+*.tmp
+data/*.tmp
+

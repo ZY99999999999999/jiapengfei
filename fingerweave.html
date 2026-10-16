@@ -1,0 +1,2636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>指尖纹韵 - 蒙古族纹样数字化平台</title>
+  <script src="lib/tailwind.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+    :root {
+      --mg-blue: #1a3a5c; --mg-blue-deep: #0f2440; --mg-white: #f5f0e8;
+      --mg-red: #c0392b; --mg-yellow: #d4a017; --mg-gold: #c9a84c; --mg-green: #2e7d32;
+      --sidebar-w: 300px; --topbar-h: 56px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif; background: #0a0e1a; color: #e0dcd4; overflow: hidden; height: 100vh;
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(15,25,60,0.5) 0%, transparent 60%);
+    }
+
+    /* ===== 顶部栏 ===== */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: var(--topbar-h);
+      background: rgba(10,14,26,0.92); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--mg-white); }
+    .topbar-logo-dot { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--mg-gold), var(--mg-yellow)); }
+    .topbar-logo span { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 600; letter-spacing: 1px; }
+    .topbar-nav { display: flex; gap: 2px; margin-left: 24px; }
+    .topbar-link {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; color: rgba(224,220,212,0.5);
+      text-decoration: none; transition: all 0.2s;
+    }
+    .topbar-link:hover { color: var(--mg-gold); background: rgba(201,168,76,0.06); }
+    .topbar-link.active { color: var(--mg-gold); background: rgba(201,168,76,0.1); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-btn {
+      padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer;
+      border: 1px solid rgba(201,168,76,0.25); background: rgba(201,168,76,0.08); color: var(--mg-gold);
+      transition: all 0.25s; letter-spacing: 1px;
+      backdrop-filter: blur(8px);
+    }
+    .topbar-btn:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.5); box-shadow: 0 2px 12px rgba(201,168,76,0.1); }
+    .topbar-btn.primary { background: linear-gradient(135deg, var(--mg-gold), #d4a017); color: var(--mg-blue-deep); border-color: var(--mg-gold); font-weight: 700; box-shadow: 0 2px 12px rgba(201,168,76,0.2); }
+    .topbar-btn.primary:hover { background: linear-gradient(135deg, #d4b35a, #e0b030); box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+
+    /* ===== 主布局 ===== */
+    .main-layout { display: flex; height: calc(100vh - var(--topbar-h)); margin-top: var(--topbar-h); }
+
+    /* ===== 左侧面板 ===== */
+    .left-panel {
+      width: var(--sidebar-w); min-width: var(--sidebar-w); height: 100%;
+      background: rgba(15,20,35,0.95); border-right: 1px solid rgba(201,168,76,0.12);
+      overflow-y: auto; display: flex; flex-direction: column;
+      backdrop-filter: blur(12px);
+      box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+    }
+    .panel-section { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .panel-title {
+      font-size: 11px; font-weight: 600; color: rgba(201,168,76,0.7); letter-spacing: 3px;
+      text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+      padding-left: 2px;
+      border-left: 3px solid rgba(201,168,76,0.4);
+      padding-left: 10px;
+    }
+    .panel-title svg { width: 14px; height: 14px; stroke: rgba(201,168,76,0.5); }
+
+    /* 纹样选择网格 */
+    .pattern-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .pattern-thumb {
+      aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 2px solid transparent;
+      background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; padding: 6px; overflow: hidden; position: relative;
+    }
+    .pattern-thumb:hover { border-color: rgba(201,168,76,0.3); background: rgba(255,255,255,0.06); }
+    .pattern-thumb.selected { border-color: var(--mg-gold); background: rgba(201,168,76,0.1); box-shadow: 0 0 12px rgba(201,168,76,0.15); }
+    .pattern-thumb .select-badge {
+      position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--mg-gold); color: var(--mg-blue-deep); font-size: 10px; font-weight: 700;
+      display: none; align-items: center; justify-content: center; z-index: 2;
+    }
+    .pattern-thumb.selected .select-badge { display: flex; }
+    .pattern-thumb svg, .pattern-thumb img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* 分类标签 */
+    .cat-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+    .cat-tab {
+      padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer;
+      background: rgba(255,255,255,0.04); color: rgba(224,220,212,0.5); border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .cat-tab:hover { color: var(--mg-gold); }
+    .cat-tab.active { background: rgba(201,168,76,0.1); color: var(--mg-gold); border-color: rgba(201,168,76,0.25); }
+    .cat-tab.upload-btn { background: rgba(201,168,76,0.08); color: var(--mg-gold); border: 1px dashed rgba(201,168,76,0.4); }
+    .cat-tab.upload-btn:hover { background: rgba(201,168,76,0.2); }
+
+    /* 拖拽样式 */
+    .pattern-thumb.dragging { opacity: 0.4; transform: scale(0.9); }
+    .pattern-thumb.drag-over { border-color: var(--mg-gold); box-shadow: 0 0 8px rgba(201,168,76,0.4); }
+
+    /* 折叠面板 */
+    .panel-title { cursor: pointer; user-select: none; }
+    .panel-title .collapse-arrow {
+      width: 12px; height: 12px; margin-left: auto; transition: transform 0.3s ease;
+      stroke: rgba(201,168,76,0.5);
+    }
+    .panel-title .collapse-arrow.collapsed { transform: rotate(-90deg); }
+    .panel-collapsible {
+      overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease;
+      max-height: 2000px; opacity: 1;
+    }
+    .panel-collapsible.collapsed {
+      max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0;
+    }
+
+    /* 图层面板始终位于纹样列表上方，方便边选边调整 */
+    .layer-panel {
+      position: sticky; top: 0; z-index: 10;
+      padding: 12px 16px; border-bottom: 1px solid rgba(201,168,76,0.15);
+      background: rgba(12,16,28,0.98); backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+    .layer-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px;
+      background: rgba(255,255,255,0.03); margin-bottom: 4px; cursor: pointer; transition: all 0.2s;
+    }
+    .layer-item:hover { background: rgba(255,255,255,0.06); }
+    .layer-item.active { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); }
+    .layer-item .layer-thumb { width: 28px; height: 28px; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+    .layer-item .layer-thumb img { width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.7; }
+    .layer-item .layer-name { flex: 1; font-size: 11px; color: rgba(224,220,212,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .layer-item .layer-del {
+      width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: rgba(231,76,60,0.6); font-size: 16px; font-weight: 700;
+      transition: all 0.15s; background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.15);
+      flex-shrink: 0;
+    }
+    .layer-item .layer-del:hover { color: #fff; background: rgba(231,76,60,0.7); border-color: rgba(231,76,60,0.8); transform: scale(1.1); }
+    .layer-empty { font-size: 11px; color: rgba(224,220,212,0.3); text-align: center; padding: 12px; }
+    .layer-count-badge {
+      font-size: 10px; background: rgba(201,168,76,0.2); color: var(--mg-gold);
+      padding: 1px 6px; border-radius: 8px; margin-left: 6px;
+    }
+
+    /* ===== 中央画布 ===== */
+    .canvas-area {
+      flex: 1; position: relative; overflow: hidden;
+      background: #0d1220;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(201,168,76,0.03) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      border: 1px solid rgba(201,168,76,0.08);
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+    }
+    #mainCanvas { width: 100%; height: 100%; display: block; }
+    .canvas-hint {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none; opacity: 0.3;
+    }
+    .canvas-hint.hidden { display: none; }
+    .canvas-hint h3 { font-family: 'Noto Serif SC', serif; font-size: 20px; color: var(--mg-white); margin-bottom: 8px; letter-spacing: 2px; }
+    .canvas-hint p { font-size: 13px; color: rgba(224,220,212,0.5); }
+    .canvas-toolbar {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 4px; padding: 8px; border-radius: 14px;
+      background: rgba(10,14,26,0.88); backdrop-filter: blur(20px) saturate(1.2);
+      border: 1px solid rgba(201,168,76,0.15);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .canvas-tool {
+      width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; background: transparent; border: none; color: rgba(224,220,212,0.5);
+      transition: all 0.2s; position: relative;
+    }
+    .canvas-tool:hover { background: rgba(255,255,255,0.06); color: var(--mg-gold); }
+    .canvas-tool.active { background: rgba(201,168,76,0.15); color: var(--mg-gold); }
+    .canvas-tool svg { width: 18px; height: 18px; }
+    .canvas-tool .tooltip {
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      padding: 4px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+      background: rgba(0,0,0,0.85); color: #fff; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; margin-bottom: 6px;
+    }
+    .canvas-tool:hover .tooltip { opacity: 1; }
+    .toolbar-sep { width: 1px; background: rgba(255,255,255,0.08); margin: 4px 2px; }
+
+    /* ===== 右侧面板 ===== */
+    .right-panel {
+      width: var(--sidebar-w); min-width: var(--sidebar-w); height: 100%;
+      background: rgba(15,20,35,0.95); border-left: 1px solid rgba(201,168,76,0.12);
+      overflow-y: auto;
+      backdrop-filter: blur(12px);
+      box-shadow: -2px 0 20px rgba(0,0,0,0.3);
+    }
+    .control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .control-label { font-size: 12px; color: rgba(224,220,212,0.6); }
+    .control-value { font-size: 12px; font-family: monospace; color: var(--mg-gold); font-weight: 600; min-width: 40px; text-align: right; }
+    input[type="range"] {
+      -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,0.08); outline: none; cursor: pointer; margin-top: 4px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--mg-gold); cursor: pointer; box-shadow: 0 0 8px rgba(201,168,76,0.4);
+    }
+    .color-palette { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch {
+      width: 36px; height: 36px; border-radius: 10px; cursor: pointer; border: 2px solid transparent;
+      transition: all 0.2s; position: relative;
+    }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.selected { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+    .color-swatch .color-label {
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: rgba(224,220,212,0.4); white-space: nowrap;
+    }
+    .custom-color-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+    .custom-color-row input[type="color"] {
+      -webkit-appearance: none; width: 32px; height: 32px; border: none; border-radius: 8px;
+      cursor: pointer; background: none; padding: 0;
+    }
+    .custom-color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 8px; }
+    .custom-color-row input[type="color"]::-webkit-color-swatch { border: 2px solid rgba(255,255,255,0.2); border-radius: 6px; }
+    .custom-color-row span { font-size: 12px; color: rgba(224,220,212,0.5); }
+    .repeat-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .repeat-btn {
+      padding: 10px 8px; border-radius: 10px; cursor: pointer; text-align: center;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(224,220,212,0.5); transition: all 0.2s; font-size: 12px;
+    }
+    .repeat-btn:hover { background: rgba(255,255,255,0.06); color: var(--mg-white); }
+    .repeat-btn.active { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); color: var(--mg-gold); }
+    .repeat-btn .btn-icon { font-size: 18px; margin-bottom: 4px; }
+    .repeat-btn .btn-label { font-size: 11px; letter-spacing: 1px; }
+
+    /* 旋转模式切换 */
+    .rot-mode-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .rot-mode-tab {
+      flex: 1; padding: 6px 4px; border-radius: 8px; font-size: 11px; cursor: pointer;
+      text-align: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(224,220,212,0.5); transition: all 0.2s; letter-spacing: 1px;
+    }
+    .rot-mode-tab:hover { background: rgba(255,255,255,0.06); color: var(--mg-white); }
+    .rot-mode-tab.active { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.3); color: var(--mg-gold); }
+    .rot-section { display: none; }
+    .rot-section.visible { display: block; }
+    /* 坐标显示 */
+    .coord-display {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    .coord-chip {
+      flex: 1; padding: 6px 10px; border-radius: 8px; font-size: 11px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(224,220,212,0.5); display: flex; align-items: center; gap: 4px;
+    }
+    .coord-chip b { color: var(--mg-gold); font-family: monospace; font-size: 12px; }
+    .pivot-hint {
+      font-size: 10px; color: rgba(201,168,76,0.4); margin-bottom: 8px; line-height: 1.5;
+      padding: 6px 8px; border-radius: 6px; background: rgba(201,168,76,0.04);
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.3); }
+
+    /* ===== 画笔模式面板 ===== */
+    .draw-panel { display: none !important; }
+    .draw-panel.visible { display: block !important; }
+    .draw-panel .panel-section { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .sym-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .sym-btn {
+      padding: 8px 4px; border-radius: 8px; cursor: pointer; text-align: center;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(224,220,212,0.5); transition: all 0.2s; font-size: 11px;
+    }
+    .sym-btn:hover { background: rgba(255,255,255,0.06); color: var(--mg-white); }
+    .sym-btn.active { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); color: var(--mg-gold); }
+    .sym-btn .sym-icon { font-size: 16px; margin-bottom: 2px; }
+    .sym-btn .sym-label { font-size: 10px; letter-spacing: 0.5px; }
+    .draw-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .draw-actions .topbar-btn { flex: 1; min-width: 80px; text-align: center; font-size: 11px; padding: 8px 6px; }
+    .draw-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .draw-toggle-row .toggle-label { font-size: 12px; color: rgba(224,220,212,0.6); }
+    .draw-toggle {
+      position: relative; width: 36px; height: 20px; border-radius: 10px; cursor: pointer;
+      background: rgba(255,255,255,0.1); transition: background 0.2s;
+    }
+    .draw-toggle.on { background: rgba(201,168,76,0.5); }
+    .draw-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+      border-radius: 50%; background: #fff; transition: transform 0.2s;
+    }
+    .draw-toggle.on::after { transform: translateX(16px); }
+    .close-hint-dot {
+      position: absolute; width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--mg-gold); pointer-events: none; display: none;
+      transform: translate(-50%, -50%); box-shadow: 0 0 8px rgba(201,168,76,0.4);
+    }
+    .draw-mode-indicator {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      padding: 4px 16px; border-radius: 20px; font-size: 11px; letter-spacing: 1px;
+      background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3);
+      color: var(--mg-gold); pointer-events: none; display: none;
+      backdrop-filter: blur(8px);
+    }
+    .draw-mode-indicator.visible { display: block; }
+
+    /* 底部五色色条 */
+    .five-color-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 5px; display: flex; z-index: 200;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+    }
+    .five-color-bar span { flex: 1; display: block; position: relative; }
+    .five-color-bar span::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, transparent, rgba(255,255,255,0.1));
+    }
+  </style>
+  <link rel="stylesheet" href="platform-ui.css?v=1.1">
+</head>
+<body>
+
+  <!-- 顶部栏 -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="topbar-logo">
+        <div class="topbar-logo-dot"></div>
+        <span>蒙古族纹样平台</span>
+      </a>
+      <div class="topbar-nav">
+        <a href="index.html" class="topbar-link">首页</a>
+        <a href="explorer.html" class="topbar-link">纹样探索</a>
+        <a href="fingerweave.html" class="topbar-link active">指尖纹韵</a>
+      <a href="creator.html" class="topbar-link">创意共创</a>
+        <a href="recommend.html" class="topbar-link">智慧推荐</a>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" onclick="resetAll()">重置</button>
+      <button class="topbar-btn primary" onclick="exportImage()">导出 PNG</button>
+    </div>
+  </div>
+
+  <!-- 主布局 -->
+  <div class="main-layout">
+
+    <!-- 左侧：纹样选择 + 图层 -->
+    <div class="left-panel">
+      <div class="panel-section layer-panel">
+        <div class="panel-title" style="cursor:default; margin-bottom:8px;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          纹样图层 · 组合叠加
+          <span class="layer-count-badge" id="layerCountBadge">0</span>
+        </div>
+        <div id="layerList">
+          <div class="layer-empty">点击下方纹样添加图层</div>
+        </div>
+        <div style="margin-top: 8px; display: flex; gap: 6px;">
+          <button class="topbar-btn" onclick="clearAllLayers()" style="flex:1; font-size:11px; padding:4px 8px;">清空图层</button>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title" onclick="togglePatternPanel(this)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          初始形状 · I (Initial Shape)
+          <svg class="collapse-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="panel-collapsible" id="patternCollapsible">
+          <div class="cat-tabs" id="catTabs">
+            <div class="cat-tab active" data-cat="all">全部</div>
+            <div class="cat-tab" data-cat="geo">几何纹样</div>
+            <div class="cat-tab" data-cat="rel">宗教纹样</div>
+            <div class="cat-tab" data-cat="bio">动植物纹样</div>
+            <div class="cat-tab" data-cat="custom">手绘纹样</div>
+            <div class="cat-tab upload-btn" onclick="document.getElementById('svgUploadInput').click()" title="上传纹样（支持 PNG/JPG/SVG，自动转换）">＋ 上传</div>
+          </div>
+          <input type="file" id="svgUploadInput" accept=".svg,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleSvgUpload(event)">
+          <div class="pattern-grid" id="patternGrid"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 中央画布 -->
+    <div class="canvas-area" id="canvasArea">
+      <canvas id="mainCanvas"></canvas>
+      <div class="canvas-hint" id="canvasHint">
+        <h3>选择纹样开始创作</h3>
+        <p>从左侧面板选择初始形状，支持多个纹样叠加组合</p>
+      </div>
+      <div class="draw-mode-indicator" id="drawModeIndicator">✎ 画笔模式 · 自由绘制</div>
+      <div class="close-hint-dot" id="closeHintDot"></div>
+      <div class="canvas-toolbar">
+        <button class="canvas-tool" onclick="zoomIn()" title="放大"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg><span class="tooltip">放大</span></button>
+        <button class="canvas-tool" onclick="zoomOut()" title="缩小"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"/></svg><span class="tooltip">缩小</span></button>
+        <button class="canvas-tool" onclick="resetView()" title="适应"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg><span class="tooltip">适应画布</span></button>
+        <div class="toolbar-sep"></div>
+        <button class="canvas-tool" id="drawModeBtn" onclick="toggleDrawMode()" title="画笔工具"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg><span class="tooltip">画笔工具</span></button>
+        <button class="canvas-tool" id="sendToCreatorToolbarBtn" data-send-to-creator onclick="sendToCreator()" title="带入创意共创" style="display:none; color:#f0cc63; border-color:rgba(201,168,76,.55);"><span style="font-size:18px;line-height:1;">→</span><span class="tooltip">带入创意共创</span></button>
+        <div class="toolbar-sep"></div>
+        <button class="canvas-tool" id="pivotModeBtn" onclick="togglePivotMode()" title="设定旋转中心"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg><span class="tooltip">点击画布设定旋转中心</span></button>
+        <div class="toolbar-sep"></div>
+        <button class="canvas-tool" onclick="undoAction()" title="撤销"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v2M3 10l4-4m-4 4l4 4"/></svg><span class="tooltip">撤销</span></button>
+      </div>
+    </div>
+
+    <!-- 右侧：变换规则面板 -->
+    <div class="right-panel" id="normalPanel">
+      <!-- 旋转体系 -->
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          旋转体系 · R (Rotation)
+        </div>
+
+        <!-- 自转/公转 模式切换 -->
+        <div class="rot-mode-tabs">
+          <div class="rot-mode-tab active" data-mode="self" onclick="switchRotMode('self', this)">自转</div>
+          <div class="rot-mode-tab" data-mode="orbit" onclick="switchRotMode('orbit', this)">公转</div>
+        </div>
+
+        <!-- 自转控制区 -->
+        <div class="rot-section visible" id="rotSelfSection">
+          <div class="control-row">
+            <span class="control-label">自转角度</span>
+            <span class="control-value" id="selfRotVal">0°</span>
+          </div>
+          <input type="range" id="selfRotSlider" min="0" max="360" value="0" step="1">
+          <div style="height:4px;"></div>
+          <div class="pivot-hint">纹样绕自身中心旋转（原地转身）</div>
+        </div>
+
+        <!-- 公转控制区 -->
+        <div class="rot-section" id="rotOrbitSection">
+          <!-- 公转子模式：花环/旋转对称 -->
+          <div class="rot-mode-tabs" style="margin-bottom:10px;">
+            <div class="rot-mode-tab active" onclick="switchOrbitStyle('ring', this)">花环闭合</div>
+            <div class="rot-mode-tab" onclick="switchOrbitStyle('kaleid', this)">旋转对称</div>
+          </div>
+          <div class="pivot-hint" id="orbitStyleHint">单元沿圆周首尾相接，形成连续闭合的环形纹样</div>
+
+          <div class="control-row">
+            <span class="control-label">重复数量</span>
+            <span class="control-value" id="orbitCountVal">6</span>
+          </div>
+          <input type="range" id="orbitCountSlider" min="2" max="24" value="6" step="1">
+          <div style="height:10px;"></div>
+          <div class="control-row">
+            <span class="control-label">公转半径</span>
+            <span class="control-value" id="orbitRadiusVal">0</span>
+          </div>
+          <input type="range" id="orbitRadiusSlider" min="0" max="500" value="0" step="1">
+          <div style="height:10px;"></div>
+          <div class="control-row">
+            <span class="control-label">整体旋转</span>
+            <span class="control-value" id="orbitRotVal">0°</span>
+          </div>
+          <input type="range" id="orbitRotSlider" min="0" max="360" value="0" step="1">
+          <div style="height:10px;"></div>
+          <div class="control-row">
+            <span class="control-label">单元间距</span>
+            <span class="control-value" id="orbitGapVal">0</span>
+          </div>
+          <input type="range" id="orbitGapSlider" min="-50" max="50" value="0" step="1">
+          <div style="height:12px;"></div>
+
+          <!-- 一键闭合 -->
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <button class="topbar-btn" onclick="autoCloseRing()" style="flex:1; font-size:11px; padding:5px 8px;">✦ 一键闭合</button>
+          </div>
+
+          <!-- 旋转中心 -->
+          <div class="pivot-hint">旋转中心为全局共享。点击底部 ⊕ 后在画布上点击设定；或调整下方坐标</div>
+          <div class="coord-display">
+            <div class="coord-chip">X: <b id="pivotXVal">0</b></div>
+            <div class="coord-chip">Y: <b id="pivotYVal">0</b></div>
+          </div>
+          <div class="control-row">
+            <span class="control-label">中心 X</span>
+            <span class="control-value" id="pivotXSliderVal">0</span>
+          </div>
+          <input type="range" id="pivotXSlider" min="-500" max="500" value="0" step="1">
+          <div style="height:8px;"></div>
+          <div class="control-row">
+            <span class="control-label">中心 Y</span>
+            <span class="control-value" id="pivotYSliderVal">0</span>
+          </div>
+          <input type="range" id="pivotYSlider" min="-500" max="500" value="0" step="1">
+        </div>
+      </div>
+
+      <!-- 缩放/偏移/镜像 -->
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+          变换 · Transform
+        </div>
+        <div class="control-row">
+          <span class="control-label">缩放比例</span>
+          <span class="control-value" id="scaleVal">1.0×</span>
+        </div>
+        <input type="range" id="scaleSlider" min="20" max="300" value="100" step="1">
+        <div style="height:12px;"></div>
+        <div class="control-row">
+          <span class="control-label">水平偏移</span>
+          <span class="control-value" id="txVal">0</span>
+        </div>
+        <input type="range" id="txSlider" min="-200" max="200" value="0" step="1">
+        <div style="height:12px;"></div>
+        <div class="control-row">
+          <span class="control-label">垂直偏移</span>
+          <span class="control-value" id="tyVal">0</span>
+        </div>
+        <input type="range" id="tySlider" min="-200" max="200" value="0" step="1">
+        <div style="height:16px;"></div>
+        <div class="repeat-btns">
+          <button class="repeat-btn" onclick="toggleMirrorX(this)" id="mirrorXBtn">
+            <div class="btn-icon">↔</div>
+            <div class="btn-label">水平镜像</div>
+          </button>
+          <button class="repeat-btn" onclick="toggleMirrorY(this)" id="mirrorYBtn">
+            <div class="btn-icon">↕</div>
+            <div class="btn-label">垂直镜像</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 连续纹样 -->
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zm0 8a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z"/></svg>
+          连续纹样 · 衍生规则
+        </div>
+        <div class="repeat-btns">
+          <button class="repeat-btn" onclick="setRepeatMode('none', this)" id="repNone">
+            <div class="btn-icon">◇</div>
+            <div class="btn-label">单元</div>
+          </button>
+          <button class="repeat-btn" onclick="setRepeatMode('band-h', this)" id="repBandH">
+            <div class="btn-icon">⋯</div>
+            <div class="btn-label">二方连续(横)</div>
+          </button>
+          <button class="repeat-btn" onclick="setRepeatMode('band-v', this)" id="repBandV">
+            <div class="btn-icon">⋮</div>
+            <div class="btn-label">二方连续(纵)</div>
+          </button>
+          <button class="repeat-btn" onclick="setRepeatMode('four', this)" id="repFour">
+            <div class="btn-icon">▦</div>
+            <div class="btn-label">四方连续</div>
+          </button>
+        </div>
+        <div style="height:10px;"></div>
+        <div class="control-row">
+          <span class="control-label">重复次数</span>
+          <span class="control-value" id="repCountVal">3</span>
+        </div>
+        <input type="range" id="repCountSlider" min="2" max="8" value="3" step="1">
+        <div style="height:8px;"></div>
+        <div class="control-row">
+          <span class="control-label">间距</span>
+          <span class="control-value" id="repGapVal">0</span>
+        </div>
+        <input type="range" id="repGapSlider" min="0" max="100" value="0" step="1">
+      </div>
+
+      <!-- 色彩 -->
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          五色体系 · S (Color)
+        </div>
+        <div class="color-palette" id="colorPalette">
+          <div class="color-swatch selected" style="background:#1a6fc4;" data-color="#1a6fc4" onclick="selectColor(this)"><span class="color-label">蓝</span></div>
+          <div class="color-swatch" style="background:#1a1a1a;" data-color="#1a1a1a" onclick="selectColor(this)"><span class="color-label">黑</span></div>
+          <div class="color-swatch" style="background:#c0392b;" data-color="#c0392b" onclick="selectColor(this)"><span class="color-label">红</span></div>
+          <div class="color-swatch" style="background:#d4a017;" data-color="#d4a017" onclick="selectColor(this)"><span class="color-label">黄</span></div>
+          <div class="color-swatch" style="background:#2e7d32;" data-color="#2e7d32" onclick="selectColor(this)"><span class="color-label">绿</span></div>
+        </div>
+        <div class="custom-color-row">
+          <input type="color" id="customColor" value="#c9a84c" onchange="applyCustomColor(this.value)">
+          <span>自定义颜色</span>
+        </div>
+        <div style="height:12px;"></div>
+        <div class="control-row"><span class="control-label">背景色</span></div>
+        <div class="color-palette" id="bgPalette" style="margin-top:4px;">
+          <div class="color-swatch selected" style="background:#0d1220; border: 1px solid rgba(255,255,255,0.15);" data-color="#0d1220" onclick="selectBg(this)"><span class="color-label">深蓝</span></div>
+          <div class="color-swatch" style="background:#f5f0e8;" data-color="#f5f0e8" onclick="selectBg(this)"><span class="color-label">米白</span></div>
+          <div class="color-swatch" style="background:#1a1a1a;" data-color="#1a1a1a" onclick="selectBg(this)"><span class="color-label">黑</span></div>
+          <div class="color-swatch" style="background:#ffffff;" data-color="#ffffff" onclick="selectBg(this)"><span class="color-label">白</span></div>
+          <div class="color-swatch" style="background:#f5e6d3;" data-color="#f5e6d3" onclick="selectBg(this)"><span class="color-label">暖白</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 画笔模式右侧面板（默认隐藏） ===== -->
+    <div class="right-panel draw-panel" id="drawPanel">
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          画笔工具 · 自由绘制
+        </div>
+
+        <!-- 绘制模式选择 -->
+        <div style="margin-bottom: 12px;">
+          <div class="sym-btns" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="sym-btn active" data-drawtype="free" onclick="setDrawType('free', this)">
+              <div class="sym-icon">〰</div>
+              <div class="sym-label">自由画</div>
+            </div>
+            <div class="sym-btn" data-drawtype="line" onclick="setDrawType('line', this)">
+              <div class="sym-icon">╱</div>
+              <div class="sym-label">直线</div>
+            </div>
+            <div class="sym-btn" data-drawtype="polyline" onclick="setDrawType('polyline', this)">
+              <div class="sym-icon">⌐</div>
+              <div class="sym-label">折线</div>
+            </div>
+          </div>
+          <div class="pivot-hint" id="drawTypeHint" style="margin-top:8px;">自由画笔模式，按住鼠标拖拽绘制</div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">笔刷粗细</span>
+          <span class="control-value" id="brushSizeVal">3px</span>
+        </div>
+        <input type="range" id="brushSizeSlider" min="1" max="20" value="3" step="1">
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          对称模式
+        </div>
+        <div class="sym-btns">
+          <div class="sym-btn active" data-sym="none" onclick="setSymmetry('none', this)">
+            <div class="sym-icon">─</div>
+            <div class="sym-label">无</div>
+          </div>
+          <div class="sym-btn" data-sym="2" onclick="setSymmetry('2', this)">
+            <div class="sym-icon">↔</div>
+            <div class="sym-label">2倍</div>
+          </div>
+          <div class="sym-btn" data-sym="4" onclick="setSymmetry('4', this)">
+            <div class="sym-icon">✚</div>
+            <div class="sym-label">4倍</div>
+          </div>
+          <div class="sym-btn" data-sym="8" onclick="setSymmetry('8', this)">
+            <div class="sym-icon">✳</div>
+            <div class="sym-label">8倍</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="pivot-hint">对称中心为画布中心，2倍=左右镜像，4倍=十字对称，8倍=米字对称</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          辅助选项
+        </div>
+        <div class="draw-toggle-row">
+          <span class="toggle-label">笔画平滑</span>
+          <div class="draw-toggle on" id="toggleSmooth" onclick="this.classList.toggle('on'); DRAW_STATE.smooth = this.classList.contains('on');"></div>
+        </div>
+        <div class="draw-toggle-row">
+          <span class="toggle-label">自动闭合</span>
+          <div class="draw-toggle on" id="toggleAutoClose" onclick="this.classList.toggle('on'); DRAW_STATE.autoClose = this.classList.contains('on');"></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+          画笔颜色
+        </div>
+        <div class="color-palette" id="drawColorPalette">
+          <div class="color-swatch selected" style="background:#c9a84c;" data-color="#c9a84c" onclick="setDrawColor(this)"><span class="color-label">金</span></div>
+          <div class="color-swatch" style="background:#1a6fc4;" data-color="#1a6fc4" onclick="setDrawColor(this)"><span class="color-label">蓝</span></div>
+          <div class="color-swatch" style="background:#c0392b;" data-color="#c0392b" onclick="setDrawColor(this)"><span class="color-label">红</span></div>
+          <div class="color-swatch" style="background:#f5f0e8;" data-color="#f5f0e8" onclick="setDrawColor(this)"><span class="color-label">白</span></div>
+          <div class="color-swatch" style="background:#2e7d32;" data-color="#2e7d32" onclick="setDrawColor(this)"><span class="color-label">绿</span></div>
+        </div>
+        <div class="custom-color-row">
+          <input type="color" id="drawCustomColor" value="#c9a84c" onchange="setDrawColorHex(this.value)">
+          <span>自定义颜色</span>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          操作
+        </div>
+        <div class="draw-actions">
+          <button class="topbar-btn" onclick="undoDrawStroke()">↩ 撤销一笔</button>
+          <button class="topbar-btn" onclick="clearDrawing()">✕ 清空</button>
+        </div>
+        <div style="height:12px;"></div>
+        <div class="draw-actions">
+          <button class="topbar-btn primary" onclick="finishDrawing()" style="flex:2;">✓ 完成 · 生成图层</button>
+        </div>
+        <div style="height:8px;"></div>
+        <div class="draw-actions">
+          <button class="topbar-btn" id="sendToCreatorBtn" data-send-to-creator onclick="sendToCreator()" disabled style="flex:1; opacity:.45;">→ 生成后带入创意共创</button>
+        </div>
+        <div style="height:8px;"></div>
+        <div class="draw-actions">
+          <button class="topbar-btn" onclick="toggleDrawMode()" style="flex:1;">退出画笔模式</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ============================================================
+  //  纹样分类映射表（学术分类：几何/宗教/动植物）
+  // ============================================================
+  const PATTERN_CLASSIFICATION = {
+    'geo': [
+      '服装元素提取A1', '服装元素提取A2', '服装元素提取A3', '服装元素提取A4',
+      '服装元素提取A8', '服装元素提取A9', '服装元素提取A10', '服装元素提取A11',
+      '服装元素提取A14', '服装元素提取A15', '服装元素提取A16', '服装元素提取A17',
+      '服装元素提取A19', '服装元素提取A21', '服装元素提取A22', '服装元素提取A23',
+      '服装元素提取A24',
+      '头饰元素提取B1', '头饰元素提取B2', '头饰元素提取B4', '头饰元素提取B8',
+      '头饰元素提取B9', '头饰元素提取B15', '头饰元素提取B16', '头饰元素提取B18',
+      '鞋靴元素提取C1', '鞋靴元素提取C2', '鞋靴元素提取C3', '鞋靴元素提取C4',
+      '鞋靴元素提取C8', '鞋靴元素提取C9', '鞋靴元素提取C11', '鞋靴元素提取C14',
+      '鞋靴元素提取C15', '鞋靴元素提取C16', '鞋靴元素提取C17', '鞋靴元素提取C18',
+      '腰佩元素提取D4', '腰佩元素提取D9', '腰佩元素提取D11', '腰佩元素提取D14',
+      '腰佩元素提取D15', '腰佩元素提取D16', '腰佩元素提取D19', '腰佩元素提取D20',
+      '腰佩元素提取D21', '腰佩元素提取D22', '腰佩元素提取D23', '腰佩元素提取D24',
+      '回纹变体F1', '回纹变体F2', '回纹变体F3', '回纹变体F4', '回纹变体F5', '回纹变体F6',
+      '几何纹样F1', '几何纹样F2', '几何纹样F3', '几何纹样F4',
+      '几何纹样F5', '几何纹样F6', '几何纹样F7', '几何纹样F8',
+    ],
+    'rel': [
+      '服装元素提取A5', '服装元素提取A6', '服装元素提取A7',
+      '服装元素提取A25', '服装元素提取A26', '服装元素提取A27',
+      '服装元素提取A28', '服装元素提取A29',
+      '头饰元素提取B3', '头饰元素提取B5', '头饰元素提取B6', '头饰元素提取B7',
+      '头饰元素提取B17',
+      '鞋靴元素提取C5', '鞋靴元素提取C6', '鞋靴元素提取C7',
+      '鞋靴元素提取C12', '鞋靴元素提取C13', '鞋靴元素提取C19', '鞋靴元素提取C21',
+      '腰佩元素提取D1', '腰佩元素提取D2', '腰佩元素提取D3',
+      '腰佩元素提取D5', '腰佩元素提取D6', '腰佩元素提取D7', '腰佩元素提取D8',
+      '腰佩元素提取D10', '腰佩元素提取D12', '腰佩元素提取D13',
+      '腰佩元素提取D17', '腰佩元素提取D18',
+      '文献资料元素提取E2', '文献资料元素提取E4',
+      '盘长结变体F1', '盘长结变体F2', '盘长结变体F3', '盘长结变体F4', '盘长结变体F5',
+    ],
+    'bio': [
+      '服装元素提取A12', '服装元素提取A13', '服装元素提取A18', '服装元素提取A20',
+      '鞋靴元素提取C10', '鞋靴元素提取C20',
+      '腰佩元素提取D25',
+      '动植物纹样F1', '动植物纹样F2', '动植物纹样F3', '动植物纹样F4', '动植物纹样F5',
+      '卷草纹变体F1', '卷草纹变体F2', '卷草纹变体F3', '卷草纹变体F4', '卷草纹变体F5',
+      '云纹变体F1', '云纹变体F2', '云纹变体F3', '云纹变体F4', '云纹变体F5', '云纹变体F6',
+    ],
+  };
+
+  const FILE_TO_CAT = {};
+  Object.entries(PATTERN_CLASSIFICATION).forEach(([cat, names]) => {
+    names.forEach(n => FILE_TO_CAT[n] = cat);
+  });
+
+  // ===== 图层系统 =====
+  const LAYERS = [];
+  let activeLayerId = null;
+  let layerIdCounter = 0;
+
+  const GLOBAL_STATE = {
+    repeatMode: 'none',
+    repeatCount: 3,
+    repeatGap: 0,
+    bgColor: '#0d1220',
+    viewZoom: 1,
+    viewOffsetX: 0,
+    viewOffsetY: 0,
+    showCoordSystem: true,   // 是否显示坐标系辅助线
+    pivotPlaceMode: false,   // 是否处于"点击画布设定旋转中心"模式
+    // 全局旋转中心（所有图层共享）
+    pivotX: 0,
+    pivotY: 0,
+    // 公转圆环模式
+    orbitStyle: 'ring',  // 'ring'=花环闭合, 'kaleid'=旋转对称
+    orbitCount: 6,       // 圆环上重复数量
+    orbitGap: 0,         // 单元间距微调
+  };
+
+  // 画笔状态（提前声明，后续事件处理器需要引用）
+  const DRAW_STATE = {
+    active: false,          // 是否处于画笔模式
+    drawing: false,         // 当前是否正在画（鼠标按下）
+    strokes: [],            // 所有已完成的笔画 [{points:[], color, width, closed}]
+    currentPoints: [],      // 当前正在画的点 [{x,y}]
+    symmetry: 'none',       // 'none' | '2' | '4' | '8'
+    smooth: true,           // 是否平滑
+    autoClose: true,        // 是否自动闭合
+    color: '#c9a84c',       // 画笔颜色
+    brushSize: 3,           // 画笔粗细
+    closeThreshold: 25,     // 自动闭合阈值（像素）
+    // 绘制模式
+    drawType: 'free',       // 'free' | 'line' | 'polyline'
+    // 直线模式临时状态
+    lineStart: null,        // 直线起点 {x, y}
+    linePreview: null,      // 直线预览终点 {x, y}
+    // 折线模式状态
+    polyVertices: [],       // 折线已确认顶点 [{x, y}]
+    polyPreview: null,      // 折线预览下一个点 {x, y}
+    shiftHeld: false,       // Shift 键是否按住
+  };
+
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // ===== 折叠面板 =====
+  function togglePatternPanel(titleEl) {
+    const arrow = titleEl.querySelector('.collapse-arrow');
+    const content = document.getElementById('patternCollapsible');
+    arrow.classList.toggle('collapsed');
+    content.classList.toggle('collapsed');
+  }
+
+  // ===== 文件列表 =====
+  let SVG_FILES = [];
+  const SVG_BASE = 'wenyang_svg/';
+
+  // 从服务器 API 加载纹样文件列表（按 geo/rel/bio 子文件夹）
+  async function loadPatternList() {
+    SVG_FILES = [];
+    try {
+      const resp = await fetch('/api/patterns');
+      const data = await resp.json();
+      // data 格式: { geo: ['file1.svg', ...], rel: [...], bio: [...] }
+      for (const cat of ['geo', 'rel', 'bio']) {
+        (data[cat] || []).forEach(file => {
+          const name = file.replace('.svg', '');
+          SVG_FILES.push({ cat, name, file, path: `wenyang_svg/${cat}/${file}` });
+        });
+      }
+    } catch (e) {
+      // 如果 API 不可用（比如 file:// 协议打开），回退到硬编码列表
+      console.warn('API 不可用，使用内置纹样列表', e);
+      buildFileListFallback();
+    }
+
+    // 加载用户自定义排序（如果有）
+    const savedOrder = localStorage.getItem('patternOrder');
+    if (savedOrder) {
+      try {
+        const order = JSON.parse(savedOrder);
+        SVG_FILES.sort((a, b) => {
+          const ia = order.indexOf(a.name);
+          const ib = order.indexOf(b.name);
+          if (ia === -1 && ib === -1) return 0;
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
+      } catch(e) {}
+    }
+
+    renderPatternGrid();
+  }
+
+  // 回退方案（无服务器时使用，兼容 file:// 协议）
+  function buildFileListFallback() {
+    const allNames = Object.entries(PATTERN_CLASSIFICATION).flatMap(([cat, names]) =>
+      names.map(name => ({ cat, name, file: `${name}.svg`, path: `wenyang_svg/${cat}/${name}.svg` }))
+    );
+    SVG_FILES.push(...allNames);
+  }
+
+  loadPatternList();
+
+  // ===== 加载手绘自定义纹样（从 localStorage） =====
+  let lastGeneratedPatternId = '';
+  let lastGeneratedPatternName = '';
+
+  function updateCreatorTransferButton(id, name) {
+    if (id) {
+      lastGeneratedPatternId = id;
+      lastGeneratedPatternName = name || '手绘纹样';
+    }
+    if (!lastGeneratedPatternId) return;
+    document.querySelectorAll('[data-send-to-creator]').forEach(button => {
+      button.disabled = false;
+      button.style.opacity = '1';
+      if (button.id === 'sendToCreatorToolbarBtn') {
+        button.style.display = 'grid';
+        button.title = `带「${lastGeneratedPatternName}」进入创意共创`;
+      } else {
+        button.textContent = `→ 带「${lastGeneratedPatternName}」进入创意共创`;
+      }
+    });
+  }
+
+  function sendToCreator() {
+    if (!lastGeneratedPatternId) {
+      alert('请先完成当前纹样并生成图层');
+      return;
+    }
+    const params = new URLSearchParams({ pattern: lastGeneratedPatternId, source: 'fingerweave' });
+    window.location.href = `creator.html?${params.toString()}`;
+  }
+
+  function loadCustomDrawPatterns() {
+    try {
+      const saved = localStorage.getItem('customDrawPatterns');
+      if (!saved) return;
+      const customs = JSON.parse(saved); // [{id, name, dataUrl, timestamp}]
+      customs.forEach(item => {
+        SVG_FILES.push({
+          cat: 'custom',
+          name: item.name,
+          file: item.id + '.png',
+          path: item.dataUrl, // DataURL 作为路径
+          isCustomDraw: true,
+          customId: item.id,
+        });
+      });
+      const latest = customs.slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0];
+      if (latest) updateCreatorTransferButton(latest.id, latest.name);
+    } catch(e) { console.warn('加载自定义纹样失败', e); }
+  }
+  loadCustomDrawPatterns();
+
+  // 保存手绘纹样到 localStorage
+  function saveCustomDrawPattern(id, name, dataUrl) {
+    let customs = [];
+    try {
+      const saved = localStorage.getItem('customDrawPatterns');
+      if (saved) customs = JSON.parse(saved);
+    } catch(e) {}
+    customs.push({ id, name, dataUrl, timestamp: Date.now() });
+    localStorage.setItem('customDrawPatterns', JSON.stringify(customs));
+  }
+
+  // 删除手绘纹样
+  function removeCustomDrawPattern(customId) {
+    let customs = [];
+    try {
+      const saved = localStorage.getItem('customDrawPatterns');
+      if (saved) customs = JSON.parse(saved);
+    } catch(e) {}
+    customs = customs.filter(c => c.id !== customId);
+    localStorage.setItem('customDrawPatterns', JSON.stringify(customs));
+    SVG_FILES = SVG_FILES.filter(f => f.customId !== customId);
+    renderPatternGrid();
+  }
+
+  // ===== 纹样上传功能（支持 PNG/JPG/SVG，后端自动转换） =====
+  async function handleSvgUpload(event) {
+    const files = event.target.files;
+    if (!files.length) return;
+    const category = currentCat === 'all' ? 'geo' : currentCat;
+
+    for (const file of Array.from(files)) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['svg', 'png', 'jpg', 'jpeg'].includes(ext)) continue;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+
+      try {
+        const resp = await fetch('/api/upload-pattern', { method: 'POST', body: formData });
+        const result = await resp.json();
+        if (result.ok) {
+          console.log(`✅ 上传成功: ${result.file} → ${result.category}/`);
+        } else {
+          alert(`上传失败: ${result.error}`);
+        }
+      } catch (e) {
+        alert(`上传出错，请确保通过 server.py 启动项目\n(${e.message})`);
+        break;
+      }
+    }
+
+    // 上传完成后重新加载列表
+    await loadPatternList();
+    event.target.value = '';
+  }
+
+  // ===== 拖拽排序 =====
+  let dragSrcIdx = null;
+
+  function handleDragStart(e) {
+    const el = e.target.closest('.pattern-thumb');
+    if (!el) return;
+    dragSrcIdx = parseInt(el.dataset.idx);
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragSrcIdx);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const el = e.target.closest('.pattern-thumb');
+    if (el) el.classList.add('drag-over');
+  }
+
+  function handleDragLeave(e) {
+    const el = e.target.closest('.pattern-thumb');
+    if (el) el.classList.remove('drag-over');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    const el = e.target.closest('.pattern-thumb');
+    if (!el) return;
+    el.classList.remove('drag-over');
+    const dropIdx = parseInt(el.dataset.idx);
+    if (dragSrcIdx === null || dragSrcIdx === dropIdx) return;
+
+    // 交换在 SVG_FILES 中的位置
+    const item = SVG_FILES.splice(dragSrcIdx, 1)[0];
+    SVG_FILES.splice(dropIdx, 0, item);
+
+    // 保存排序
+    localStorage.setItem('patternOrder', JSON.stringify(SVG_FILES.map(f => f.name)));
+    renderPatternGrid();
+  }
+
+  function handleDragEnd(e) {
+    document.querySelectorAll('.pattern-thumb').forEach(el => {
+      el.classList.remove('dragging', 'drag-over');
+    });
+    dragSrcIdx = null;
+  }
+
+  // ===== 纹样网格 =====
+  let currentCat = 'all';
+  function renderPatternGrid() {
+    const grid = document.getElementById('patternGrid');
+    const filtered = currentCat === 'all' ? SVG_FILES : SVG_FILES.filter(f => f.cat === currentCat);
+    const selectedFiles = LAYERS.map(l => l.file);
+    grid.innerHTML = filtered.map((f, i) => {
+      const count = selectedFiles.filter(sf => sf === f.file).length;
+      const isSelected = count > 0;
+      const globalIdx = SVG_FILES.indexOf(f);
+      // 使用子文件夹路径
+      const imgSrc = f.path || `${SVG_BASE}${f.cat}/${f.file}`;
+      // 手绘纹样不需要反色滤镜
+      const imgStyle = f.isCustomDraw
+        ? 'opacity: 0.9; border-radius: 4px;'
+        : 'filter: brightness(0) invert(1); opacity: 0.7;';
+      // 手绘纹样右键可删除
+      const delHtml = f.isCustomDraw
+        ? `<span class="select-badge" style="display:flex;background:rgba(231,76,60,0.8);font-size:8px;cursor:pointer;" onclick="event.stopPropagation();removeCustomDrawPattern('${f.customId}')">✕</span>`
+        : `<span class="select-badge">${isSelected ? count : ''}</span>`;
+      return `
+      <div class="pattern-thumb ${isSelected ? 'selected' : ''}"
+           draggable="true" data-idx="${globalIdx}"
+           onclick="addPatternLayer('${f.file}', '${f.cat}')" title="${f.name}">
+        <img src="${imgSrc}" alt="${f.name}" loading="lazy"
+             style="${imgStyle}">
+        ${delHtml}
+      </div>`;
+    }).join('');
+
+    // 绑定拖拽事件
+    grid.querySelectorAll('.pattern-thumb').forEach(el => {
+      el.addEventListener('dragstart', handleDragStart);
+      el.addEventListener('dragover', handleDragOver);
+      el.addEventListener('dragleave', handleDragLeave);
+      el.addEventListener('drop', handleDrop);
+      el.addEventListener('dragend', handleDragEnd);
+    });
+  }
+
+  document.getElementById('catTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.cat-tab');
+    if (!tab || tab.classList.contains('upload-btn')) return;
+    currentCat = tab.dataset.cat;
+    document.querySelectorAll('.cat-tab:not(.upload-btn)').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderPatternGrid();
+  });
+
+  // ===== 图层操作 =====
+  function getActiveLayer() {
+    return LAYERS.find(l => l.id === activeLayerId) || null;
+  }
+
+  async function addPatternLayer(filename, category) {
+    document.getElementById('canvasHint').classList.add('hidden');
+    const id = ++layerIdCounter;
+    const layer = {
+      id,
+      file: filename,
+      cat: category || 'geo',
+      svgText: null,
+      image: null,
+      color: '#1a6fc4',
+      // 自转
+      selfRotation: 0,
+      // 公转（半径和整体旋转角度仍属图层，方便多图层不同半径叠加）
+      orbitRotation: 0,
+      orbitRadius: 0,
+      // 其他变换
+      scale: 1,
+      translateX: 0,
+      translateY: 0,
+      mirrorX: false,
+      mirrorY: false,
+    };
+    try {
+      const svgFileEntry = SVG_FILES.find(f => f.file === filename && f.cat === layer.cat);
+
+      // 手绘自定义纹样：直接用 DataURL 加载为图片
+      if (svgFileEntry && svgFileEntry.isCustomDraw) {
+        layer.image = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = svgFileEntry.path; // DataURL
+        });
+        if (!layer.image) { console.error('Failed to load custom pattern'); return; }
+        layer.color = null; // 手绘纹样不支持换色
+        layer.scale = 0.5; // 手绘纹样默认缩小一点适合画布
+      } else {
+        // 通过子文件夹路径加载 SVG
+        const svgPath = svgFileEntry ? (svgFileEntry.path || `${SVG_BASE}${layer.cat}/${filename}`) : `${SVG_BASE}${layer.cat}/${filename}`;
+        const resp = await fetch(svgPath);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${svgPath}`);
+        layer.svgText = await resp.text();
+        layer.image = await buildSvgImage(layer.svgText, layer.color);
+        if (!layer.image) throw new Error(`无法解析纹样图片: ${svgPath}`);
+      }
+    } catch (err) {
+      console.error('Failed to load SVG:', err);
+      if (LAYERS.length === 0) document.getElementById('canvasHint').classList.remove('hidden');
+      return;
+    }
+    LAYERS.push(layer);
+    activeLayerId = id;
+    syncUIFromLayer(layer);
+    renderLayerList();
+    renderPatternGrid();
+    render();
+  }
+
+  // SVG 栅格化：保持原始宽高比，长边为 2048px 确保高清
+  const SVG_RENDER_LONG_EDGE = 2048;
+  // 高清栅格尺寸只影响清晰度，不应决定画布上的视觉尺寸。
+  const PATTERN_DISPLAY_LONG_EDGE = 300;
+  function layerDisplaySize(layer) {
+    const img = layer.image;
+    const longest = Math.max(img.width, img.height) || 1;
+    const factor = PATTERN_DISPLAY_LONG_EDGE * layer.scale / longest;
+    return { width: img.width * factor, height: img.height * factor };
+  }
+
+  function buildSvgImage(svgText, color) {
+    return new Promise((resolve) => {
+      let text = svgText.replace(/currentColor/g, color);
+      // 解析 viewBox 获取原始宽高比
+      const vbMatch = text.match(/viewBox\s*=\s*["']([^"']+)["']/);
+      let vbW = 570, vbH = 709; // 默认值（本项目SVG统一尺寸）
+      if (vbMatch) {
+        const parts = vbMatch[1].trim().split(/[\s,]+/);
+        vbW = parseFloat(parts[2]) || 570;
+        vbH = parseFloat(parts[3]) || 709;
+      }
+      // 按长边计算实际渲染尺寸，保持宽高比
+      let renderW, renderH;
+      if (vbW >= vbH) {
+        renderW = SVG_RENDER_LONG_EDGE;
+        renderH = Math.round(SVG_RENDER_LONG_EDGE * (vbH / vbW));
+      } else {
+        renderH = SVG_RENDER_LONG_EDGE;
+        renderW = Math.round(SVG_RENDER_LONG_EDGE * (vbW / vbH));
+      }
+      // 移除原有 width/height，用高分辨率重新设定
+      text = text.replace(/(<svg[^>]*?)\s*width\s*=\s*["'][^"']*["']/gi, '$1');
+      text = text.replace(/(<svg[^>]*?)\s*height\s*=\s*["'][^"']*["']/gi, '$1');
+      text = text.replace(/<svg\s/, `<svg width="${renderW}" height="${renderH}" `);
+      const blob = new Blob([text], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+
+  function setActiveLayer(id) {
+    activeLayerId = id;
+    const layer = getActiveLayer();
+    if (layer) syncUIFromLayer(layer);
+    renderLayerList();
+    render();
+  }
+
+  function removeLayer(id) {
+    const idx = LAYERS.findIndex(l => l.id === id);
+    if (idx < 0) return;
+    LAYERS.splice(idx, 1);
+    if (activeLayerId === id) {
+      activeLayerId = LAYERS.length > 0 ? LAYERS[LAYERS.length - 1].id : null;
+      const layer = getActiveLayer();
+      if (layer) syncUIFromLayer(layer);
+    }
+    renderLayerList();
+    renderPatternGrid();
+    render();
+    if (LAYERS.length === 0) document.getElementById('canvasHint').classList.remove('hidden');
+  }
+
+  function clearAllLayers() {
+    LAYERS.length = 0;
+    activeLayerId = null;
+    renderLayerList();
+    renderPatternGrid();
+    render();
+    document.getElementById('canvasHint').classList.remove('hidden');
+  }
+
+function renderLayerList() {
+    const list = document.getElementById('layerList');
+    const badge = document.getElementById('layerCountBadge');
+    badge.textContent = LAYERS.length;
+    if (LAYERS.length === 0) {
+      list.innerHTML = '<div class="layer-empty">点击上方纹样添加图层</div>';
+      return;
+    }
+    list.innerHTML = LAYERS.map((l, i) => {
+      const shortName = l.file.replace('.svg', '').replace(/元素提取/, '');
+      return `
+        <div class="layer-item ${l.id === activeLayerId ? 'active' : ''}" onclick="setActiveLayer(${l.id})">
+          <div class="layer-thumb"><img src="${(SVG_FILES.find(f => f.file === l.file && f.cat === l.cat) || {}).path || `${SVG_BASE}${l.cat}/${l.file}`}" alt=""></div>
+          <span class="layer-name">${i + 1}. ${shortName}</span>
+          <button class="layer-del" onclick="event.stopPropagation(); removeLayer(${l.id})">×</button>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== UI 同步 =====
+  function syncUIFromLayer(layer) {
+    document.getElementById('selfRotSlider').value = layer.selfRotation;
+    document.getElementById('selfRotVal').textContent = layer.selfRotation + '°';
+    document.getElementById('orbitRotSlider').value = layer.orbitRotation;
+    document.getElementById('orbitRotVal').textContent = layer.orbitRotation + '°';
+    document.getElementById('orbitRadiusSlider').value = layer.orbitRadius;
+    document.getElementById('orbitRadiusVal').textContent = Math.round(layer.orbitRadius);
+    // 全局公转参数同步
+    document.getElementById('orbitCountSlider').value = GLOBAL_STATE.orbitCount;
+    document.getElementById('orbitCountVal').textContent = GLOBAL_STATE.orbitCount;
+    document.getElementById('orbitGapSlider').value = GLOBAL_STATE.orbitGap;
+    document.getElementById('orbitGapVal').textContent = GLOBAL_STATE.orbitGap;
+    // pivot 坐标从全局状态同步
+    document.getElementById('pivotXSlider').value = GLOBAL_STATE.pivotX;
+    document.getElementById('pivotXSliderVal').textContent = Math.round(GLOBAL_STATE.pivotX);
+    document.getElementById('pivotXVal').textContent = Math.round(GLOBAL_STATE.pivotX);
+    document.getElementById('pivotYSlider').value = GLOBAL_STATE.pivotY;
+    document.getElementById('pivotYSliderVal').textContent = Math.round(GLOBAL_STATE.pivotY);
+    document.getElementById('pivotYVal').textContent = Math.round(GLOBAL_STATE.pivotY);
+    document.getElementById('scaleSlider').value = layer.scale * 100;
+    document.getElementById('scaleVal').textContent = layer.scale.toFixed(1) + '×';
+    document.getElementById('txSlider').value = layer.translateX;
+    document.getElementById('txVal').textContent = Math.round(layer.translateX);
+    document.getElementById('tySlider').value = layer.translateY;
+    document.getElementById('tyVal').textContent = Math.round(layer.translateY);
+    document.getElementById('mirrorXBtn').classList.toggle('active', layer.mirrorX);
+    document.getElementById('mirrorYBtn').classList.toggle('active', layer.mirrorY);
+    document.querySelectorAll('#colorPalette .color-swatch').forEach(s => {
+      s.classList.toggle('selected', s.dataset.color === layer.color);
+    });
+    document.getElementById('customColor').value = layer.color;
+  }
+
+  // ===== 旋转模式切换 =====
+  function switchRotMode(mode, tab) {
+    document.querySelectorAll('.rot-mode-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('rotSelfSection').classList.toggle('visible', mode === 'self');
+    document.getElementById('rotOrbitSection').classList.toggle('visible', mode === 'orbit');
+  }
+
+  // ===== 画布中心点设定模式 =====
+  function togglePivotMode() {
+    GLOBAL_STATE.pivotPlaceMode = !GLOBAL_STATE.pivotPlaceMode;
+    document.getElementById('pivotModeBtn').classList.toggle('active', GLOBAL_STATE.pivotPlaceMode);
+    canvas.style.cursor = GLOBAL_STATE.pivotPlaceMode ? 'crosshair' : 'default';
+  }
+
+  // ===== Canvas 尺寸（支持 Retina 高清屏） =====
+  function resizeCanvas() {
+    const area = document.getElementById('canvasArea');
+    const dpr = window.devicePixelRatio || 1;
+    const w = area.clientWidth;
+    const h = area.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    render();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ===== 核心渲染 =====
+  function render() {
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.width / dpr, H = canvas.height / dpr;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = GLOBAL_STATE.bgColor;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    // 全局视图变换：画布中心 + 视图偏移
+    const viewCX = W / 2 + GLOBAL_STATE.viewOffsetX;
+    const viewCY = H / 2 + GLOBAL_STATE.viewOffsetY;
+    ctx.translate(viewCX, viewCY);
+    ctx.scale(GLOBAL_STATE.viewZoom, GLOBAL_STATE.viewZoom);
+
+    // 绘制坐标系辅助线
+    drawCoordSystem();
+
+    // 绘制全局旋转中心标记
+    if (GLOBAL_STATE.pivotX !== 0 || GLOBAL_STATE.pivotY !== 0) {
+      drawPivotMark(GLOBAL_STATE.pivotX, GLOBAL_STATE.pivotY);
+    }
+
+    // 绘制对称辅助线（画笔模式下）
+    renderSymmetryGuides();
+
+    // 绘制手绘笔画（画笔模式下）
+    renderDrawStrokes();
+
+    // 逐图层渲染
+    LAYERS.forEach(layer => {
+      if (!layer.image) return;
+      const size = layerDisplaySize(layer);
+      const unitW = size.width;
+      const unitH = size.height;
+
+      // 先收集所有重复单元的网格位置
+      const gridPositions = [];
+      if (GLOBAL_STATE.repeatMode === 'none') {
+        gridPositions.push({ x: 0, y: 0 });
+      } else if (GLOBAL_STATE.repeatMode === 'band-h') {
+        const count = GLOBAL_STATE.repeatCount;
+        const totalW = count * unitW + (count - 1) * GLOBAL_STATE.repeatGap;
+        const startX = -totalW / 2;
+        for (let i = 0; i < count; i++) {
+          gridPositions.push({ x: startX + i * (unitW + GLOBAL_STATE.repeatGap) + unitW / 2, y: 0 });
+        }
+      } else if (GLOBAL_STATE.repeatMode === 'band-v') {
+        const count = GLOBAL_STATE.repeatCount;
+        const totalH = count * unitH + (count - 1) * GLOBAL_STATE.repeatGap;
+        const startY = -totalH / 2;
+        for (let i = 0; i < count; i++) {
+          gridPositions.push({ x: 0, y: startY + i * (unitH + GLOBAL_STATE.repeatGap) + unitH / 2 });
+        }
+      } else if (GLOBAL_STATE.repeatMode === 'four') {
+        const count = GLOBAL_STATE.repeatCount;
+        const totalW = count * unitW + (count - 1) * GLOBAL_STATE.repeatGap;
+        const totalH = count * unitH + (count - 1) * GLOBAL_STATE.repeatGap;
+        const startX = -totalW / 2, startY = -totalH / 2;
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            gridPositions.push({
+              x: startX + c * (unitW + GLOBAL_STATE.repeatGap) + unitW / 2,
+              y: startY + r * (unitH + GLOBAL_STATE.repeatGap) + unitH / 2
+            });
+          }
+        }
+      }
+
+      // 判断是否使用公转圆环模式
+      const useOrbit = layer.orbitRadius > 0;
+
+      if (useOrbit) {
+        const px = GLOBAL_STATE.pivotX;
+        const py = GLOBAL_STATE.pivotY;
+        const n = GLOBAL_STATE.orbitCount;
+        const baseAngleRad = (layer.orbitRotation * Math.PI) / 180;
+        const style = GLOBAL_STATE.orbitStyle;
+        const gap = GLOBAL_STATE.orbitGap;
+
+        // 将 gap 微调映射为半径偏移：gap 正值 → 单元间距增大 → 需要更大半径
+        // 使用弦长公式的逆推：deltaR ≈ gap / (2 * sin(π/n))
+        const gapRadiusOffset = n >= 2 ? gap / (2 * Math.sin(Math.PI / n)) : 0;
+        const effectiveRadius = Math.max(0, layer.orbitRadius + gapRadiusOffset);
+
+        // 绘制圆轨道
+        drawOrbitCircle(px, py, effectiveRadius);
+
+        for (let i = 0; i < n; i++) {
+          const angleDeg = (360 * i) / n;
+          const angle = baseAngleRad + (angleDeg * Math.PI) / 180;
+          const cx = px + effectiveRadius * Math.sin(angle);
+          const cy = py - effectiveRadius * Math.cos(angle);
+
+          if (style === 'kaleid') {
+            // 旋转对称（万花筒/曼陀罗）：每个单元绕自身中心旋转 i/n 圈
+            // 所有单元朝向随角度同步旋转，形成对称图案
+            const autoSelfRot = layer.selfRotation + angleDeg;
+            drawLayerUnitWithRot(layer, cx, cy, unitW, unitH, autoSelfRot);
+          } else {
+            // 花环闭合：每个单元沿圆周切线方向排列
+            // 切线方向 = 径向角度 + 90°，使纹样"躺"在圆周上首尾相接
+            const tangentRot = layer.selfRotation + angleDeg + 90;
+            drawLayerUnitWithRot(layer, cx, cy, unitW, unitH, tangentRot);
+          }
+        }
+      } else {
+        // 无公转：按原始网格位置绘制
+        gridPositions.forEach(pos => {
+          drawLayerUnit(layer, pos.x, pos.y, unitW, unitH);
+        });
+      }
+    });
+
+    ctx.restore();
+  }
+
+  // 绘制公转圆轨道
+  function drawOrbitCircle(px, py, radius) {
+    if (radius <= 0) return;
+    ctx.save();
+    const s = 1 / GLOBAL_STATE.viewZoom;
+    ctx.strokeStyle = 'rgba(231,76,60,0.15)';
+    ctx.lineWidth = 1 * s;
+    ctx.setLineDash([4 * s, 3 * s]);
+    ctx.beginPath();
+    ctx.arc(px, py, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // 绘制坐标系十字线
+  function drawCoordSystem() {
+    const len = 2000;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(201,168,76,0.12)';
+    ctx.lineWidth = 1 / GLOBAL_STATE.viewZoom;
+    ctx.setLineDash([6 / GLOBAL_STATE.viewZoom, 4 / GLOBAL_STATE.viewZoom]);
+    // 水平线
+    ctx.beginPath();
+    ctx.moveTo(-len, 0); ctx.lineTo(len, 0);
+    ctx.stroke();
+    // 垂直线
+    ctx.beginPath();
+    ctx.moveTo(0, -len); ctx.lineTo(0, len);
+    ctx.stroke();
+    // 原点标记
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(201,168,76,0.2)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4 / GLOBAL_STATE.viewZoom, 0, Math.PI * 2);
+    ctx.fill();
+    // 坐标标签
+    ctx.fillStyle = 'rgba(201,168,76,0.25)';
+    ctx.font = `${10 / GLOBAL_STATE.viewZoom}px 'Noto Sans SC'`;
+    ctx.fillText('O', 6 / GLOBAL_STATE.viewZoom, -6 / GLOBAL_STATE.viewZoom);
+    ctx.restore();
+  }
+
+  // 绘制旋转中心标记
+  function drawPivotMark(px, py) {
+    ctx.save();
+    const s = 1 / GLOBAL_STATE.viewZoom;
+    // 十字
+    ctx.strokeStyle = 'rgba(231,76,60,0.7)';
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(px - 10 * s, py); ctx.lineTo(px + 10 * s, py);
+    ctx.moveTo(px, py - 10 * s); ctx.lineTo(px, py + 10 * s);
+    ctx.stroke();
+    // 圆圈
+    ctx.beginPath();
+    ctx.arc(px, py, 5 * s, 0, Math.PI * 2);
+    ctx.stroke();
+    // 标签
+    ctx.fillStyle = 'rgba(231,76,60,0.7)';
+    ctx.font = `${9 * s}px 'Noto Sans SC'`;
+    ctx.fillText('旋转中心', px + 12 * s, py - 8 * s);
+    ctx.restore();
+  }
+
+  // 公转连线：从旋转中心到纹样绘制位置
+  function drawOrbitLine(px, py, destX, destY) {
+    ctx.save();
+    const s = 1 / GLOBAL_STATE.viewZoom;
+    ctx.strokeStyle = 'rgba(231,76,60,0.25)';
+    ctx.lineWidth = 1 * s;
+    ctx.setLineDash([4 * s, 3 * s]);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(destX, destY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // ===== 绘制单个图层的一个单元 =====
+  function drawLayerUnit(layer, cx, cy, unitW, unitH) {
+    drawLayerUnitWithRot(layer, cx, cy, unitW, unitH, layer.selfRotation);
+  }
+
+  // 带指定旋转角度的绘制（圆环模式下自动计算旋转角度时使用）
+  function drawLayerUnitWithRot(layer, cx, cy, unitW, unitH, rotDeg) {
+    ctx.save();
+    ctx.translate(cx + layer.translateX, cy + layer.translateY);
+    ctx.rotate((rotDeg * Math.PI) / 180);
+    const sx = layer.mirrorX ? -1 : 1;
+    const sy = layer.mirrorY ? -1 : 1;
+    ctx.scale(sx, sy);
+    ctx.drawImage(layer.image, -unitW / 2, -unitH / 2, unitW, unitH);
+    ctx.restore();
+  }
+
+  // ===== 画布点击：设定旋转中心 =====
+  canvas.addEventListener('click', (e) => {
+    if (DRAW_STATE.active) return; // 画笔模式下不设定旋转中心
+    if (!GLOBAL_STATE.pivotPlaceMode) return;
+    const layer = getActiveLayer();
+    if (!layer) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    // 转换为逻辑坐标（使用CSS尺寸，不受DPR影响）
+    const W = rect.width, H = rect.height;
+    const viewCX = W / 2 + GLOBAL_STATE.viewOffsetX;
+    const viewCY = H / 2 + GLOBAL_STATE.viewOffsetY;
+    const logicX = (canvasX - viewCX) / GLOBAL_STATE.viewZoom;
+    const logicY = (canvasY - viewCY) / GLOBAL_STATE.viewZoom;
+
+    GLOBAL_STATE.pivotX = Math.round(logicX);
+    GLOBAL_STATE.pivotY = Math.round(logicY);
+
+    // 更新 UI
+    document.getElementById('pivotXSlider').value = GLOBAL_STATE.pivotX;
+    document.getElementById('pivotXSliderVal').textContent = GLOBAL_STATE.pivotX;
+    document.getElementById('pivotXVal').textContent = GLOBAL_STATE.pivotX;
+    document.getElementById('pivotYSlider').value = GLOBAL_STATE.pivotY;
+    document.getElementById('pivotYSliderVal').textContent = GLOBAL_STATE.pivotY;
+    document.getElementById('pivotYVal').textContent = GLOBAL_STATE.pivotY;
+
+    // 退出设定模式
+    GLOBAL_STATE.pivotPlaceMode = false;
+    document.getElementById('pivotModeBtn').classList.remove('active');
+    canvas.style.cursor = 'default';
+
+    render();
+  });
+
+  // ===== 画布拖拽平移 =====
+  let isDragging = false, dragStartX = 0, dragStartY = 0;
+  canvas.addEventListener('mousedown', (e) => {
+    if (DRAW_STATE.active) return; // 画笔模式下不拖拽
+    if (GLOBAL_STATE.pivotPlaceMode) return;
+    isDragging = true;
+    dragStartX = e.clientX - GLOBAL_STATE.viewOffsetX;
+    dragStartY = e.clientY - GLOBAL_STATE.viewOffsetY;
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    GLOBAL_STATE.viewOffsetX = e.clientX - dragStartX;
+    GLOBAL_STATE.viewOffsetY = e.clientY - dragStartY;
+    render();
+  });
+  canvas.addEventListener('mouseup', () => { isDragging = false; canvas.style.cursor = GLOBAL_STATE.pivotPlaceMode ? 'crosshair' : 'default'; });
+  canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+  // 滚轮缩放
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    GLOBAL_STATE.viewZoom = Math.max(0.1, Math.min(5, GLOBAL_STATE.viewZoom + delta));
+    render();
+  }, { passive: false });
+
+  // ===== 滑块事件 =====
+  function bindSlider(sliderId, valId, prop, format, transform) {
+    const slider = document.getElementById(sliderId);
+    const valEl = document.getElementById(valId);
+    slider.addEventListener('input', () => {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      const raw = parseFloat(slider.value);
+      const val = transform ? transform(raw) : raw;
+      layer[prop] = val;
+      valEl.textContent = format ? format(val) : val;
+      render();
+    });
+  }
+
+  // 自转
+  bindSlider('selfRotSlider', 'selfRotVal', 'selfRotation', v => v + '°');
+  // 公转
+  bindSlider('orbitRotSlider', 'orbitRotVal', 'orbitRotation', v => v + '°');
+  bindSlider('orbitRadiusSlider', 'orbitRadiusVal', 'orbitRadius', v => Math.round(v));
+  // 旋转中心坐标
+  document.getElementById('pivotXSlider').addEventListener('input', function() {
+    GLOBAL_STATE.pivotX = parseInt(this.value);
+    document.getElementById('pivotXSliderVal').textContent = GLOBAL_STATE.pivotX;
+    document.getElementById('pivotXVal').textContent = GLOBAL_STATE.pivotX;
+    render();
+  });
+  document.getElementById('pivotYSlider').addEventListener('input', function() {
+    GLOBAL_STATE.pivotY = parseInt(this.value);
+    document.getElementById('pivotYSliderVal').textContent = GLOBAL_STATE.pivotY;
+    document.getElementById('pivotYVal').textContent = GLOBAL_STATE.pivotY;
+    render();
+  });
+  // 缩放
+  bindSlider('scaleSlider', 'scaleVal', 'scale', v => v.toFixed(1) + '×', v => v / 100);
+  // 偏移
+  bindSlider('txSlider', 'txVal', 'translateX', v => Math.round(v));
+  bindSlider('tySlider', 'tyVal', 'translateY', v => Math.round(v));
+  // 重复次数
+  document.getElementById('repCountSlider').addEventListener('input', function() {
+    GLOBAL_STATE.repeatCount = parseInt(this.value);
+    document.getElementById('repCountVal').textContent = this.value;
+    render();
+  });
+  // 间距
+  document.getElementById('repGapSlider').addEventListener('input', function() {
+    GLOBAL_STATE.repeatGap = parseInt(this.value);
+    document.getElementById('repGapVal').textContent = this.value;
+    render();
+  });
+
+  // ===== 公转圆环参数 =====
+  // 公转模式切换：花环闭合 / 旋转对称
+  function switchOrbitStyle(style, tab) {
+    GLOBAL_STATE.orbitStyle = style;
+    // 切换 tab 高亮
+    tab.parentElement.querySelectorAll('.rot-mode-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    // 更新提示文字
+    const hint = document.getElementById('orbitStyleHint');
+    if (style === 'ring') {
+      hint.textContent = '单元沿圆周首尾相接，形成连续闭合的环形纹样';
+    } else {
+      hint.textContent = '单元绕中心旋转复制，形成万花筒/曼陀罗效果';
+    }
+    render();
+  }
+
+  // 圆环重复数量
+  document.getElementById('orbitCountSlider').addEventListener('input', function() {
+    GLOBAL_STATE.orbitCount = parseInt(this.value);
+    document.getElementById('orbitCountVal').textContent = this.value;
+    render();
+  });
+
+  // 圆环单元间距微调
+  document.getElementById('orbitGapSlider').addEventListener('input', function() {
+    GLOBAL_STATE.orbitGap = parseInt(this.value);
+    document.getElementById('orbitGapVal').textContent = this.value;
+    render();
+  });
+
+  // ===== 一键闭合 =====
+  // 根据当前活动图层的尺寸、旋转角度和圆环数量，计算最佳半径使单元首尾相接
+  function autoCloseRing() {
+    const layer = getActiveLayer();
+    if (!layer || !layer.image) return;
+
+    const n = GLOBAL_STATE.orbitCount;
+    if (n < 2) return;
+
+    const size = layerDisplaySize(layer);
+    const unitW = size.width;
+    const unitH = size.height;
+    const style = GLOBAL_STATE.orbitStyle;
+    const gap = GLOBAL_STATE.orbitGap;
+
+    // 计算纹样在圆周切线方向上的投影长度（即"占位弦长"）
+    // 纹样是矩形，旋转后在切线方向的投影 = |W·sin(θ)| + |H·cos(θ)|
+    // 花环模式：每个单元的自转 = selfRotation + angleDeg + 90°
+    // 旋转对称：每个单元的自转 = selfRotation + angleDeg
+    // 其中 angleDeg 是径向分布角度，对于"切线方向投影"来说，
+    // 我们只需要考虑纹样相对于切线的夹角。
+    // 切线方向 = 径向角度 + 90°，所以：
+    //   花环模式下：纹样相对切线 = selfRotation + 90° - 90° = selfRotation
+    //   旋转对称下：纹样相对切线 = selfRotation - 90°（因为纹样朝径向）
+    let relAngleRad;
+    if (style === 'ring') {
+      relAngleRad = (layer.selfRotation * Math.PI) / 180;
+    } else {
+      relAngleRad = ((layer.selfRotation - 90) * Math.PI) / 180;
+    }
+
+    const chordLen = Math.abs(unitW * Math.sin(relAngleRad))
+                   + Math.abs(unitH * Math.cos(relAngleRad))
+                   + gap;
+
+    // 弦长 = 2 * R * sin(π / n)  =>  R = chordLen / (2 * sin(π / n))
+    const idealRadius = Math.round(chordLen / (2 * Math.sin(Math.PI / n)));
+
+    // 更新当前图层的公转半径
+    layer.orbitRadius = idealRadius;
+
+    // 同步 UI
+    const slider = document.getElementById('orbitRadiusSlider');
+    // 如果计算出的半径超过滑块 max，扩大范围
+    if (idealRadius > parseInt(slider.max)) {
+      slider.max = idealRadius + 100;
+    }
+    slider.value = idealRadius;
+    document.getElementById('orbitRadiusVal').textContent = idealRadius;
+
+    render();
+  }
+
+  // ===== 色彩 =====
+  async function selectColor(el) {
+    const layer = getActiveLayer();
+    if (!layer) return;
+    document.querySelectorAll('#colorPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    layer.color = el.dataset.color;
+    document.getElementById('customColor').value = layer.color;
+    layer.image = await buildSvgImage(layer.svgText, layer.color);
+    render();
+  }
+  async function applyCustomColor(hex) {
+    const layer = getActiveLayer();
+    if (!layer) return;
+    document.querySelectorAll('#colorPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    layer.color = hex;
+    layer.image = await buildSvgImage(layer.svgText, layer.color);
+    render();
+  }
+
+  // ===== 背景色 =====
+  function selectBg(el) {
+    document.querySelectorAll('#bgPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    GLOBAL_STATE.bgColor = el.dataset.color;
+    render();
+  }
+
+  // ===== 镜像 =====
+  function toggleMirrorX(btn) {
+    const layer = getActiveLayer();
+    if (!layer) return;
+    layer.mirrorX = !layer.mirrorX;
+    btn.classList.toggle('active', layer.mirrorX);
+    render();
+  }
+  function toggleMirrorY(btn) {
+    const layer = getActiveLayer();
+    if (!layer) return;
+    layer.mirrorY = !layer.mirrorY;
+    btn.classList.toggle('active', layer.mirrorY);
+    render();
+  }
+
+  // ===== 连续纹样 =====
+  function setRepeatMode(mode, btn) {
+    GLOBAL_STATE.repeatMode = mode;
+    document.querySelectorAll('.repeat-btns .repeat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  // ===== 视图工具 =====
+  function zoomIn() { GLOBAL_STATE.viewZoom = Math.min(5, GLOBAL_STATE.viewZoom + 0.15); render(); }
+  function zoomOut() { GLOBAL_STATE.viewZoom = Math.max(0.1, GLOBAL_STATE.viewZoom - 0.15); render(); }
+  function resetView() { GLOBAL_STATE.viewZoom = 1; GLOBAL_STATE.viewOffsetX = 0; GLOBAL_STATE.viewOffsetY = 0; render(); }
+
+  // ===== 重置 =====
+  function resetAll() {
+    clearAllLayers();
+    GLOBAL_STATE.repeatMode = 'none';
+    GLOBAL_STATE.repeatCount = 3;
+    GLOBAL_STATE.repeatGap = 0;
+    GLOBAL_STATE.bgColor = '#0d1220';
+    GLOBAL_STATE.viewZoom = 1;
+    GLOBAL_STATE.viewOffsetX = 0;
+    GLOBAL_STATE.viewOffsetY = 0;
+    GLOBAL_STATE.pivotX = 0;
+    GLOBAL_STATE.pivotY = 0;
+    GLOBAL_STATE.orbitStyle = 'ring';
+    GLOBAL_STATE.orbitCount = 6;
+    GLOBAL_STATE.orbitGap = 0;
+    GLOBAL_STATE.pivotPlaceMode = false;
+    // 重置 UI 控件
+    document.getElementById('repCountSlider').value = 3;
+    document.getElementById('repCountVal').textContent = '3';
+    document.getElementById('repGapSlider').value = 0;
+    document.getElementById('repGapVal').textContent = '0';
+    document.getElementById('orbitCountSlider').value = 6;
+    document.getElementById('orbitCountVal').textContent = '6';
+    document.getElementById('orbitGapSlider').value = 0;
+    document.getElementById('orbitGapVal').textContent = '0';
+    document.getElementById('pivotXSlider').value = 0;
+    document.getElementById('pivotXSliderVal').textContent = '0';
+    document.getElementById('pivotXVal').textContent = '0';
+    document.getElementById('pivotYSlider').value = 0;
+    document.getElementById('pivotYSliderVal').textContent = '0';
+    document.getElementById('pivotYVal').textContent = '0';
+    document.getElementById('pivotModeBtn').classList.remove('active');
+    canvas.style.cursor = 'default';
+    document.querySelectorAll('.repeat-btns .repeat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#bgPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    document.querySelector('#bgPalette .color-swatch').classList.add('selected');
+    render();
+  }
+
+  // ===== 撤销（移除最后一个图层） =====
+  function undoAction() {
+    if (LAYERS.length === 0) return;
+    const last = LAYERS[LAYERS.length - 1];
+    removeLayer(last.id);
+  }
+
+  // ===== 导出 =====
+  function exportImage() {
+    // 临时渲染到一个干净的画布
+    const expCanvas = document.createElement('canvas');
+    const expW = 2000, expH = 2000;
+    expCanvas.width = expW; expCanvas.height = expH;
+    const expCtx = expCanvas.getContext('2d');
+    expCtx.fillStyle = GLOBAL_STATE.bgColor;
+    expCtx.fillRect(0, 0, expW, expH);
+
+    // 临时替换 ctx
+    const origCtx = ctx;
+    const origCanvas = canvas;
+
+    // 使用 render 的逻辑手动绘制
+    expCtx.save();
+    expCtx.translate(expW / 2, expH / 2);
+    // 导出画布比屏幕画布大；放大逻辑坐标，保持纹样在成品中的视觉比例。
+    expCtx.scale(3, 3);
+
+    LAYERS.forEach(layer => {
+      if (!layer.image) return;
+      const img = layer.image;
+      const size = layerDisplaySize(layer);
+      const unitW = size.width;
+      const unitH = size.height;
+
+      function drawUnitExp(cx, cy, rotDeg) {
+        expCtx.save();
+        expCtx.translate(cx + layer.translateX, cy + layer.translateY);
+        expCtx.rotate((rotDeg * Math.PI) / 180);
+        expCtx.scale(layer.mirrorX ? -1 : 1, layer.mirrorY ? -1 : 1);
+        expCtx.drawImage(img, -unitW / 2, -unitH / 2, unitW, unitH);
+        expCtx.restore();
+      }
+
+      const useOrbit = layer.orbitRadius > 0;
+
+      if (useOrbit) {
+        const px = GLOBAL_STATE.pivotX, py = GLOBAL_STATE.pivotY;
+        const n = GLOBAL_STATE.orbitCount;
+        const baseAngleRad = (layer.orbitRotation * Math.PI) / 180;
+        const style = GLOBAL_STATE.orbitStyle;
+        const gap = GLOBAL_STATE.orbitGap;
+        const gapRadiusOffset = n >= 2 ? gap / (2 * Math.sin(Math.PI / n)) : 0;
+        const effectiveRadius = Math.max(0, layer.orbitRadius + gapRadiusOffset);
+
+        for (let i = 0; i < n; i++) {
+          const angleDeg = (360 * i) / n;
+          const angle = baseAngleRad + (angleDeg * Math.PI) / 180;
+          const cx = px + effectiveRadius * Math.sin(angle);
+          const cy = py - effectiveRadius * Math.cos(angle);
+          if (style === 'kaleid') {
+            drawUnitExp(cx, cy, layer.selfRotation + angleDeg);
+          } else {
+            drawUnitExp(cx, cy, layer.selfRotation + angleDeg + 90);
+          }
+        }
+      } else {
+        // 收集网格位置
+        const gridPositions = [];
+        if (GLOBAL_STATE.repeatMode === 'none') {
+          gridPositions.push({ x: 0, y: 0 });
+        } else if (GLOBAL_STATE.repeatMode === 'band-h') {
+          const c = GLOBAL_STATE.repeatCount;
+          const tw = c * unitW + (c - 1) * GLOBAL_STATE.repeatGap;
+          const sx = -tw / 2;
+          for (let i = 0; i < c; i++) gridPositions.push({ x: sx + i * (unitW + GLOBAL_STATE.repeatGap) + unitW / 2, y: 0 });
+        } else if (GLOBAL_STATE.repeatMode === 'band-v') {
+          const c = GLOBAL_STATE.repeatCount;
+          const th = c * unitH + (c - 1) * GLOBAL_STATE.repeatGap;
+          const sy = -th / 2;
+          for (let i = 0; i < c; i++) gridPositions.push({ x: 0, y: sy + i * (unitH + GLOBAL_STATE.repeatGap) + unitH / 2 });
+        } else if (GLOBAL_STATE.repeatMode === 'four') {
+          const c = GLOBAL_STATE.repeatCount;
+          const tw = c * unitW + (c - 1) * GLOBAL_STATE.repeatGap;
+          const th = c * unitH + (c - 1) * GLOBAL_STATE.repeatGap;
+          const sx = -tw / 2, sy = -th / 2;
+          for (let r = 0; r < c; r++) {
+            for (let col = 0; col < c; col++) {
+              gridPositions.push({ x: sx + col * (unitW + GLOBAL_STATE.repeatGap) + unitW / 2, y: sy + r * (unitH + GLOBAL_STATE.repeatGap) + unitH / 2 });
+            }
+          }
+        }
+        gridPositions.forEach(p => drawUnitExp(p.x, p.y, layer.selfRotation));
+      }
+    });
+
+    expCtx.restore();
+
+    // 下载
+    const link = document.createElement('a');
+    link.download = '蒙古族纹样_指尖纹韵.png';
+    link.href = expCanvas.toDataURL('image/png');
+    link.click();
+  }
+
+  // ============================================================
+  //  画笔模式 - 自由绘制 + 对称辅助 + 平滑 + 自动闭合
+  // ============================================================
+
+  // 切换画笔模式
+  function toggleDrawMode() {
+    DRAW_STATE.active = !DRAW_STATE.active;
+    const btn = document.getElementById('drawModeBtn');
+    const indicator = document.getElementById('drawModeIndicator');
+    const normalPanel = document.getElementById('normalPanel');
+    const drawPanel = document.getElementById('drawPanel');
+
+    btn.classList.toggle('active', DRAW_STATE.active);
+    indicator.classList.toggle('visible', DRAW_STATE.active);
+
+    if (DRAW_STATE.active) {
+      // 进入画笔模式
+      normalPanel.style.display = 'none';
+      drawPanel.classList.add('visible');
+      canvas.style.cursor = 'crosshair';
+      // 退出旋转中心设定模式
+      GLOBAL_STATE.pivotPlaceMode = false;
+      document.getElementById('pivotModeBtn').classList.remove('active');
+    } else {
+      // 退出画笔模式
+      normalPanel.style.display = '';
+      drawPanel.classList.remove('visible');
+      canvas.style.cursor = 'default';
+      document.getElementById('closeHintDot').style.display = 'none';
+      // 清除临时绘制状态
+      DRAW_STATE.lineStart = null;
+      DRAW_STATE.linePreview = null;
+      DRAW_STATE.polyVertices = [];
+      DRAW_STATE.polyPreview = null;
+      DRAW_STATE.drawing = false;
+    }
+    render();
+  }
+
+  // 笔刷粗细
+  document.getElementById('brushSizeSlider').addEventListener('input', function() {
+    DRAW_STATE.brushSize = parseInt(this.value);
+    document.getElementById('brushSizeVal').textContent = this.value + 'px';
+  });
+
+  // 对称模式
+  function setSymmetry(mode, btn) {
+    DRAW_STATE.symmetry = mode;
+    // 只清除对称按钮的active，不影响drawType按钮
+    btn.closest('.sym-btns').querySelectorAll('.sym-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  // 绘制模式切换（自由画/直线/折线）
+  function setDrawType(type, btn) {
+    DRAW_STATE.drawType = type;
+    // 只清除 drawtype 按钮组的 active
+    document.querySelectorAll('[data-drawtype]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // 切换时清除临时状态
+    DRAW_STATE.lineStart = null;
+    DRAW_STATE.linePreview = null;
+    DRAW_STATE.polyVertices = [];
+    DRAW_STATE.polyPreview = null;
+    DRAW_STATE.drawing = false;
+    DRAW_STATE.currentPoints = [];
+    document.getElementById('closeHintDot').style.display = 'none';
+
+    // 更新提示文字
+    const hints = {
+      free: '自由画笔模式，按住鼠标拖拽绘制',
+      line: '直线模式，点击起点拖拽到终点释放 (Shift锁定角度)',
+      polyline: '折线模式，逐次点击添加顶点，双击或回车结束 (Shift锁定角度)',
+    };
+    document.getElementById('drawTypeHint').textContent = hints[type] || '';
+    render();
+  }
+
+  // Shift 键监听（用于角度锁定）
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') DRAW_STATE.shiftHeld = true;
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') DRAW_STATE.shiftHeld = false;
+  });
+
+  // Enter/Escape 快捷键：折线模式下回车结束，Escape取消当前绘制
+  document.addEventListener('keydown', (e) => {
+    if (!DRAW_STATE.active) return;
+    if (e.key === 'Enter' && DRAW_STATE.drawType === 'polyline' && DRAW_STATE.polyVertices.length >= 2) {
+      finishPolyline();
+    }
+    if (e.key === 'Escape') {
+      // 取消当前绘制
+      DRAW_STATE.lineStart = null;
+      DRAW_STATE.linePreview = null;
+      DRAW_STATE.polyVertices = [];
+      DRAW_STATE.polyPreview = null;
+      DRAW_STATE.drawing = false;
+      DRAW_STATE.currentPoints = [];
+      document.getElementById('closeHintDot').style.display = 'none';
+      render();
+    }
+  });
+
+  // Shift锁定角度辅助：将目标点约束到从origin出发的0°/45°/90°/135°方向
+  function snapAngle(origin, target) {
+    if (!DRAW_STATE.shiftHeld) return target;
+    const dx = target.x - origin.x;
+    const dy = target.y - origin.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1) return target;
+    const angle = Math.atan2(dy, dx);
+    // 吸附到最近的45°增量
+    const snap = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+    return {
+      x: origin.x + dist * Math.cos(snap),
+      y: origin.y + dist * Math.sin(snap),
+    };
+  }
+
+  // 画笔颜色
+  function setDrawColor(el) {
+    document.querySelectorAll('#drawColorPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    DRAW_STATE.color = el.dataset.color;
+    document.getElementById('drawCustomColor').value = DRAW_STATE.color;
+  }
+  function setDrawColorHex(hex) {
+    document.querySelectorAll('#drawColorPalette .color-swatch').forEach(s => s.classList.remove('selected'));
+    DRAW_STATE.color = hex;
+  }
+
+  // ===== 绘画事件处理 =====
+  let _polyLastClickTime = 0;
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (!DRAW_STATE.active) return;
+    if (e.button !== 0) return; // 只响应左键
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pt = getDrawPoint(e);
+
+    if (DRAW_STATE.drawType === 'free') {
+      // 自由画模式：按下开始
+      DRAW_STATE.drawing = true;
+      DRAW_STATE.currentPoints = [];
+      DRAW_STATE.currentPoints.push(pt);
+    } else if (DRAW_STATE.drawType === 'line') {
+      // 直线模式：按下设置起点
+      DRAW_STATE.drawing = true;
+      DRAW_STATE.lineStart = pt;
+      DRAW_STATE.linePreview = pt;
+    } else if (DRAW_STATE.drawType === 'polyline') {
+      // 折线模式：检测双击
+      const now = Date.now();
+      if (now - _polyLastClickTime < 350 && DRAW_STATE.polyVertices.length >= 2) {
+        // 双击结束折线
+        _polyLastClickTime = 0;
+        finishPolyline();
+        return;
+      }
+      _polyLastClickTime = now;
+
+      // 单击添加顶点
+      let snapPt = pt;
+      if (DRAW_STATE.polyVertices.length > 0) {
+        snapPt = snapAngle(DRAW_STATE.polyVertices[DRAW_STATE.polyVertices.length - 1], pt);
+      }
+      DRAW_STATE.polyVertices.push(snapPt);
+      DRAW_STATE.polyPreview = null;
+
+      // 自动闭合检测：当折线点>=3且新点靠近起点
+      if (DRAW_STATE.autoClose && DRAW_STATE.polyVertices.length >= 3) {
+        const first = DRAW_STATE.polyVertices[0];
+        const dist = Math.hypot(snapPt.x - first.x, snapPt.y - first.y);
+        if (dist < DRAW_STATE.closeThreshold) {
+          // 闭合折线
+          DRAW_STATE.polyVertices[DRAW_STATE.polyVertices.length - 1] = first;
+          finishPolyline(true);
+          return;
+        }
+      }
+      render();
+    }
+  }, true);
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!DRAW_STATE.active) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pt = getDrawPoint(e);
+
+    if (DRAW_STATE.drawType === 'free') {
+      if (!DRAW_STATE.drawing) return;
+      DRAW_STATE.currentPoints.push(pt);
+
+      // 自动闭合提示
+      if (DRAW_STATE.autoClose && DRAW_STATE.currentPoints.length > 10) {
+        const first = DRAW_STATE.currentPoints[0];
+        const dist = Math.hypot(pt.x - first.x, pt.y - first.y);
+        const dot = document.getElementById('closeHintDot');
+        if (dist < DRAW_STATE.closeThreshold) {
+          const rect = canvas.getBoundingClientRect();
+          const W = rect.width, H = rect.height;
+          const viewCX = W / 2 + GLOBAL_STATE.viewOffsetX;
+          const viewCY = H / 2 + GLOBAL_STATE.viewOffsetY;
+          const screenX = viewCX + first.x * GLOBAL_STATE.viewZoom;
+          const screenY = viewCY + first.y * GLOBAL_STATE.viewZoom;
+          dot.style.display = 'block';
+          dot.style.left = screenX + 'px';
+          dot.style.top = screenY + 'px';
+        } else {
+          dot.style.display = 'none';
+        }
+      }
+      render();
+    } else if (DRAW_STATE.drawType === 'line') {
+      if (!DRAW_STATE.drawing || !DRAW_STATE.lineStart) return;
+      DRAW_STATE.linePreview = snapAngle(DRAW_STATE.lineStart, pt);
+      render();
+    } else if (DRAW_STATE.drawType === 'polyline') {
+      if (DRAW_STATE.polyVertices.length === 0) return;
+      const lastV = DRAW_STATE.polyVertices[DRAW_STATE.polyVertices.length - 1];
+      DRAW_STATE.polyPreview = snapAngle(lastV, pt);
+
+      // 闭合提示
+      if (DRAW_STATE.autoClose && DRAW_STATE.polyVertices.length >= 2) {
+        const first = DRAW_STATE.polyVertices[0];
+        const previewPt = DRAW_STATE.polyPreview;
+        const dist = Math.hypot(previewPt.x - first.x, previewPt.y - first.y);
+        const dot = document.getElementById('closeHintDot');
+        if (dist < DRAW_STATE.closeThreshold) {
+          const rect = canvas.getBoundingClientRect();
+          const W = rect.width, H = rect.height;
+          const viewCX = W / 2 + GLOBAL_STATE.viewOffsetX;
+          const viewCY = H / 2 + GLOBAL_STATE.viewOffsetY;
+          const screenX = viewCX + first.x * GLOBAL_STATE.viewZoom;
+          const screenY = viewCY + first.y * GLOBAL_STATE.viewZoom;
+          dot.style.display = 'block';
+          dot.style.left = screenX + 'px';
+          dot.style.top = screenY + 'px';
+        } else {
+          dot.style.display = 'none';
+        }
+      }
+      render();
+    }
+  }, true);
+
+  canvas.addEventListener('mouseup', (e) => {
+    if (!DRAW_STATE.active) return;
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (DRAW_STATE.drawType === 'free') {
+      if (!DRAW_STATE.drawing) return;
+      DRAW_STATE.drawing = false;
+      document.getElementById('closeHintDot').style.display = 'none';
+
+      if (DRAW_STATE.currentPoints.length < 2) {
+        DRAW_STATE.currentPoints = [];
+        return;
+      }
+
+      // 检查是否需要自动闭合
+      let closed = false;
+      if (DRAW_STATE.autoClose && DRAW_STATE.currentPoints.length > 10) {
+        const first = DRAW_STATE.currentPoints[0];
+        const last = DRAW_STATE.currentPoints[DRAW_STATE.currentPoints.length - 1];
+        const dist = Math.hypot(last.x - first.x, last.y - first.y);
+        if (dist < DRAW_STATE.closeThreshold) {
+          closed = true;
+        }
+      }
+
+      // 平滑处理
+      let points = DRAW_STATE.currentPoints;
+      if (DRAW_STATE.smooth) {
+        points = smoothPoints(points);
+      }
+
+      // 保存笔画
+      DRAW_STATE.strokes.push({
+        points: points,
+        color: DRAW_STATE.color,
+        width: DRAW_STATE.brushSize,
+        closed: closed,
+      });
+      DRAW_STATE.currentPoints = [];
+      render();
+    } else if (DRAW_STATE.drawType === 'line') {
+      if (!DRAW_STATE.drawing || !DRAW_STATE.lineStart) return;
+      DRAW_STATE.drawing = false;
+
+      const endPt = snapAngle(DRAW_STATE.lineStart, getDrawPoint(e));
+      const dist = Math.hypot(endPt.x - DRAW_STATE.lineStart.x, endPt.y - DRAW_STATE.lineStart.y);
+      if (dist < 2) {
+        // 太短，忽略
+        DRAW_STATE.lineStart = null;
+        DRAW_STATE.linePreview = null;
+        return;
+      }
+
+      // 保存为一条两点的笔画（直线）
+      DRAW_STATE.strokes.push({
+        points: [DRAW_STATE.lineStart, endPt],
+        color: DRAW_STATE.color,
+        width: DRAW_STATE.brushSize,
+        closed: false,
+      });
+      DRAW_STATE.lineStart = null;
+      DRAW_STATE.linePreview = null;
+      render();
+    }
+    // polyline 模式不在 mouseup 结束，它在 click 中处理
+  }, true);
+
+  // 折线完成函数
+  function finishPolyline(closed) {
+    if (DRAW_STATE.polyVertices.length < 2) return;
+    DRAW_STATE.strokes.push({
+      points: [...DRAW_STATE.polyVertices],
+      color: DRAW_STATE.color,
+      width: DRAW_STATE.brushSize,
+      closed: !!closed,
+    });
+    DRAW_STATE.polyVertices = [];
+    DRAW_STATE.polyPreview = null;
+    document.getElementById('closeHintDot').style.display = 'none';
+    render();
+  }
+
+  // 注：画笔模式下的拖拽平移已在原有 mousedown handler 中通过 DRAW_STATE.active 守卫阻止
+
+  // 获取绘画坐标（转换为逻辑坐标系）
+  function getDrawPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    const W = rect.width, H = rect.height;
+    const viewCX = W / 2 + GLOBAL_STATE.viewOffsetX;
+    const viewCY = H / 2 + GLOBAL_STATE.viewOffsetY;
+    const logicX = (canvasX - viewCX) / GLOBAL_STATE.viewZoom;
+    const logicY = (canvasY - viewCY) / GLOBAL_STATE.viewZoom;
+    return { x: logicX, y: logicY };
+  }
+
+  // ===== Catmull-Rom 样条平滑 =====
+  function smoothPoints(pts) {
+    if (pts.length < 4) return pts;
+    const result = [];
+    // 先做一次简单的降采样（去掉过密的点）
+    const simplified = [pts[0]];
+    const minDist = 3;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = simplified[simplified.length - 1];
+      if (Math.hypot(pts[i].x - prev.x, pts[i].y - prev.y) >= minDist) {
+        simplified.push(pts[i]);
+      }
+    }
+    if (simplified.length < 4) return simplified;
+
+    // Catmull-Rom 插值
+    const tension = 0.5;
+    for (let i = 0; i < simplified.length - 1; i++) {
+      const p0 = simplified[Math.max(0, i - 1)];
+      const p1 = simplified[i];
+      const p2 = simplified[Math.min(simplified.length - 1, i + 1)];
+      const p3 = simplified[Math.min(simplified.length - 1, i + 2)];
+
+      const steps = 6;
+      for (let t = 0; t < steps; t++) {
+        const tt = t / steps;
+        const tt2 = tt * tt;
+        const tt3 = tt2 * tt;
+
+        const x = 0.5 * (
+          (2 * p1.x) +
+          (-p0.x + p2.x) * tt +
+          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt2 +
+          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * tt3
+        );
+        const y = 0.5 * (
+          (2 * p1.y) +
+          (-p0.y + p2.y) * tt +
+          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt2 +
+          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * tt3
+        );
+        result.push({ x, y });
+      }
+    }
+    result.push(simplified[simplified.length - 1]);
+    return result;
+  }
+
+  // ===== 对称变换矩阵 =====
+  function getSymmetryTransforms(mode) {
+    // 返回一组变换函数 (x, y) => {x, y}
+    const transforms = [{ fn: (x, y) => ({ x, y }) }]; // 原始
+    if (mode === '2' || mode === '4' || mode === '8') {
+      transforms.push({ fn: (x, y) => ({ x: -x, y }) }); // 左右镜像
+    }
+    if (mode === '4' || mode === '8') {
+      transforms.push({ fn: (x, y) => ({ x, y: -y }) }); // 上下镜像
+      transforms.push({ fn: (x, y) => ({ x: -x, y: -y }) }); // 中心对称
+    }
+    if (mode === '8') {
+      transforms.push({ fn: (x, y) => ({ x: y, y: x }) }); // 对角线1
+      transforms.push({ fn: (x, y) => ({ x: -y, y: -x }) }); // 对角线2
+      transforms.push({ fn: (x, y) => ({ x: -y, y: x }) }); // 90°旋转
+      transforms.push({ fn: (x, y) => ({ x: y, y: -x }) }); // 270°旋转
+    }
+    return transforms;
+  }
+
+  // ===== 绘制笔画（带对称） =====
+  function renderDrawStrokes() {
+    if (!DRAW_STATE.active && DRAW_STATE.strokes.length === 0) return;
+
+    const transforms = getSymmetryTransforms(DRAW_STATE.symmetry);
+
+    // 绘制已完成的笔画
+    DRAW_STATE.strokes.forEach(stroke => {
+      transforms.forEach(t => {
+        drawStrokePath(stroke.points, stroke.color, stroke.width, stroke.closed, t.fn);
+      });
+    });
+
+    // 绘制当前正在画的笔画（自由画模式）
+    if (DRAW_STATE.drawType === 'free' && DRAW_STATE.drawing && DRAW_STATE.currentPoints.length > 1) {
+      const pts = DRAW_STATE.smooth ? smoothPoints(DRAW_STATE.currentPoints) : DRAW_STATE.currentPoints;
+      transforms.forEach(t => {
+        drawStrokePath(pts, DRAW_STATE.color, DRAW_STATE.brushSize, false, t.fn);
+      });
+    }
+
+    // 绘制直线预览
+    if (DRAW_STATE.drawType === 'line' && DRAW_STATE.drawing && DRAW_STATE.lineStart && DRAW_STATE.linePreview) {
+      const previewPts = [DRAW_STATE.lineStart, DRAW_STATE.linePreview];
+      transforms.forEach(t => {
+        drawStrokePath(previewPts, DRAW_STATE.color, DRAW_STATE.brushSize, false, t.fn, true);
+      });
+    }
+
+    // 绘制折线已有线段 + 预览线段
+    if (DRAW_STATE.drawType === 'polyline' && DRAW_STATE.polyVertices.length > 0) {
+      // 已确认的线段
+      if (DRAW_STATE.polyVertices.length >= 2) {
+        transforms.forEach(t => {
+          drawStrokePath(DRAW_STATE.polyVertices, DRAW_STATE.color, DRAW_STATE.brushSize, false, t.fn);
+        });
+      }
+      // 预览线段（从最后顶点到鼠标位置），虚线
+      if (DRAW_STATE.polyPreview) {
+        const lastV = DRAW_STATE.polyVertices[DRAW_STATE.polyVertices.length - 1];
+        const previewPts = [lastV, DRAW_STATE.polyPreview];
+        transforms.forEach(t => {
+          drawStrokePath(previewPts, DRAW_STATE.color, DRAW_STATE.brushSize, false, t.fn, true);
+        });
+      }
+      // 绘制顶点标记
+      transforms.forEach(t => {
+        DRAW_STATE.polyVertices.forEach(v => {
+          const p = t.fn(v.x, v.y);
+          ctx.save();
+          ctx.fillStyle = DRAW_STATE.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (DRAW_STATE.brushSize + 2) / GLOBAL_STATE.viewZoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+      });
+    }
+  }
+
+  function drawStrokePath(points, color, width, closed, transform, dashed) {
+    if (points.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width / GLOBAL_STATE.viewZoom;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (dashed) {
+      const s = 1 / GLOBAL_STATE.viewZoom;
+      ctx.setLineDash([6 * s, 4 * s]);
+      ctx.globalAlpha = 0.6;
+    }
+    ctx.beginPath();
+    const p0 = transform(points[0].x, points[0].y);
+    ctx.moveTo(p0.x, p0.y);
+    for (let i = 1; i < points.length; i++) {
+      const p = transform(points[i].x, points[i].y);
+      ctx.lineTo(p.x, p.y);
+    }
+    if (closed) {
+      ctx.closePath();
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ===== 绘制对称辅助线 =====
+  function renderSymmetryGuides() {
+    if (!DRAW_STATE.active || DRAW_STATE.symmetry === 'none') return;
+    ctx.save();
+    const s = 1 / GLOBAL_STATE.viewZoom;
+    const len = 2000;
+    ctx.strokeStyle = 'rgba(201,168,76,0.2)';
+    ctx.lineWidth = 0.8 * s;
+    ctx.setLineDash([4 * s, 4 * s]);
+
+    if (DRAW_STATE.symmetry === '2' || DRAW_STATE.symmetry === '4' || DRAW_STATE.symmetry === '8') {
+      // 垂直中线（左右对称轴）
+      ctx.beginPath();
+      ctx.moveTo(0, -len); ctx.lineTo(0, len);
+      ctx.stroke();
+    }
+    if (DRAW_STATE.symmetry === '4' || DRAW_STATE.symmetry === '8') {
+      // 水平中线（上下对称轴）
+      ctx.beginPath();
+      ctx.moveTo(-len, 0); ctx.lineTo(len, 0);
+      ctx.stroke();
+    }
+    if (DRAW_STATE.symmetry === '8') {
+      // 45度对角线
+      ctx.beginPath();
+      ctx.moveTo(-len, -len); ctx.lineTo(len, len);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(len, -len); ctx.lineTo(-len, len);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // 撤销一笔
+  function undoDrawStroke() {
+    // 如果正在画折线，先撤销最后一个顶点
+    if (DRAW_STATE.drawType === 'polyline' && DRAW_STATE.polyVertices.length > 0) {
+      DRAW_STATE.polyVertices.pop();
+      render();
+      return;
+    }
+    if (DRAW_STATE.strokes.length > 0) {
+      DRAW_STATE.strokes.pop();
+      render();
+    }
+  }
+
+  // 清空画布
+  function clearDrawing() {
+    DRAW_STATE.strokes = [];
+    DRAW_STATE.currentPoints = [];
+    DRAW_STATE.lineStart = null;
+    DRAW_STATE.linePreview = null;
+    DRAW_STATE.polyVertices = [];
+    DRAW_STATE.polyPreview = null;
+    document.getElementById('closeHintDot').style.display = 'none';
+    render();
+  }
+
+  // ===== 完成绘制 → 生成图层 =====
+  function finishDrawing() {
+    // 如果还有未完成的折线，先完成它
+    if (DRAW_STATE.drawType === 'polyline' && DRAW_STATE.polyVertices.length >= 2) {
+      finishPolyline();
+    }
+
+    if (DRAW_STATE.strokes.length === 0) {
+      alert('请先绘制一些内容');
+      return;
+    }
+
+    // 将当前绘制内容渲染到一个离屏 Canvas，然后作为图层加入
+    const transforms = getSymmetryTransforms(DRAW_STATE.symmetry);
+
+    // 计算绘制的边界
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    DRAW_STATE.strokes.forEach(stroke => {
+      transforms.forEach(t => {
+        stroke.points.forEach(pt => {
+          const p = t.fn(pt.x, pt.y);
+          minX = Math.min(minX, p.x);
+          minY = Math.min(minY, p.y);
+          maxX = Math.max(maxX, p.x);
+          maxY = Math.max(maxY, p.y);
+        });
+      });
+    });
+
+    // 增加 padding
+    const padding = 20;
+    minX -= padding; minY -= padding;
+    maxX += padding; maxY += padding;
+    const w = maxX - minX;
+    const h = maxY - minY;
+
+    if (w <= 0 || h <= 0) return;
+
+    // 使用 2x 分辨率
+    const scale = 2;
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = w * scale;
+    offCanvas.height = h * scale;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.scale(scale, scale);
+    offCtx.translate(-minX, -minY);
+
+    // 绘制所有笔画
+    DRAW_STATE.strokes.forEach(stroke => {
+      transforms.forEach(t => {
+        offCtx.strokeStyle = stroke.color;
+        offCtx.lineWidth = stroke.width;
+        offCtx.lineCap = 'round';
+        offCtx.lineJoin = 'round';
+        offCtx.beginPath();
+        const p0 = t.fn(stroke.points[0].x, stroke.points[0].y);
+        offCtx.moveTo(p0.x, p0.y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          const p = t.fn(stroke.points[i].x, stroke.points[i].y);
+          offCtx.lineTo(p.x, p.y);
+        }
+        if (stroke.closed) offCtx.closePath();
+        offCtx.stroke();
+      });
+    });
+
+    // 将离屏 Canvas 转为图片，加入图层系统 + 保存到纹样库
+    const dataUrl = offCanvas.toDataURL('image/png');
+    const img = new Image();
+    img.onload = () => {
+      const id = ++layerIdCounter;
+      const customId = 'draw_' + Date.now();
+      const patternName = '手绘纹样_' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+
+      // 保存到 localStorage（纹样库持久化）
+      saveCustomDrawPattern(customId, patternName, dataUrl);
+      updateCreatorTransferButton(customId, patternName);
+
+      // 加入左侧纹样面板
+      SVG_FILES.push({
+        cat: 'custom',
+        name: patternName,
+        file: customId + '.png',
+        path: dataUrl,
+        isCustomDraw: true,
+        customId: customId,
+      });
+
+      // 创建图层
+      const layer = {
+        id,
+        file: customId + '.png',
+        cat: 'custom',
+        svgText: null,
+        image: img,
+        color: null,
+        selfRotation: 0,
+        orbitRotation: 0,
+        orbitRadius: 0,
+        scale: 1 / scale,  // 因为是 2x 渲染的
+        translateX: (minX + maxX) / 2,  // 偏移到绘制中心
+        translateY: (minY + maxY) / 2,
+        mirrorX: false,
+        mirrorY: false,
+      };
+      LAYERS.push(layer);
+      activeLayerId = id;
+      document.getElementById('canvasHint').classList.add('hidden');
+
+      // 清空绘制状态
+      DRAW_STATE.strokes = [];
+      DRAW_STATE.currentPoints = [];
+
+      // 退出画笔模式
+      toggleDrawMode();
+
+      // 刷新
+      syncUIFromLayer(layer);
+      renderLayerList();
+      renderPatternGrid();
+      render();
+    };
+    img.src = dataUrl;
+  }
+
+  // ===== 初始化 =====
+  renderPatternGrid();
+  resizeCanvas();
+  </script>
+
+  <!-- 底部五色色条 -->
+  <div class="five-color-bar">
+    <span style="background:#0066CC;"></span>
+    <span style="background:#CC0000;"></span>
+    <span style="background:#FFCC00;"></span>
+    <span style="background:#00CC66;"></span>
+    <span style="background:#1a1a2e;"></span>
+  </div>
+</body>
+</html>

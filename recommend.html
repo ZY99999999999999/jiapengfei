@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧推荐 - 蒙古族纹样数字化平台</title>
+  <script src="lib/tailwind.js"></script>
+  <!-- face-api.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+    :root {
+      --mg-blue: #1a3a5c; --mg-blue-deep: #0f2440; --mg-white: #f5f0e8;
+      --mg-red: #c0392b; --mg-yellow: #d4a017; --mg-gold: #c9a84c; --mg-green: #2e7d32;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: #0a0e1a;
+      color: var(--mg-white);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* 星空粒子纹理背景 */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(1.5px 1.5px at 10% 20%, rgba(201,168,76,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.15) 0%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 55% 15%, rgba(201,168,76,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 45%, rgba(255,255,255,0.12) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 85% 75%, rgba(201,168,76,0.25) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 100%),
+        radial-gradient(1.2px 1.2px at 45% 90%, rgba(201,168,76,0.15) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 20%, rgba(255,255,255,0.12) 0%, transparent 100%),
+        radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* 导航栏 */
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 56px;
+      background: rgba(10,14,26,0.92); backdrop-filter: blur(20px) saturate(1.3);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      display: flex; align-items: center; padding: 0 24px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--mg-white); }
+    .nav-logo-dot { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--mg-gold), var(--mg-yellow)); box-shadow: 0 0 12px rgba(201,168,76,0.3); }
+    .nav-logo span { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 600; letter-spacing: 1px; }
+    .nav-links { display: flex; gap: 2px; margin-left: 24px; }
+    .nav-link {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; color: rgba(224,220,212,0.5);
+      text-decoration: none; transition: all 0.2s;
+    }
+    .nav-link:hover { color: var(--mg-gold); background: rgba(201,168,76,0.06); }
+    .nav-link.active { color: var(--mg-gold); background: rgba(201,168,76,0.1); }
+
+    /* 主内容 */
+    .main-content { max-width: 1200px; margin: 0 auto; padding: 80px 24px 60px; position: relative; z-index: 1; }
+    .page-header { text-align: center; margin-bottom: 48px; }
+    .page-header h1 {
+      font-family: 'Noto Serif SC', serif; font-size: 32px; font-weight: 700;
+      color: var(--mg-white); letter-spacing: 3px; margin-bottom: 12px;
+    }
+    .page-header p { font-size: 15px; color: rgba(224,220,212,0.5); line-height: 1.8; max-width: 600px; margin: 0 auto; }
+    .page-header .theory-badge {
+      display: inline-block; margin-top: 12px; padding: 4px 16px; border-radius: 16px;
+      font-size: 11px; color: rgba(201,168,76,0.7); border: 1px solid rgba(201,168,76,0.2);
+      background: rgba(201,168,76,0.05); letter-spacing: 2px;
+    }
+    .experience-note {
+      max-width: 720px; margin: 16px auto 0; padding: 12px 16px;
+      display: flex; align-items: flex-start; justify-content: center; gap: 10px;
+      border: 1px solid rgba(201,168,76,0.16); border-radius: 12px;
+      background: rgba(201,168,76,0.045); color: rgba(224,220,212,0.66);
+      font-size: 12px; line-height: 1.7; text-align: left;
+    }
+    .experience-note strong { color: rgba(232,199,106,0.9); font-weight: 500; white-space: nowrap; }
+
+    /* 两栏布局 */
+    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+    @media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } }
+
+    /* 左栏：摄像头/上传区 */
+    .camera-card {
+      border-radius: 20px; overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      backdrop-filter: blur(16px) saturate(1.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(201,168,76,0.08);
+      position: relative;
+    }
+    .camera-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+    }
+    .camera-card-header {
+      padding: 16px 20px; border-bottom: 1px solid rgba(201,168,76,0.08);
+      font-size: 13px; font-weight: 600; color: rgba(201,168,76,0.7); letter-spacing: 2px;
+      background: rgba(201,168,76,0.02);
+      position: relative; padding-left: 32px;
+    }
+    .camera-card-header::before {
+      content: ''; position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 14px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--mg-gold), rgba(201,168,76,0.3));
+    }
+    .camera-body { padding: 20px; }
+    .video-wrapper {
+      position: relative; width: 100%; aspect-ratio: 4/3; border-radius: 12px;
+      overflow: hidden; background: #0d1020; margin-bottom: 16px;
+      border: 1px solid rgba(201,168,76,0.1);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.4);
+    }
+    #videoEl { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
+    #overlayCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); }
+    #uploadPreview { width: 100%; height: 100%; object-fit: contain; display: none; }
+    .video-placeholder {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: rgba(224,220,212,0.3);
+    }
+    .video-placeholder svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.3; }
+    .video-placeholder p { font-size: 13px; }
+
+    .action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      flex: 1; min-width: 120px; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+      font-size: 13px; font-weight: 600; text-align: center; transition: all 0.3s;
+      border: 1px solid rgba(201,168,76,0.25); background: rgba(201,168,76,0.06); color: var(--mg-gold);
+      backdrop-filter: blur(8px);
+    }
+    .action-btn:hover {
+      background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.5);
+      box-shadow: 0 4px 16px rgba(201,168,76,0.1);
+      transform: translateY(-1px);
+    }
+    .action-btn.primary {
+      background: linear-gradient(135deg, var(--mg-gold), #d4b35a);
+      color: var(--mg-blue-deep); border-color: var(--mg-gold);
+      box-shadow: 0 4px 16px rgba(201,168,76,0.25);
+    }
+    .action-btn.primary:hover { background: linear-gradient(135deg, #d4b35a, #e0c06a); box-shadow: 0 6px 24px rgba(201,168,76,0.35); }
+    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.loading { background: var(--mg-yellow); animation: pulse 1s infinite; }
+    .status-dot.success { background: var(--mg-green); }
+    .status-dot.error { background: var(--mg-red); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* 右栏：推荐结果 */
+    .result-card {
+      border-radius: 20px; overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      backdrop-filter: blur(16px) saturate(1.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(201,168,76,0.08);
+      position: relative;
+    }
+    .result-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+    }
+    .result-card-header {
+      padding: 16px 20px; border-bottom: 1px solid rgba(201,168,76,0.08);
+      font-size: 13px; font-weight: 600; color: rgba(201,168,76,0.7); letter-spacing: 2px;
+      background: rgba(201,168,76,0.02);
+      position: relative; padding-left: 32px;
+    }
+    .result-card-header::before {
+      content: ''; position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 14px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--mg-gold), rgba(201,168,76,0.3));
+    }
+    .result-body { padding: 20px; }
+    /* 特征分析 */
+    .trait-list { margin-bottom: 20px; }
+    .trait-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; margin-bottom: 4px; border-radius: 10px;
+      background: rgba(201,168,76,0.02);
+      border: 1px solid rgba(201,168,76,0.05);
+      transition: all 0.2s;
+    }
+    .trait-item:hover { background: rgba(201,168,76,0.05); border-color: rgba(201,168,76,0.12); }
+    .trait-item:last-child { margin-bottom: 0; }
+    .trait-label { font-size: 13px; color: rgba(224,220,212,0.5); }
+    .trait-value { font-size: 13px; color: var(--mg-gold); font-weight: 600; }
+    /* 推荐纹样 */
+    .recommend-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .recommend-item {
+      border-radius: 16px; overflow: hidden; cursor: pointer;
+      background: rgba(15,20,40,0.6);
+      border: 1px solid rgba(201,168,76,0.12);
+      backdrop-filter: blur(12px) saturate(1.1);
+      transition: all 0.5s cubic-bezier(0.23,1,0.32,1);
+      position: relative;
+    }
+    .recommend-item:hover {
+      border-color: rgba(201,168,76,0.4);
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 30px rgba(201,168,76,0.08);
+    }
+    .recommend-item::before {
+      content: ''; position: absolute; top: 0; left: -100%; bottom: 0;
+      width: 300%; z-index: 5;
+      background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(201,168,76,0.08) 45%, rgba(255,220,130,0.15) 50%, rgba(201,168,76,0.08) 55%, transparent 60%, transparent 100%);
+      transform: translateX(-100%); opacity: 0; transition: opacity 0.4s; pointer-events: none;
+    }
+    .recommend-item:hover::before {
+      opacity: 1; animation: sweepCard 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards;
+    }
+    @keyframes sweepCard { from { transform: translateX(-100%); } to { transform: translateX(40%); } }
+    .recommend-item-img {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      padding: 20px; background: rgba(201,168,76,0.03);
+      position: relative;
+    }
+    .recommend-item-img::after {
+      content: ''; position: absolute; inset: 12px;
+      border: 1px solid rgba(201,168,76,0.06); border-radius: 8px;
+      pointer-events: none;
+    }
+    .recommend-item-img img {
+      width: 100%; height: 100%; object-fit: contain;
+      transition: all 0.4s; filter: drop-shadow(0 2px 8px rgba(201,168,76,0.15));
+    }
+    .recommend-item:hover .recommend-item-img img {
+      transform: scale(1.05);
+      filter: drop-shadow(0 4px 16px rgba(201,168,76,0.25));
+    }
+    .recommend-item-info { padding: 12px 14px; border-top: 1px solid rgba(201,168,76,0.06); }
+    .recommend-item-name { font-size: 13px; font-weight: 600; color: var(--mg-white); margin-bottom: 4px; }
+    .recommend-item-reason { font-size: 11px; color: rgba(224,220,212,0.4); line-height: 1.5; }
+    .recommend-item-match {
+      display: inline-flex; align-items: baseline; gap: 4px; margin-top: 8px;
+      padding: 4px 10px; border-radius: 10px;
+      background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.12);
+    }
+    .recommend-item-match .match-num {
+      font-size: 22px; font-weight: 700; color: var(--mg-gold);
+      font-family: 'Noto Serif SC', serif;
+      text-shadow: 0 2px 8px rgba(201,168,76,0.3);
+    }
+    .recommend-item-match .match-label {
+      font-size: 10px; color: rgba(201,168,76,0.6); font-weight: 500;
+    }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 48px 20px; }
+    .empty-state svg { width: 56px; height: 56px; color: rgba(201,168,76,0.2); margin-bottom: 16px; }
+    .empty-state h3 { font-family: 'Noto Serif SC', serif; font-size: 18px; color: rgba(224,220,212,0.4); margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; color: rgba(224,220,212,0.25); }
+
+    /* 分析中过渡动画 */
+    .analyzing-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      background: rgba(10,14,26,0.85);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.4s;
+      border-radius: 12px;
+    }
+    .analyzing-overlay.active { opacity: 1; pointer-events: auto; }
+    .scan-line {
+      position: absolute; left: 10%; right: 10%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--mg-gold), rgba(201,168,76,0.8), var(--mg-gold), transparent);
+      box-shadow: 0 0 12px rgba(201,168,76,0.6), 0 0 30px rgba(201,168,76,0.3);
+      animation: scanMove 2s ease-in-out infinite;
+      border-radius: 2px;
+    }
+    @keyframes scanMove {
+      0% { top: 15%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 80%; opacity: 0; }
+    }
+    .analyzing-text {
+      font-size: 14px; color: var(--mg-gold); letter-spacing: 3px;
+      margin-top: 20px; font-weight: 500;
+      animation: textPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes textPulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .analyzing-progress {
+      width: 160px; height: 3px; border-radius: 2px;
+      background: rgba(201,168,76,0.15); margin-top: 16px; overflow: hidden;
+      position: relative;
+    }
+    .analyzing-progress-bar {
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--mg-gold), #e0c06a);
+      width: 0%; transition: width 0.3s ease;
+    }
+    .analyzing-dots {
+      display: flex; gap: 6px; margin-top: 12px;
+    }
+    .analyzing-dots span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--mg-gold); opacity: 0.3;
+      animation: dotBlink 1.2s ease-in-out infinite;
+    }
+    .analyzing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .analyzing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBlink {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* 分析步骤提示 */
+    .analyze-steps {
+      margin-top: 20px; font-size: 11px; color: rgba(224,220,212,0.4);
+      text-align: center; line-height: 1.8;
+    }
+    .analyze-steps .step { opacity: 0; transform: translateY(8px); transition: all 0.4s; }
+    .analyze-steps .step.visible { opacity: 1; transform: translateY(0); }
+    .analyze-steps .step.done { color: rgba(201,168,76,0.6); }
+    .analyze-steps .step.done::before { content: '✓ '; }
+
+    /* 隐藏的文件输入 */
+    #fileInput { display: none; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 3px; }
+
+    /* 底部五色色条 */
+    .five-color-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 5px; display: flex; z-index: 200;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+    }
+    .five-color-bar span { flex: 1; display: block; position: relative; overflow: hidden; }
+    .five-color-bar span::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, transparent 100%);
+    }
+
+    /* 标题装饰 */
+    .title-ornament {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      margin-top: 10px; margin-bottom: 8px;
+    }
+    .title-ornament .line {
+      width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--mg-gold), transparent);
+    }
+    .title-ornament .diamond {
+      width: 8px; height: 8px; background: var(--mg-gold);
+      transform: rotate(45deg); opacity: 0.7;
+      box-shadow: 0 0 8px rgba(201,168,76,0.4);
+    }
+
+    .page-header h1 {
+      font-family: 'Noto Serif SC', serif; font-size: 38px; font-weight: 700;
+      color: var(--mg-gold); letter-spacing: 8px; margin-bottom: 8px;
+      text-shadow: 0 2px 20px rgba(201,168,76,0.3), 0 0 40px rgba(201,168,76,0.1);
+    }
+
+    /* 状态提示增强 */
+    .status-bar {
+      margin-top: 12px; padding: 10px 14px; border-radius: 10px;
+      background: rgba(201,168,76,0.02); border: 1px solid rgba(201,168,76,0.05);
+      font-size: 12px; color: rgba(224,220,212,0.5);
+      display: flex; align-items: center; gap: 8px; min-height: 40px;
+    }
+  </style>
+  <link rel="stylesheet" href="platform-ui.css?v=1.1">
+</head>
+<body>
+
+  <!-- 导航栏 -->
+  <nav class="nav-bar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-dot"></div>
+      <span>蒙古族纹样平台</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">首页</a>
+      <a href="explorer.html" class="nav-link">纹样探索</a>
+      <a href="fingerweave.html" class="nav-link">指尖纹韵</a>
+      <a href="creator.html" class="nav-link">创意共创</a>
+      <a href="recommend.html" class="nav-link active">智慧推荐</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <!-- 页头 -->
+    <div class="page-header">
+      <h1>智慧推荐</h1>
+      <div class="title-ornament">
+        <div class="line"></div>
+        <div class="diamond"></div>
+        <div class="line"></div>
+      </div>
+      <p>通过趣味性面部特征分析，从纹样库中生成个性化推荐。<br>以交互方式建立使用者与纹样文化寓意之间的体验联系。</p>
+      <div class="theory-badge">语用学维度 · PRAGMATICS · 符号与使用者的关系</div>
+      <div class="experience-note" role="note" aria-label="体验与隐私说明">
+        <strong>体验说明</strong>
+        <span>推荐结果仅用于文化互动，不代表民族身份、性格或审美判断；照片与摄像头画面仅在当前浏览器中分析，不上传至平台服务器。</span>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <!-- 左栏 -->
+      <div>
+        <div class="camera-card">
+          <div class="camera-card-header">面部特征采集</div>
+          <div class="camera-body">
+            <div class="video-wrapper" id="videoWrapper">
+              <video id="videoEl" autoplay muted playsinline></video>
+              <canvas id="overlayCanvas"></canvas>
+              <img id="uploadPreview" alt="">
+              <div class="video-placeholder" id="placeholder">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <p>开启摄像头或上传照片</p>
+              </div>
+              <!-- 分析中过渡动画 -->
+              <div class="analyzing-overlay" id="analyzingOverlay">
+                <div class="scan-line"></div>
+                <div class="analyzing-text">面部特征分析中</div>
+                <div class="analyzing-progress"><div class="analyzing-progress-bar" id="analyzeProgressBar"></div></div>
+                <div class="analyzing-dots"><span></span><span></span><span></span></div>
+                <div class="analyze-steps" id="analyzeSteps">
+                  <div class="step" data-step="1">正在定位面部区域...</div>
+                  <div class="step" data-step="2">提取面部关键点...</div>
+                  <div class="step" data-step="3">分析脸型与比例...</div>
+                  <div class="step" data-step="4">识别表情特征...</div>
+                  <div class="step" data-step="5">匹配纹样数据库...</div>
+                </div>
+              </div>
+            </div>
+            <div class="action-btns">
+              <button class="action-btn" id="cameraBtn" onclick="toggleCamera()">开启摄像头</button>
+              <button class="action-btn" onclick="document.getElementById('fileInput').click()">上传照片</button>
+              <button class="action-btn primary" id="analyzeBtn" onclick="analyzeface()" disabled>开始分析</button>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleUpload(event)">
+            <div class="status-bar" id="statusBar">
+              <span>等待操作...</span>
+            </div>
+          </div>
+        </div>
+        <!-- 特征分析结果（左栏下方） -->
+        <div class="result-card" id="traitCard" style="margin-top:16px; display:none;">
+          <div class="result-card-header">面部特征分析</div>
+          <div class="result-body">
+            <div class="trait-list" id="traitList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右栏：纹样推荐 -->
+      <div>
+        <div class="result-card">
+          <div class="result-card-header">纹样推荐</div>
+          <div class="result-body" id="recommendBody">
+            <div class="empty-state" id="emptyState">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              <h3>等待面部分析</h3>
+              <p>请先开启摄像头或上传照片，点击"开始分析"获取纹样推荐</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ===== SVG 文件子目录映射 =====
+  const SVG_SUBDIR_MAP = {};
+  // bio 目录
+  ['服装元素提取A12.svg','服装元素提取A13.svg','服装元素提取A18.svg','服装元素提取A20.svg','腰佩元素提取D25.svg','鞋靴元素提取C10.svg','鞋靴元素提取C20.svg'].forEach(f => SVG_SUBDIR_MAP[f] = 'bio');
+  // rel 目录
+  ['头饰元素提取B17.svg','头饰元素提取B3.svg','头饰元素提取B5.svg','头饰元素提取B6.svg','头饰元素提取B7.svg','文献资料元素提取E2.svg','文献资料元素提取E4.svg','服装元素提取A25.svg','服装元素提取A26.svg','服装元素提取A27.svg','服装元素提取A28.svg','服装元素提取A29.svg','服装元素提取A5.svg','服装元素提取A6.svg','服装元素提取A7.svg','腰佩元素提取D1.svg','腰佩元素提取D10.svg','腰佩元素提取D12.svg','腰佩元素提取D13.svg','腰佩元素提取D17.svg','腰佩元素提取D18.svg','腰佩元素提取D2.svg','腰佩元素提取D3.svg','腰佩元素提取D5.svg','腰佩元素提取D6.svg','腰佩元素提取D7.svg','腰佩元素提取D8.svg','鞋靴元素提取C12.svg','鞋靴元素提取C13.svg','鞋靴元素提取C19.svg','鞋靴元素提取C21.svg','鞋靴元素提取C5.svg','鞋靴元素提取C6.svg','鞋靴元素提取C7.svg'].forEach(f => SVG_SUBDIR_MAP[f] = 'rel');
+  // geo 目录（其余所有文件）
+  function getSvgPath(filename) {
+    const sub = SVG_SUBDIR_MAP[filename] || 'geo';
+    return `wenyang_svg/${sub}/${filename}`;
+  }
+
+  // ===== 纹样数据库 =====
+  // 每个纹样附带文化寓意标签，用于匹配
+const PATTERN_DB = [
+// ============ 卷草纹类（哈木尔纹） - 曲线柔美，适配圆脸、女性、年轻 ============
+{ file: '服装元素提取A1.svg', name: '哈木尔卷草纹', cat: 'A', tags: ['柔美','曲线','生命','女性','年轻'], meaning: '哈木尔纹是蒙古族最基本的装饰母题，以流畅的S形曲线象征草原上生生不息的生命力与万物繁荣', match_traits: { shape: 'round', gender: 'female', age: 'young' } },
+{ file: '服装元素提取A6.svg', name: '三角卷草组合纹', cat: 'A', tags: ['灵动','活泼','几何','年轻'], meaning: '三角形与卷草纹的组合，刚柔并济，几何框架中包含自由的生命卷须，象征青春活力与创造力', match_traits: { shape: 'round', gender: 'neutral', age: 'young', expression: 'happy' } },
+{ file: '服装元素提取A16.svg', name: '连续卷草边饰纹', cat: 'A', tags: ['连续','流动','优雅','女性'], meaning: '连续展开的哈木尔卷草纹带，如草原长风般绵延不断，象征生命的延续与草原的辽阔', match_traits: { shape: 'oval', gender: 'female', age: 'young' } },
+{ file: '服装元素提取A22.svg', name: '椭圆卷草纹', cat: 'A', tags: ['圆润','饱满','柔美','和谐'], meaning: '椭圆形内含对称卷草装饰，造型饱满圆润，象征生活富足、家庭和美', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '服装元素提取A23.svg', name: '羊角对卷纹', cat: 'A', tags: ['对称','柔美','民族','女性'], meaning: '左右对称的螺旋涡卷，形如盘羊角自然弯曲，是蒙古族最典型的哈木尔纹造型，寓意吉祥如意', match_traits: { shape: 'round', gender: 'female', age: 'young' } },
+{ file: '服装元素提取A24.svg', name: '连续涡卷纹', cat: 'A', tags: ['连续','动感','活泼','年轻'], meaning: '四个连续涡卷组成的边饰带，如奔腾的河流般流畅有力，象征生命的律动与不息', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+
+// ============ 花卉纹类 - 自然美，适配圆脸/椭圆脸、女性 ============
+{ file: '服装元素提取A26.svg', name: '牡丹花纹', cat: 'A', tags: ['富贵','华美','花卉','女性'], meaning: '牡丹花纹象征富贵荣华，两朵盛放的牡丹展现雍容之美，是蒙古族服饰中常见的吉祥花卉', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '服装元素提取A27.svg', name: '团窠花卉纹', cat: 'A', tags: ['圆满','华贵','对称','女性'], meaning: '圆形内对称花卉与枝叶组合，团窠构图象征圆满富足，常用于蒙古族贵族服饰的主体装饰', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '服装元素提取A28.svg', name: '折枝花卉纹', cat: 'A', tags: ['自然','清新','优雅','女性'], meaning: '折枝花卉以写实手法描绘自然生长的花枝，清新雅致，寓意生机勃勃与自然之美', match_traits: { shape: 'oval', gender: 'female', age: 'young' } },
+{ file: '腰佩元素提取D25.svg', name: '牡丹团花佩饰纹', cat: 'D', tags: ['富贵','花卉','华美','女性'], meaning: '三朵盛开牡丹密集组合，剪纸风格，象征花开富贵、三多之福（多福多寿多子）', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+
+// ============ 云纹类 - 灵动祥瑞，适配椭圆脸、中性 ============
+{ file: '服装元素提取A8.svg', name: '如意云头纹', cat: 'A', tags: ['祥瑞','自由','灵动','吉祥'], meaning: '如意云纹是蒙古族"翰·乌嘎拉吉"纹样，形如祥云飘逸，象征吉祥如意与自在逍遥', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+{ file: '服装元素提取A9.svg', name: '三朵祥云纹', cat: 'A', tags: ['祥瑞','灵动','活泼','年轻'], meaning: '三朵如意云头组合，轻盈飘逸，三为吉数，寓意三元及第、福禄寿三星高照', match_traits: { shape: 'oval', gender: 'neutral', age: 'young', expression: 'happy' } },
+{ file: '服装元素提取A14.svg', name: '涡卷祥云纹', cat: 'A', tags: ['祥瑞','大气','舒展','中性'], meaning: '三个大涡卷组成的云头纹，舒展大气，象征长生天的庇佑与草原的广阔胸怀', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '腰佩元素提取D24.svg', name: '自由云纹', cat: 'D', tags: ['自由','灵动','飘逸','年轻'], meaning: '多个涡旋云卷自由组合，如天空流云变幻不定，象征自由不羁的游牧精神', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+
+// ============ 几何纹类 - 方正刚劲，适配方脸/长脸、男性 ============
+{ file: '服装元素提取A2.svg', name: '犄纹边饰', cat: 'A', tags: ['几何','刚劲','秩序','男性'], meaning: '犄纹（回纹变体）以方折直角构成连续边饰，象征坚定不移的意志与严整的秩序之美', match_traits: { shape: 'square', gender: 'male', age: 'middle' } },
+{ file: '服装元素提取A10.svg', name: '菱格连续纹', cat: 'A', tags: ['几何','稳重','连续','成熟'], meaning: '菱形与椭圆交替排列的连续边饰带，严整规律，象征生活的秩序感与沉稳品格', match_traits: { shape: 'square', gender: 'male', age: 'middle' } },
+{ file: '服装元素提取A13.svg', name: '复合几何边饰纹', cat: 'A', tags: ['复合','精致','几何','大气'], meaning: '三角锯齿、花卉、波浪等多种母题组合的宽幅边饰带，工艺复杂，象征尊贵身份与精湛技艺', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '服装元素提取A17.svg', name: '回纹角隅云纹', cat: 'A', tags: ['几何','端庄','传统','成熟'], meaning: '回纹转角搭配云头装饰，方中带圆、刚柔相济，是蒙古族服饰角隅装饰的典型构图', match_traits: { shape: 'square', gender: 'neutral', age: 'middle' } },
+{ file: '服装元素提取A19.svg', name: '菱形交织边饰纹', cat: 'A', tags: ['几何','精密','严整','男性'], meaning: '菱格与椭圆环环相扣的精密编织纹，象征团结协作与坚不可摧的凝聚力', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+
+// ============ 盘长纹类（吉祥结） - 永恒绵延，适配各脸型、中老年 ============
+{ file: '服装元素提取A11.svg', name: '盘长云纹组合', cat: 'A', tags: ['吉祥','永恒','交织','中性'], meaning: '盘长结与云纹的组合，无尽的交织线条象征因缘相续、福寿绵长，云纹增添祥瑞之气', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '服装元素提取A15.svg', name: '盘长结纹', cat: 'A', tags: ['长寿','吉祥','绵延','永恒'], meaning: '盘长纹是佛教八宝之一，无始无终的线条象征轮回不息、寿命绵长，是蒙古族最重要的吉祥符号', match_traits: { shape: 'round', gender: 'neutral', age: 'old' } },
+{ file: '服装元素提取A21.svg', name: '如意盘长结', cat: 'A', tags: ['吉祥','如意','圆满','中性'], meaning: '上下对称的环形绳结纹，如意头与盘长结融合，寓意事事如意、好运连绵', match_traits: { shape: 'oval', gender: 'neutral', age: 'old' } },
+{ file: '腰佩元素提取D16.svg', name: '吉祥结', cat: 'D', tags: ['吉祥','永恒','简约','哲理'], meaning: '标准蒙古族吉祥结（乌力吉乌塔苏），菱形四方交织，线条首尾相连象征无始无终的宇宙真理', match_traits: { shape: 'square', gender: 'neutral', age: 'old' } },
+
+// ============ 团花/寿字类 - 吉祥圆满，适配圆脸/方脸、中老年 ============
+{ file: '服装元素提取A4.svg', name: '寿字纹', cat: 'A', tags: ['长寿','吉祥','圆满','成熟'], meaning: '圆形寿字纹样，祈愿健康长寿，是蒙古族吸收中原文化后广泛使用的祝福纹样', match_traits: { shape: 'round', gender: 'neutral', age: 'old' } },
+{ file: '服装元素提取A18.svg', name: '方框团花纹', cat: 'A', tags: ['富贵','规整','对称','华美'], meaning: '方框内六瓣花卉连续排列，花开富贵的美好祝愿，规整构图体现端庄大方', match_traits: { shape: 'square', gender: 'female', age: 'middle' } },
+{ file: '服装元素提取A5.svg', name: '八瓣莲花纹', cat: 'A', tags: ['圆满','祥瑞','纯净','和谐'], meaning: '八瓣莲花圆形构图，莲花在蒙古族文化中象征纯净与圆满，八瓣对应八方，寓意四面八方皆吉祥', match_traits: { shape: 'round', gender: 'neutral', age: 'middle' } },
+
+// ============ 头饰纹类 - 精致华贵，适配女性 ============
+{ file: '头饰元素提取B1.svg', name: '盾形卷草头饰纹', cat: 'B', tags: ['精致','华贵','女性','对称'], meaning: '盾形外框内含卷草与圆环组合，是蒙古族女性额饰（塔拉）的典型纹样，象征家族的守护与荣耀', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B3.svg', name: '涡卷坠饰纹', cat: 'B', tags: ['灵动','垂坠','女性','华美'], meaning: '菱形布局的涡卷纹坠饰造型，上有悬挂环，是蒙古族女性耳饰或发饰的经典构图，随步摇曳', match_traits: { shape: 'long', gender: 'female', age: 'young' } },
+{ file: '头饰元素提取B4.svg', name: '塔形顶饰纹', cat: 'B', tags: ['尊贵','庄严','层次','成熟'], meaning: '多层宝塔形头饰顶部装饰，含盘长纹与花卉，层层递进象征步步高升与崇高地位', match_traits: { shape: 'long', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B5.svg', name: '圆形花卉头饰纹', cat: 'B', tags: ['华美','圆满','精致','年轻'], meaning: '环形排列的精美花卉头饰，繁花似锦，象征青春年华的美好与对美满生活的向往', match_traits: { shape: 'round', gender: 'female', age: 'young', expression: 'happy' } },
+{ file: '头饰元素提取B6.svg', name: '如意盘长头饰纹', cat: 'B', tags: ['吉祥','对称','端庄','女性'], meaning: '如意云头外框内含万字盘长纹，是已婚女性头饰上的常见纹样，寓意婚姻美满、福寿绵长', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B15.svg', name: '展翅卷草额饰纹', cat: 'B', tags: ['舒展','大气','华丽','女性'], meaning: '中心菱形向左右大幅展开的涡卷纹，如鸟展翅，是蒙古族贵族女性前额大型装饰的代表纹样', match_traits: { shape: 'long', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B17.svg', name: '圆形放射卷草纹', cat: 'B', tags: ['圆形','放射','精美','华贵'], meaning: '圆环内八瓣卷草放射排列，如太阳光芒四射，是蒙古族头饰圆形金属片的典型纹样', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+
+// ============ 靴饰纹类 - 灵动多变，适配年轻/中性 ============
+{ file: '鞋靴元素提取C1.svg', name: '靴面卷草云纹', cat: 'C', tags: ['灵动','动感','活泼','年轻'], meaning: '靴面正面的卷草与云纹组合装饰，曲线流畅灵动，体现蒙古族骑马民族的洒脱气质', match_traits: { shape: 'round', gender: 'neutral', age: 'young' } },
+{ file: '鞋靴元素提取C2.svg', name: '圆形宝珠靴饰纹', cat: 'C', tags: ['圆满','精致','珠宝','华美'], meaning: '双圆环框内六瓣花与珠点组合，是蒙古族靴面圆形金属装饰片的纹样，象征完满与珍贵', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '鞋靴元素提取C3.svg', name: '对称云卷靴饰纹', cat: 'C', tags: ['对称','祥瑞','灵动','年轻'], meaning: '左右对称展开的云卷纹横带，是蒙古族靴筒上沿的装饰带，云卷翻飞寓意步步生云', match_traits: { shape: 'oval', gender: 'neutral', age: 'young', expression: 'happy' } },
+{ file: '鞋靴元素提取C5.svg', name: '涡卷花卉靴饰纹', cat: 'C', tags: ['涡卷','花卉','精致','中性'], meaning: '涡卷与花卉组合的靴面装饰纹，工艺精湛，体现蒙古族对足饰的重视与精致生活追求', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C6.svg', name: '菱形云纹靴饰', cat: 'C', tags: ['菱形','如意','端庄','对称'], meaning: '四角如意云头交织的菱形构图，正中对称卷草，是蒙古族靴面大型主体装饰的经典造型', match_traits: { shape: 'square', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C10.svg', name: '盘长花卉靴饰纹', cat: 'C', tags: ['盘长','花卉','吉祥','端庄'], meaning: '盘长纹与花卉组合的靴面装饰，吉祥结为主体，花卉点缀四角，寓意步步莲花、吉祥随行', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C11.svg', name: '三联盘长边饰纹', cat: 'C', tags: ['连续','吉祥','规律','成熟'], meaning: '三个方形盘长结串联的靴筒边饰带，连续不断寓意福运绵延、步步吉祥', match_traits: { shape: 'long', gender: 'neutral', age: 'middle' } },
+
+// ============ 腰佩饰件纹类 - 庄重大气，适配男性/成熟 ============
+{ file: '腰佩元素提取D1.svg', name: '卷草盘长腰佩纹', cat: 'D', tags: ['端庄','精致','男性','庄重'], meaning: '圆环内卷草云头纹样的腰带饰件，是蒙古族男性腰带上的金属佩饰，象征勇武与尊贵身份', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D5.svg', name: '盘长云头腰佩纹', cat: 'D', tags: ['粗犷','力量','盘长','男性'], meaning: '粗线盘长结与对称云涡纹组合的竖向腰佩，线条有力，展现蒙古族男性的阳刚与大气', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D7.svg', name: '八瓣如意腰佩纹', cat: 'D', tags: ['精致','如意','大型','尊贵'], meaning: '菱形外框含八瓣如意云头，中心方形盘长结，是蒙古族贵族男性大型腰带主饰件的纹样', match_traits: { shape: 'square', gender: 'male', age: 'old' } },
+{ file: '腰佩元素提取D8.svg', name: '火焰宝珠腰佩纹', cat: 'D', tags: ['宗教','庄严','深沉','哲理'], meaning: '火焰宝珠与盘长结、涡旋纹纵向组合，融合佛教火焰纹元素，象征智慧之光与宗教虔诚', match_traits: { shape: 'long', gender: 'male', age: 'old' } },
+{ file: '腰佩元素提取D10.svg', name: '团花卷草大型腰佩纹', cat: 'D', tags: ['复杂','华贵','大气','成熟'], meaning: '密集涡卷与菱形几何纹组合的大型腰佩饰件，工艺精湛，体现佩戴者的尊贵地位', match_traits: { shape: 'oval', gender: 'male', age: 'old' } },
+{ file: '腰佩元素提取D14.svg', name: '宝珠卷草盾形佩纹', cat: 'D', tags: ['华美','宝珠','写实','尊贵'], meaning: '盾形外框内中心大宝珠周围密集卷草涡卷，写实金银器风格，是蒙古族贵族腰饰的巅峰之作', match_traits: { shape: 'oval', gender: 'male', age: 'old' } },
+{ file: '腰佩元素提取D17.svg', name: '如意花形腰佩纹', cat: 'D', tags: ['如意','花形','精美','中性'], meaning: '六瓣如意云头花形外框内含竖向盘长与涡卷，造型优美，男女均可佩戴的吉祥纹样', match_traits: { shape: 'round', gender: 'neutral', age: 'middle' } },
+{ file: '腰佩元素提取D18.svg', name: '三角云纹角饰', cat: 'D', tags: ['三角','云纹','简洁','年轻'], meaning: '倒三角外框内含如意云头纹样，简洁明快，常用于蒙古族服饰的三角形胸饰或角饰', match_traits: { shape: 'long', gender: 'neutral', age: 'young' } },
+{ file: '腰佩元素提取D19.svg', name: '如意宝珠佩饰纹', cat: 'D', tags: ['如意','珠宝','圆润','女性'], meaning: '如意头形内含三颗宝珠与对称卷草，写实金属器风格，是蒙古族女性佩饰中的珍贵纹样', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '腰佩元素提取D21.svg', name: '方形团花宝珠纹', cat: 'D', tags: ['方正','珠宝','对称','端庄'], meaning: '长方形内中心大圆花轮与四角梅花组合，镶嵌宝石风格的腰带方形扣饰，象征富足与品位', match_traits: { shape: 'square', gender: 'neutral', age: 'middle' } },
+{ file: '腰佩元素提取D22.svg', name: '蝴蝶纹佩饰', cat: 'D', tags: ['蝴蝶','灵动','美丽','女性','年轻'], meaning: '展翅蝴蝶造型的腰佩纹样，蝴蝶在蒙古族文化中象征美丽与自由，寓意灵魂的轻盈飞翔', match_traits: { shape: 'oval', gender: 'female', age: 'young', expression: 'happy' } },
+{ file: '腰佩元素提取D23.svg', name: '树形涡卷纹', cat: 'D', tags: ['生命树','涡卷','自然','中性'], meaning: '上部云头、下部大涡卷如树根的生命树造型，象征蒙古族"世界树"的宇宙观——天、地、人三界相连', match_traits: { shape: 'long', gender: 'neutral', age: 'middle' } },
+
+// ============ 文献类 - 古朴深沉，适配成熟/老年 ============
+{ file: '文献资料元素提取E2.svg', name: '古典卷草纹', cat: 'E', tags: ['古典','传承','深沉','智慧'], meaning: '源自历史文献的古典卷草纹样，保留了蒙古族早期纹饰的古朴风格，承载着民族文化的深厚底蕴', match_traits: { shape: 'square', gender: 'neutral', age: 'old' } },
+{ file: '文献资料元素提取E4.svg', name: '文献团花纹', cat: 'E', tags: ['古典','圆满','庄重','传统'], meaning: '源自古籍文献的团花纹样，圆形构图庄重典雅，记录着蒙古族祖先的审美智慧与文化记忆', match_traits: { shape: 'round', gender: 'neutral', age: 'old' } },
+
+// ============ 补充收录 - 服装类 ============
+{ file: '服装元素提取A3.svg', name: '对称涡卷纹', cat: 'A', tags: ['对称','涡卷','庄重','大气'], meaning: '上下对称的大涡卷纹样，中心圆环贯穿，构图庄重饱满，象征天地交汇与阴阳和谐', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '服装元素提取A7.svg', name: '盘羊角卷草纹', cat: 'A', tags: ['力量','阳刚','大气','男性'], meaning: '盘羊角纹（乌嘎拉吉）是蒙古族最具代表性的纹样之一，涡卷如盘羊角般雄健有力，象征勇猛与力量', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '服装元素提取A12.svg', name: '万字盘长组合纹', cat: 'A', tags: ['万字','盘长','永恒','哲理'], meaning: '万字纹与盘长纹的组合，万字代表四方旋转的宇宙秩序，与盘长结合寓意智慧与永恒轮回', match_traits: { shape: 'square', gender: 'neutral', age: 'old' } },
+{ file: '服装元素提取A20.svg', name: '缠枝花卉纹', cat: 'A', tags: ['花卉','缠枝','繁复','华美'], meaning: '花卉与枝蔓缠绕的连续纹样，花开满枝象征繁荣兴旺，是蒙古族贵族服饰中常见的大面积装饰', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+{ file: '服装元素提取A25.svg', name: '对称花卉纹', cat: 'A', tags: ['对称','花卉','简洁','清雅'], meaning: '左右对称的简洁花卉纹样，构图明快雅致，适用于服饰的小面积点缀装饰', match_traits: { shape: 'oval', gender: 'female', age: 'young' } },
+{ file: '服装元素提取A29.svg', name: '卷叶花卉纹', cat: 'A', tags: ['自然','花卉','流畅','生机'], meaning: '自然生长的花卉与卷叶组合纹样，线条舒展自由，象征草原上蓬勃的生命力', match_traits: { shape: 'oval', gender: 'female', age: 'young' } },
+
+// ============ 补充收录 - 头饰类 ============
+{ file: '头饰元素提取B2.svg', name: '盾形圆环头饰纹', cat: 'B', tags: ['盾形','守护','华贵','女性'], meaning: '盾形外框内含涡卷与圆环的组合头饰纹，盾形寓意守护，是蒙古族女性前额装饰的典型造型', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B7.svg', name: '菱形四瓣云头纹', cat: 'B', tags: ['菱形','云纹','精致','年轻'], meaning: '菱形四瓣如意云头纹，中心含圆点花卉，轻巧灵动，是年轻女性头饰小型装饰片的常见纹样', match_traits: { shape: 'square', gender: 'female', age: 'young' } },
+{ file: '头饰元素提取B8.svg', name: '倒三角云纹头饰', cat: 'B', tags: ['三角','云纹','密集','华丽'], meaning: '半盾形内密集涡卷云纹组合，底部尖角形状，是蒙古族女性前额三角形饰片的经典纹样', match_traits: { shape: 'long', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B9.svg', name: '椭圆涡卷头饰纹', cat: 'B', tags: ['椭圆','涡卷','端庄','优雅'], meaning: '椭圆形外框内含对称涡卷装饰，端庄大方，是蒙古族已婚女性头饰中部装饰的典型纹样', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B16.svg', name: '四瓣盘长头饰纹', cat: 'B', tags: ['盘长','四瓣','吉祥','精致'], meaning: '菱形四叶草外框内含交织环扣盘长纹，寓意四方吉祥、福运绵延，是头饰金属片的精美纹样', match_traits: { shape: 'square', gender: 'female', age: 'middle' } },
+{ file: '头饰元素提取B18.svg', name: '五环如意头饰纹', cat: 'B', tags: ['环扣','如意','连续','吉祥'], meaning: '如意云头外框内五个圆环相扣，象征五福临门、环环相扣的美好因缘，是头饰上的吉祥纹样', match_traits: { shape: 'oval', gender: 'female', age: 'middle' } },
+
+// ============ 补充收录 - 鞋靴类 ============
+{ file: '鞋靴元素提取C4.svg', name: '靴面密集卷草纹', cat: 'C', tags: ['密集','精致','华贵','成熟'], meaning: '靴面正面密集对称卷草与盘长纹组合，黑底镂空效果华丽夺目，体现精湛的皮革雕花工艺', match_traits: { shape: 'square', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C7.svg', name: '靴头盘长云饰纹', cat: 'C', tags: ['靴头','盘长','云纹','简洁'], meaning: '梯形底座上中心盘长结配两侧云卷，是蒙古族靴筒顶部的小型装饰纹样，简洁吉祥', match_traits: { shape: 'long', gender: 'neutral', age: 'young' } },
+{ file: '鞋靴元素提取C8.svg', name: '盾形涡卷靴饰纹', cat: 'C', tags: ['盾形','涡卷','力量','男性'], meaning: '六角盾形外框内含对称S形涡卷纹，造型刚健有力，是男性靴面侧饰的常见纹样', match_traits: { shape: 'square', gender: 'male', age: 'middle' } },
+{ file: '鞋靴元素提取C9.svg', name: '菱形如意靴饰纹', cat: 'C', tags: ['菱形','如意','小巧','精致'], meaning: '小型菱形框内四朵如意云卷，精致小巧，是靴面点缀型金属装饰片的纹样', match_traits: { shape: 'square', gender: 'neutral', age: 'young' } },
+{ file: '鞋靴元素提取C12.svg', name: '圆形如意团花靴纹', cat: 'C', tags: ['圆形','如意','团花','华美'], meaning: '多瓣花边圆形外框内四朵对称涡卷云纹，是蒙古族靴面大型圆形装饰的精美纹样', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '鞋靴元素提取C13.svg', name: '对称云卷横饰纹', cat: 'C', tags: ['对称','云卷','横向','活泼'], meaning: '对称展开的卷草云纹横向装饰带，轻盈灵动，是靴筒中部的常见装饰纹样', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+{ file: '鞋靴元素提取C14.svg', name: '四瓣旋转如意纹', cat: 'C', tags: ['旋转','如意','动感','吉祥'], meaning: '菱形旋转方向的四瓣如意纹加中心盘长交织，旋转构图富有动感，寓意四时如意', match_traits: { shape: 'square', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C15.svg', name: '黑白卷草靴面纹', cat: 'C', tags: ['黑白','卷草','强烈','大胆'], meaning: '黑白对比强烈的写意卷草与几何组合，视觉冲击力强，体现蒙古族大胆的审美风格', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '鞋靴元素提取C16.svg', name: '自由涡卷靴饰纹', cat: 'C', tags: ['自由','涡卷','灵动','奔放'], meaning: '自由流动的多涡卷组合，不规则动态造型，如草原奔马般不拘一格，象征自由奔放的精神', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+{ file: '鞋靴元素提取C17.svg', name: '连续花波边饰纹', cat: 'C', tags: ['连续','花卉','边饰','规律'], meaning: '黑底白纹的连续花卉波浪窄条边饰带，规律重复节奏感强，是靴筒边缘的精美装饰带', match_traits: { shape: 'long', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C18.svg', name: '菱形心纹编织带', cat: 'C', tags: ['编织','菱形','心形','精密'], meaning: '菱形与心形交织的黑底镂空编织纹边饰带，如同精密织物，象征细致入微的匠心精神', match_traits: { shape: 'long', gender: 'neutral', age: 'middle' } },
+{ file: '鞋靴元素提取C19.svg', name: '弧形卷草靴饰带', cat: 'C', tags: ['弧形','卷草','柔美','适配'], meaning: '弧形弯曲的卷草云纹带，特别适配靴筒弧度，体现蒙古族工匠因材施艺的巧思', match_traits: { shape: 'oval', gender: 'female', age: 'young' } },
+{ file: '鞋靴元素提取C20.svg', name: '珊瑚宝石靴饰纹', cat: 'C', tags: ['珠宝','珊瑚','写实','华贵'], meaning: '多颗圆形珊瑚珠与几何金属镶嵌的靴尖装饰纹，写实再现蒙古族珊瑚镶嵌工艺之美', match_traits: { shape: 'round', gender: 'female', age: 'middle' } },
+{ file: '鞋靴元素提取C21.svg', name: '珠串花卉带纹', cat: 'C', tags: ['珠串','花朵','灵巧','女性'], meaning: '圆珠与花朵、枝叶组合的横条装饰带，如珊瑚珠串般灵巧精美，是女性靴饰的精致纹样', match_traits: { shape: 'long', gender: 'female', age: 'young' } },
+
+// ============ 补充收录 - 腰佩类 ============
+{ file: '腰佩元素提取D2.svg', name: '盘长圆环吊坠纹', cat: 'D', tags: ['圆环','盘长','吊坠','精致'], meaning: '上部圆环内卷草云头搭配下方方形盘长结的吊坠造型，是蒙古族腰带垂吊饰件的典型纹样', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D3.svg', name: '团花双环佩饰纹', cat: 'D', tags: ['团花','双环','金属','华美'], meaning: '上部双圆环扣搭配中心多瓣卷草团花的金属饰件造型，写实还原蒙古族金银匠人的精湛技艺', match_traits: { shape: 'oval', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D4.svg', name: '角隅卷草盘长纹', cat: 'D', tags: ['角隅','几何','盘长','简洁'], meaning: 'L形构图的几何盘长与自由卷草组合，是腰带角饰件的纹样，方正中含灵动', match_traits: { shape: 'square', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D6.svg', name: '竖向盘长云涡纹', cat: 'D', tags: ['竖向','盘长','粗犷','力量'], meaning: '竖向构图的粗线盘长结加上下对称云涡纹装饰，线条粗犷有力，展现游牧民族的豪迈气概', match_traits: { shape: 'long', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D9.svg', name: '扇形如意云佩纹', cat: 'D', tags: ['扇形','如意','轻巧','年轻'], meaning: '扇形外框内三朵如意云头卷纹，造型轻巧优美，是年轻人腰带扇形饰片的常见纹样', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+{ file: '腰佩元素提取D11.svg', name: '盾形涡卷佩饰纹', cat: 'D', tags: ['盾形','涡卷','密集','华丽'], meaning: '圆弧顶尖底盾形外框内密集对称涡卷云纹填充，中心菱形几何纹，工艺华丽精湛', match_traits: { shape: 'long', gender: 'male', age: 'old' } },
+{ file: '腰佩元素提取D12.svg', name: '圆角方形涡卷佩纹', cat: 'D', tags: ['方形','涡卷','对称','端庄'], meaning: '长方形圆角外框内含对称涡卷与中心菱形盘长交织纹，是腰带方形扣饰的经典纹样', match_traits: { shape: 'square', gender: 'male', age: 'middle' } },
+{ file: '腰佩元素提取D13.svg', name: '云头形涡卷佩纹', cat: 'D', tags: ['云头','涡卷','如意','精美'], meaning: '如意云头外形框内含涡卷与菱形交织纹，造型如意吉祥，是蒙古族腰带云形饰片的代表', match_traits: { shape: 'oval', gender: 'neutral', age: 'middle' } },
+{ file: '腰佩元素提取D15.svg', name: '简约涡卷佩饰纹', cat: 'D', tags: ['简约','涡卷','轻巧','日常'], meaning: '简洁的涡卷纹小型佩饰，线条流畅不繁复，适合日常佩戴，体现蒙古族简约之美', match_traits: { shape: 'oval', gender: 'neutral', age: 'young' } },
+{ file: '腰佩元素提取D20.svg', name: '圆形卷草大佩纹', cat: 'D', tags: ['圆形','卷草','大型','尊贵'], meaning: '圆形外框内密集对称卷草涡卷纹样，大面积精致装饰，是贵族大型圆形腰佩的纹样', match_traits: { shape: 'round', gender: 'male', age: 'old' } },
+];
+
+  // ===== face-api 模型加载 =====
+  let modelsLoaded = false;
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model/';
+
+  async function loadModels() {
+    setStatus('loading', '正在加载人脸分析模型...');
+    try {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+      ]);
+      modelsLoaded = true;
+      setStatus('success', '模型加载完成，可以开始分析');
+    } catch (e) {
+      console.error('Model load error:', e);
+      setStatus('error', '模型加载失败，请刷新重试。将使用模拟分析。');
+      modelsLoaded = false;
+    }
+  }
+
+  // 页面加载时即开始加载模型
+  loadModels();
+
+  // ===== 摄像头 =====
+  let cameraStream = null;
+  let cameraActive = false;
+  let inputSource = null; // 'camera' | 'upload'
+
+  async function toggleCamera() {
+    const video = document.getElementById('videoEl');
+    const btn = document.getElementById('cameraBtn');
+    const placeholder = document.getElementById('placeholder');
+    const preview = document.getElementById('uploadPreview');
+
+    if (cameraActive) {
+      // 关闭
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      video.style.display = 'none';
+      placeholder.style.display = 'flex';
+      btn.textContent = '开启摄像头';
+      cameraActive = false;
+      inputSource = null;
+      document.getElementById('analyzeBtn').disabled = true;
+      return;
+    }
+
+    try {
+      setStatus('loading', '正在开启摄像头...');
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+      video.srcObject = cameraStream;
+      video.style.display = 'block';
+      preview.style.display = 'none';
+      placeholder.style.display = 'none';
+      cameraActive = true;
+      inputSource = 'camera';
+      btn.textContent = '关闭摄像头';
+      document.getElementById('analyzeBtn').disabled = false;
+      setStatus('success', '摄像头已开启，点击"开始分析"');
+    } catch (e) {
+      setStatus('error', '无法开启摄像头：' + e.message);
+    }
+  }
+
+  // ===== 上传照片 =====
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const preview = document.getElementById('uploadPreview');
+      const video = document.getElementById('videoEl');
+      const placeholder = document.getElementById('placeholder');
+      preview.src = ev.target.result;
+      preview.style.display = 'block';
+      video.style.display = 'none';
+      placeholder.style.display = 'none';
+      // 关闭摄像头
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      cameraActive = false;
+      document.getElementById('cameraBtn').textContent = '开启摄像头';
+      inputSource = 'upload';
+      document.getElementById('analyzeBtn').disabled = false;
+      setStatus('success', '照片已加载，点击"开始分析"');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ===== 分析动画控制 =====
+  function showAnalyzingOverlay() {
+    const overlay = document.getElementById('analyzingOverlay');
+    const progressBar = document.getElementById('analyzeProgressBar');
+    const steps = document.querySelectorAll('#analyzeSteps .step');
+    overlay.classList.add('active');
+    progressBar.style.width = '0%';
+    steps.forEach(s => { s.classList.remove('visible', 'done'); });
+  }
+
+  function hideAnalyzingOverlay() {
+    const overlay = document.getElementById('analyzingOverlay');
+    overlay.classList.remove('active');
+  }
+
+  async function animateAnalysisSteps() {
+    const progressBar = document.getElementById('analyzeProgressBar');
+    const steps = document.querySelectorAll('#analyzeSteps .step');
+    const stepDurations = [600, 800, 700, 600, 800]; // 每步持续时间(ms)
+    const totalDuration = stepDurations.reduce((a, b) => a + b, 0);
+    let elapsed = 0;
+
+    for (let i = 0; i < steps.length; i++) {
+      steps[i].classList.add('visible');
+      const progress = ((elapsed + stepDurations[i] * 0.5) / totalDuration) * 100;
+      progressBar.style.width = Math.min(progress, 95) + '%';
+      await new Promise(r => setTimeout(r, stepDurations[i]));
+      steps[i].classList.add('done');
+      elapsed += stepDurations[i];
+    }
+    progressBar.style.width = '100%';
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  // ===== 分析人脸 =====
+  async function analyzeface() {
+    if (!inputSource) { setStatus('error', '请先开启摄像头或上传照片'); return; }
+    setStatus('loading', '正在分析面部特征...');
+    document.getElementById('analyzeBtn').disabled = true;
+
+    let inputEl;
+    if (inputSource === 'camera') {
+      inputEl = document.getElementById('videoEl');
+    } else {
+      inputEl = document.getElementById('uploadPreview');
+    }
+
+    // 显示分析动画
+    showAnalyzingOverlay();
+
+    let result;
+    if (modelsLoaded) {
+      try {
+        // 同时执行分析动画和实际检测
+        const [detection] = await Promise.all([
+          faceapi.detectSingleFace(inputEl, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceExpressions()
+            .withAgeAndGender(),
+          animateAnalysisSteps()
+        ]);
+
+        if (!detection) {
+          hideAnalyzingOverlay();
+          setStatus('error', '未检测到人脸，请调整位置或更换照片');
+          document.getElementById('analyzeBtn').disabled = false;
+          return;
+        }
+        // 绘制检测标记
+        drawDetection(inputEl, detection);
+        // 提取特征
+        result = extractTraits(detection);
+      } catch (e) {
+        console.error('Detection error:', e);
+        await animateAnalysisSteps();
+        result = simulateTraits();
+      }
+    } else {
+      // 模拟分析（模型未加载时）
+      await animateAnalysisSteps();
+      result = simulateTraits();
+    }
+
+    // 隐藏分析动画
+    hideAnalyzingOverlay();
+
+    // 推荐纹样
+    const recommendations = recommendPatterns(result);
+    renderResults(result, recommendations);
+    setStatus('success', '分析完成！已为您推荐专属纹样');
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+
+  // 绘制检测框与关键点
+  function drawDetection(inputEl, detection) {
+    const overlay = document.getElementById('overlayCanvas');
+    const dims = faceapi.matchDimensions(overlay, inputEl, true);
+    const resized = faceapi.resizeResults(detection, dims);
+    faceapi.draw.drawDetections(overlay, resized);
+    faceapi.draw.drawFaceLandmarks(overlay, resized);
+  }
+
+  // 从 face-api 结果提取特征
+  function extractTraits(detection) {
+    const landmarks = detection.landmarks;
+    const jawLine = landmarks.getJawOutline();
+    const age = detection.age;
+    const gender = detection.gender;
+    const genderProb = detection.genderProbability;
+    const expressions = detection.expressions;
+
+    // 脸型分析（通过下颌线宽高比）
+    const jawWidth = Math.abs(jawLine[16].x - jawLine[0].x);
+    const jawHeight = Math.abs(jawLine[8].y - jawLine[0].y);
+    const ratio = jawHeight / jawWidth;
+    let faceShape;
+    if (ratio > 1.3) faceShape = 'long';       // 长脸
+    else if (ratio > 1.1) faceShape = 'oval';   // 椭圆脸
+    else if (ratio > 0.95) faceShape = 'round'; // 圆脸
+    else faceShape = 'square';                   // 方脸
+
+    // 年龄段
+    let ageGroup;
+    if (age < 25) ageGroup = 'young';
+    else if (age < 50) ageGroup = 'middle';
+    else ageGroup = 'old';
+
+    // 主要表情
+    const sortedExpr = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
+    const topExpression = sortedExpr[0][0];
+
+    return {
+      faceShape,
+      faceShapeName: { round: '圆形脸', oval: '椭圆脸', long: '长形脸', square: '方形脸' }[faceShape],
+      age: Math.round(age),
+      ageGroup,
+      ageGroupName: { young: '青年', middle: '中年', old: '长者' }[ageGroup],
+      gender,
+      genderName: gender === 'male' ? '男性化' : '女性化',
+      genderProb: (genderProb * 100).toFixed(0) + '%',
+      expression: topExpression,
+      expressionName: {
+        neutral: '平静', happy: '开心', sad: '沉思', angry: '刚毅',
+        fearful: '敬畏', disgusted: '深沉', surprised: '惊喜'
+      }[topExpression] || topExpression,
+      expressionProb: (sortedExpr[0][1] * 100).toFixed(0) + '%',
+    };
+  }
+
+  // 模拟分析（fallback）
+  function simulateTraits() {
+    const shapes = ['round', 'oval', 'long', 'square'];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    const age = 20 + Math.floor(Math.random() * 40);
+    const gender = Math.random() > 0.5 ? 'male' : 'female';
+    const expressions = ['neutral', 'happy', 'sad'];
+    const expr = expressions[Math.floor(Math.random() * expressions.length)];
+    const ageGroup = age < 25 ? 'young' : age < 50 ? 'middle' : 'old';
+    return {
+      faceShape: shape,
+      faceShapeName: { round: '圆形脸', oval: '椭圆脸', long: '长形脸', square: '方形脸' }[shape],
+      age, ageGroup,
+      ageGroupName: { young: '青年', middle: '中年', old: '长者' }[ageGroup],
+      gender, genderName: gender === 'male' ? '男性化' : '女性化', genderProb: '78%',
+      expression: expr,
+      expressionName: { neutral: '平静', happy: '开心', sad: '沉思' }[expr],
+      expressionProb: '85%',
+      simulated: true,
+    };
+  }
+
+  // ===== 推荐算法 =====
+  function recommendPatterns(traits) {
+    // 计算每个纹样的匹配分数
+    const scored = PATTERN_DB.map(p => {
+      let score = 0;
+      const mt = p.match_traits;
+      // 脸型匹配
+      if (mt.shape === traits.faceShape) score += 30;
+      else if ((mt.shape === 'round' && traits.faceShape === 'oval') || (mt.shape === 'oval' && traits.faceShape === 'round')) score += 15;
+      // 性别匹配
+      if (mt.gender === traits.gender) score += 25;
+      else if (mt.gender === 'neutral') score += 12;
+      // 年龄匹配
+      if (mt.age === traits.ageGroup) score += 25;
+      else if ((mt.age === 'middle' && traits.ageGroup === 'young') || (mt.age === 'young' && traits.ageGroup === 'middle')) score += 10;
+      // 表情匹配
+      if (mt.expression && mt.expression === traits.expression) score += 20;
+      else if (traits.expression === 'happy' && p.tags.includes('快乐')) score += 15;
+      else if (traits.expression === 'neutral' && p.tags.includes('稳重')) score += 10;
+      else if (traits.expression === 'sad' && p.tags.includes('深沉')) score += 10;
+
+      return { ...p, score };
+    });
+
+    // 按分数排序取前4
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 4);
+  }
+
+  // ===== 趣味解读语库 =====
+  const FUN_READINGS = {
+    // 按纹样类型+脸型/性别组合生成趣味解读
+    round_female: [
+      '你的圆润面相自带「花开富贵」属性，连纹样都忍不住为你绽放',
+      '圆脸就是草原上最饱满的月亮，难怪纹样都围着你转圈圈',
+      '蒙古族老人说：脸圆福气满，你这是天生的"阿吉奈"（福相）呀'
+    ],
+    round_male: [
+      '圆润面相配上沉稳气质，蒙古族说这叫"赛音额日德木"——好人相',
+      '你的脸型圆中带方，古人说这是「福泽深厚」之相，纹样都抢着跟你配对',
+      '这种饱满的面部轮廓，在草原文化里是丰收与满足的象征'
+    ],
+    oval_female: [
+      '椭圆脸型的你像草原上的明月，温柔又明亮，云纹专门为你飘来',
+      '你的面部线条流畅如哈木尔卷草，这纹样简直是为你量身定制的',
+      '蒙古族说椭圆脸是「天鹅面」，优雅从骨子里散发出来'
+    ],
+    oval_male: [
+      '椭圆面型配合沉静气质，像草原深处的湖水——内敛却广阔',
+      '你的面部轮廓和如意云纹一样舒展自如，天生带着祥瑞之气',
+      '面如满月轮廓分明，蒙古族长者会说这是「德吉」相——吉祥'
+    ],
+    square_female: [
+      '方正脸型的女性自带"女将军"气场，连几何纹样都要列队欢迎你',
+      '你的面部骨骼结构明晰有力，蒙古族说这是「巴特尔额吉」——英雄母亲之相',
+      '线条分明的面部轮廓，跟犄纹一样充满力量感，太飒了'
+    ],
+    square_male: [
+      '方脸 = 草原上最稳的蒙古包，你看起来就很靠谱，连纹样都选了最方正的那款',
+      '你的面部线条和回纹一样坚定有力，蒙古族说这是领袖相——"汗"相',
+      '下颌线条刚劲如犄纹转角，这在草原文化里象征"不动如山"'
+    ],
+    long_female: [
+      '修长面型像草原上挺拔的白桦树，纤细优雅，连坠饰纹样都想为你摇曳',
+      '蒙古族说长脸是「高贵面」，你的五官比例就像精心设计的头饰纹样一样精致',
+      '你的面部线条往下延伸的气质，跟竖向盘长纹一样有韵律感'
+    ],
+    long_male: [
+      '长形脸配上沉稳表情，像草原上遥望远方的鹰——看得远、想得深',
+      '你的面部比例修长有力，蒙古族文化里这叫「汗颜」——可汗的面相',
+      '纵向延展的面部轮廓和竖向纹样天然契合，这是"天赋异禀"的匹配'
+    ],
+    // 按表情补充
+    happy: '你笑起来的样子像草原上最灿烂的格桑花，好运气都被你的笑容吸引来了',
+    neutral: '你平静的神态里藏着草原的辽阔，蒙古族说「心静者远」——有大智慧',
+    sad: '你沉思的样子像草原黄昏时的天空，深邃而富有层次，连纹样都为你增添了几分哲理',
+    // 通用补充（当特定池用完时备用）
+    universal: [
+      '草原上没有两片相同的云，你和这个纹样的缘分也是独一无二的',
+      '蒙古族相信万物有灵，此刻纹样正在回应你面相中的某种呼唤',
+      '纹样千年传承只为等一个有缘人，今天它选择了你',
+      '你的面部比例与这个纹样的几何韵律产生了神奇共鸣'
+    ],
+  };
+
+  function getFunReading(traits, pattern) {
+    const key = traits.faceShape + '_' + traits.gender;
+    const pool = FUN_READINGS[key] || FUN_READINGS['oval_' + traits.gender] || FUN_READINGS['round_male'];
+    // 取一条随机的，但同一次展示中避免重复
+    let reading = pool[Math.floor(Math.random() * pool.length)];
+    // 如果有表情特殊解读，有30%概率替换
+    if (traits.expression !== 'neutral' && FUN_READINGS[traits.expression] && Math.random() < 0.3) {
+      reading = FUN_READINGS[traits.expression];
+    }
+    return reading;
+  }
+
+  // ===== 渲染结果 =====
+  function renderResults(traits, recommendations) {
+    // 左栏：特征分析
+    const traitCard = document.getElementById('traitCard');
+    const traitList = document.getElementById('traitList');
+    traitCard.style.display = 'block';
+    traitList.innerHTML = `
+      <div class="trait-item"><span class="trait-label">脸型</span><span class="trait-value">${traits.faceShapeName}</span></div>
+      <div class="trait-item"><span class="trait-label">预测年龄</span><span class="trait-value">${traits.age} 岁 (${traits.ageGroupName})</span></div>
+      <div class="trait-item"><span class="trait-label">性别倾向</span><span class="trait-value">${traits.genderName} (${traits.genderProb})</span></div>
+      <div class="trait-item"><span class="trait-label">表情气质</span><span class="trait-value">${traits.expressionName} (${traits.expressionProb})</span></div>
+      ${traits.simulated ? '<div style="font-size:11px;color:rgba(201,168,76,0.4);margin-top:8px;text-align:center;">(模拟数据 - 模型未加载)</div>' : ''}
+    `;
+
+    // 右栏：纹样推荐
+    const body = document.getElementById('recommendBody');
+    const usedReadings = new Set();
+    body.innerHTML = `
+      <div class="recommend-grid">
+        ${recommendations.map(r => {
+          let reading = getFunReading(traits, r);
+          // 避免重复（最多尝试15次防死循环）
+          let attempts = 0;
+          while (usedReadings.has(reading) && attempts < 15) {
+            if (attempts < 5) {
+              const key = traits.faceShape + '_' + traits.gender;
+              const pool = FUN_READINGS[key] || FUN_READINGS['round_male'];
+              reading = pool[Math.floor(Math.random() * pool.length)];
+            } else if (attempts < 8 && FUN_READINGS[traits.expression]) {
+              reading = FUN_READINGS[traits.expression];
+            } else {
+              // 使用通用池
+              const uPool = FUN_READINGS.universal;
+              reading = uPool[Math.floor(Math.random() * uPool.length)];
+            }
+            attempts++;
+          }
+          usedReadings.add(reading);
+          return `
+          <div class="recommend-item" onclick="window.open('fingerweave.html','_self')">
+            <div class="recommend-item-img">
+              <img src="${getSvgPath(r.file)}" alt="${r.name}" style="filter: brightness(0) invert(1); opacity: 0.85;">
+            </div>
+            <div class="recommend-item-info">
+              <div class="recommend-item-name">${r.name}</div>
+              <div class="recommend-item-reason">${r.meaning}</div>
+              <div class="recommend-item-fun" style="margin-top:8px; padding:8px 10px; border-radius:8px; background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.1); font-size:11px; color:rgba(201,168,76,0.8); line-height:1.6; font-style:italic;">
+                ✨ ${reading}
+              </div>
+              <div class="recommend-item-match">
+                <span class="match-num">${r.score}%</span>
+                <span class="match-label">匹配度</span>
+              </div>
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+    `;
+  }
+
+  // ===== 状态提示 =====
+  function setStatus(type, msg) {
+    const bar = document.getElementById('statusBar');
+    const dotClass = type === 'loading' ? 'loading' : type === 'success' ? 'success' : 'error';
+    bar.innerHTML = `<span class="status-dot ${dotClass}"></span><span>${msg}</span>`;
+  }
+  </script>
+
+  <!-- 底部五色色条 -->
+  <div class="five-color-bar">
+    <span style="background:linear-gradient(90deg, #003d99, #0066CC);"></span>
+    <span style="background:linear-gradient(90deg, #0066CC, #CC0000);"></span>
+    <span style="background:linear-gradient(90deg, #CC0000, #FFCC00);"></span>
+    <span style="background:linear-gradient(90deg, #FFCC00, #00CC66);"></span>
+    <span style="background:linear-gradient(90deg, #00CC66, #1a1a2e);"></span>
+  </div>
+
+</body>
+</html>

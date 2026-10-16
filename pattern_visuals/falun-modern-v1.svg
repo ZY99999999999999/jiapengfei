@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">法轮纹现代结构示意：八辐轮与中心轮毂</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="160" cy="160" r="112" stroke="#d9b55b" stroke-width="15"/>
+    <circle cx="160" cy="160" r="91" stroke="#217d94" stroke-width="6"/>
+    <circle cx="160" cy="160" r="26" stroke="#d9b55b" stroke-width="11"/>
+    <path d="M160 73V134M160 186V247M73 160H134M186 160H247M99 99L141 141M179 179L221 221M221 99L179 141M141 179L99 221" stroke="#d9b55b" stroke-width="13"/>
+    <circle cx="160" cy="160" r="8" fill="#c7503d" stroke="none"/>
+  </g>
+</svg>

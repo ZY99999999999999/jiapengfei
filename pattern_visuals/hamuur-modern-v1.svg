@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">哈木尔鼻纹现代结构示意：双曲内旋对称</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M160 244C126 227 91 208 73 177C53 143 64 97 98 88C128 80 150 104 147 131C144 152 120 163 107 149C97 138 103 120 117 120" stroke="#d5ad59" stroke-width="17"/>
+    <path d="M160 244C194 227 229 208 247 177C267 143 256 97 222 88C192 80 170 104 173 131C176 152 200 163 213 149C223 138 217 120 203 120" stroke="#d5ad59" stroke-width="17"/>
+    <path d="M160 225C129 210 101 194 87 168M160 225C191 210 219 194 233 168" stroke="#26a8b4" stroke-width="5"/>
+    <path d="M140 219Q160 199 180 219M143 245Q160 255 177 245" stroke="#ec7156" stroke-width="7"/>
+    <circle cx="143" cy="238" r="4" fill="#f3e6c7" stroke="none"/>
+    <circle cx="177" cy="238" r="4" fill="#f3e6c7" stroke="none"/>
+  </g>
+</svg>

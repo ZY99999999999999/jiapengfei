@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     viewBox="-10 -10 570 709" 
+     class="mongolian-pattern">
+  <path d="M 135,214 L 415,214 L 415,494 L 135,494 Z M 153,232 L 153,476 L 397,476 L 397,232 Z M 171,250 L 379,250 L 379,458 L 189,458 L 189,268 L 361,268 L 361,440 L 171,440 Z " 
+        fill="currentColor" 
+        fill-rule="evenodd" 
+        class="pattern-path"/>
+</svg>

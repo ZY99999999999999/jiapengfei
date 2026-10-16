@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">额布尔犄角纹现代结构示意：镜像盘羊角螺旋</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M159 252C115 229 86 194 83 151C80 104 105 66 142 64C178 62 187 101 166 121C144 143 114 125 122 104C126 94 136 91 145 95" stroke="#d7b45f" stroke-width="18"/>
+    <path d="M161 252C205 229 234 194 237 151C240 104 215 66 178 64C142 62 133 101 154 121C176 143 206 125 198 104C194 94 184 91 175 95" stroke="#d7b45f" stroke-width="18"/>
+    <path d="M156 229C118 208 101 177 101 146M164 229C202 208 219 177 219 146" stroke="#1c96a4" stroke-width="5"/>
+    <path d="M142 253Q160 267 178 253" stroke="#e15b45" stroke-width="8"/>
+    <path d="M90 87L76 57M230 87L244 57" stroke="#d7b45f" stroke-width="11"/>
+  </g>
+</svg>

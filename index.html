@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="从文化解读、形状文法到体感共创，探索蒙古族传统纹样的数字化活化路径。">
+  <title>蒙古族纹样数字化平台</title>
+  <link rel="stylesheet" href="platform-ui.css?v=1.1">
+  <style>
+    :root {
+      --home-bg: #050c19; --home-panel: rgba(13,25,47,.78); --home-gold: #d6b85f;
+      --home-gold-bright: #f1d57a; --home-text: #f6f1e8; --home-muted: rgba(246,241,232,.68);
+      --home-line: rgba(214,184,95,.2); --home-max: 1280px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-width: 320px; color: var(--home-text); overflow-x: hidden;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at 82% 10%, rgba(36,68,122,.24), transparent 34%),
+                  radial-gradient(circle at 18% 28%, rgba(122,67,36,.11), transparent 30%), var(--home-bg);
+    }
+    a { color: inherit; }
+    #stars-canvas { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; opacity: .7; }
+    .site-header { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--home-line); background: rgba(5,12,25,.86); backdrop-filter: blur(20px) saturate(1.2); }
+    .header-inner { width: min(calc(100% - 40px), var(--home-max)); min-height: 68px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font-family: "Noto Serif SC", "SimSun", serif; font-weight: 700; letter-spacing: .08em; white-space: nowrap; }
+    .brand-mark { width: 38px; height: 38px; flex: none; display: block; background: url('lib/images/logo-jia-oracle-v1.png') center/contain no-repeat; }
+    .site-nav { display: flex; align-items: center; gap: 4px; }
+    .site-nav a { min-height: 40px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; color: var(--home-muted); text-decoration: none; font-size: 14px; white-space: nowrap; }
+    .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--home-gold-bright); background: rgba(214,184,95,.1); }
+    .mobile-menu { display: none; position: relative; }
+    .mobile-menu summary { list-style: none; width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--home-line); border-radius: 12px; color: var(--home-gold-bright); cursor: pointer; font-size: 22px; background: rgba(214,184,95,.06); }
+    .mobile-menu summary::-webkit-details-marker { display: none; }
+    .mobile-menu nav { position: absolute; top: 52px; right: 0; width: min(280px, calc(100vw - 32px)); padding: 10px; display: grid; gap: 4px; border: 1px solid var(--home-line); border-radius: 14px; background: #0a1427; box-shadow: 0 18px 48px rgba(0,0,0,.42); }
+    .mobile-menu nav a { min-height: 44px; padding: 0 14px; display: flex; align-items: center; border-radius: 10px; color: var(--home-muted); text-decoration: none; }
+    .mobile-menu nav a:hover { color: var(--home-gold-bright); background: rgba(214,184,95,.1); }
+    .hero { width: min(calc(100% - 40px), var(--home-max)); min-height: calc(100svh - 68px); margin: 0 auto; padding: 44px 0 54px; display: grid; grid-template-columns: minmax(230px,.34fr) minmax(0,1fr); align-items: center; gap: clamp(28px,5vw,72px); }
+    .eyebrow { margin: 0 0 14px; color: var(--home-gold); font-size: 13px; font-weight: 700; letter-spacing: .18em; }
+    .hero h1 { margin: 0; font-family: "Noto Serif SC", "SimSun", serif; font-size: clamp(42px,6vw,76px); line-height: 1.08; letter-spacing: .12em; font-weight: 700; color: var(--home-gold-bright); text-wrap: balance; }
+    .hero-lead { max-width: 35em; margin: 24px 0 0; color: var(--home-muted); font-size: clamp(16px,1.6vw,19px); line-height: 1.9; }
+    .hero-actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-action { min-height: 48px; padding: 0 20px; border: 1px solid var(--home-line); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: var(--home-text); text-decoration: none; font-weight: 700; background: rgba(255,255,255,.035); transition: transform .2s ease; }
+    .hero-action.primary { color: #142039; border-color: var(--home-gold); background: linear-gradient(135deg,var(--home-gold-bright),var(--home-gold)); box-shadow: 0 12px 36px rgba(214,184,95,.18); }
+    .hero-action:hover { transform: translateY(-2px); }
+    .hero-tags { margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+    .hero-tags li { padding: 7px 11px; border: 1px solid rgba(214,184,95,.16); border-radius: 999px; color: rgba(246,241,232,.58); font-size: 12px; background: rgba(9,21,41,.68); }
+    .hero-visual { position: relative; aspect-ratio: 1440/635; min-height: 360px; overflow: hidden; border: 1px solid var(--home-line); border-radius: 22px; background: linear-gradient(90deg,rgba(5,12,25,.25),transparent 40%), url("lib/images/slices/hero_yurt_full.png?v=1.0") center/cover no-repeat; box-shadow: 0 30px 90px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.03); }
+    .hero-visual::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top,rgba(5,12,25,.5),transparent 45%); }
+    .hero-media, .hero-media video, .hero-carousel, .hero-carousel img { width: 100%; height: 100%; }
+    .hero-media { position: absolute; inset: 0; display: none; }
+    .hero-media video { object-fit: cover; display: none; }
+    .hero-carousel { position: relative; display: none; }
+    .hero-carousel img { position: absolute; inset: 0; object-fit: cover; opacity: 0; transition: opacity .9s ease; }
+    .hero-carousel img.active { opacity: 1; }
+    .hero-caption { position: absolute; left: 22px; bottom: 18px; z-index: 3; padding: 9px 12px; border: 1px solid rgba(214,184,95,.24); border-radius: 10px; color: rgba(246,241,232,.82); font-size: 12px; background: rgba(5,12,25,.68); backdrop-filter: blur(12px); }
+    .section { width: min(calc(100% - 40px), var(--home-max)); margin: 0 auto; padding: 74px 0; }
+    .section-heading { display: grid; grid-template-columns: minmax(0,1fr) minmax(260px,.7fr); gap: 32px; align-items: end; margin-bottom: 30px; }
+    .section-heading h2 { margin: 0; font-family: "Noto Serif SC", "SimSun", serif; font-size: clamp(30px,4vw,48px); color: var(--home-gold-bright); letter-spacing: .07em; }
+    .section-heading p { margin: 0; color: var(--home-muted); line-height: 1.8; }
+    .module-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 18px; }
+    .module-card { position: relative; display: flex; flex-direction: column; overflow: hidden; min-height: 248px; border: 1px solid var(--home-line); border-radius: 18px; text-decoration: none; background: #0b182a; box-shadow: 0 18px 42px rgba(0,0,0,.22); isolation: isolate; transition: transform .25s ease, border-color .25s ease; }
+    .module-card:hover { transform: translateY(-3px); border-color: rgba(214,184,95,.46); }
+    .module-art { display: block; flex: none; width: 100%; height: 0; padding-top: 34%; background-image: linear-gradient(to bottom,transparent 55%,#0b182a 100%),var(--card-art); background-position: center top; background-size: 100% 100%,100% auto; background-repeat: no-repeat; }
+    .module-card:hover .module-art { filter: brightness(1.12); }
+    .module-copy { position: relative; z-index: 1; display: flex; flex: 1; flex-direction: column; align-items: center; gap: 12px; padding: 3px 14px 25px; text-align: center; }
+    .module-title { color: #d9bd79; font-family: "Noto Serif SC", "SimSun", serif; font-size: clamp(19px,1.6vw,23px); font-weight: 500; line-height: 1.35; letter-spacing: .12em; }
+    .module-description { color: rgba(226,207,167,.75); font-family: "Noto Serif SC", "SimSun", serif; font-size: 13px; line-height: 1.5; letter-spacing: .1em; }
+    .module-rule { width: 42px; height: 1px; margin-top: auto; background: rgba(214,184,95,.48); }
+    .module-tag, .module-cta { position: absolute; z-index: 2; }
+    .module-tag { top: 14px; left: 14px; padding: 6px 9px; border: 1px solid rgba(214,184,95,.28); border-radius: 999px; color: var(--home-gold-bright); font-size: 11px; background: rgba(5,12,25,.72); }
+    .module-cta { right: 16px; bottom: 14px; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(214,184,95,.34); border-radius: 50%; color: var(--home-gold-bright); background: rgba(5,12,25,.72); }
+    .method-section { width: 100%; border-block: 1px solid rgba(214,184,95,.12); background: linear-gradient(135deg,rgba(16,33,64,.64),rgba(8,17,33,.82)); }
+    .method-inner { width: min(calc(100% - 40px), var(--home-max)); margin: 0 auto; padding: 74px 0; }
+    .method-grid { margin-top: 32px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+    .method-card { min-height: 210px; padding: 24px; border: 1px solid rgba(214,184,95,.17); border-radius: 18px; background: rgba(5,12,25,.48); }
+    .method-index { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(214,184,95,.32); border-radius: 11px; color: var(--home-gold-bright); font-family: Georgia,serif; }
+    .method-card h3 { margin: 20px 0 10px; color: var(--home-text); font-size: 20px; }
+    .method-card p { margin: 0; color: var(--home-muted); line-height: 1.8; font-size: 14px; }
+    .method-card a { margin-top: 18px; display: inline-flex; color: var(--home-gold-bright); text-decoration: none; font-size: 13px; }
+    .site-footer { width: min(calc(100% - 40px), var(--home-max)); margin: 0 auto; padding: 30px 0 38px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: rgba(246,241,232,.48); font-size: 12px; }
+    .five-colors { display: flex; width: 150px; height: 4px; border-radius: 999px; overflow: hidden; }
+    .five-colors span { flex: 1; }
+    @media (max-width: 1020px) { .site-nav { display: none; } .mobile-menu { display: block; } .hero { grid-template-columns: 1fr; min-height: auto; } .hero-copy { max-width: 760px; } .hero-visual { min-height: 0; } .module-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+    @media (max-width: 680px) {
+      .header-inner,.hero,.section,.method-inner,.site-footer { width: min(calc(100% - 28px),var(--home-max)); }
+      .brand { font-size: 14px; } .brand-mark { width: 30px; height: 30px; }
+      .hero { padding: 34px 0 42px; gap: 28px; } .hero h1 { font-size: clamp(38px,13vw,58px); }
+      .hero-lead { margin-top: 18px; font-size: 16px; } .hero-actions { display: grid; grid-template-columns: 1fr; }
+      .hero-action { width: 100%; } .hero-visual { aspect-ratio: 4/3; border-radius: 16px; }
+      .section,.method-inner { padding: 54px 0; } .section-heading { grid-template-columns: 1fr; gap: 14px; }
+      .module-grid,.method-grid { grid-template-columns: 1fr; } .module-card { min-height: 260px; }
+      .site-footer { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stars-canvas" aria-hidden="true"></canvas>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="蒙古族纹样数字化平台首页"><span class="brand-mark" aria-hidden="true"></span><span>蒙古族纹样平台</span></a>
+      <nav class="site-nav" aria-label="主要导航">
+    <a href="index.html" aria-current="page">首页</a><a href="explorer.html">纹样探索</a><a href="fingerweave.html">指尖纹韵</a><a href="creator.html">创意共创</a><a href="recommend.html">智慧推荐</a>
+      </nav>
+    <details class="mobile-menu"><summary aria-label="打开导航菜单">☰</summary><nav aria-label="移动端导航"><a href="index.html">首页</a><a href="explorer.html">纹样探索</a><a href="fingerweave.html">指尖纹韵</a><a href="creator.html">创意共创</a><a href="recommend.html">智慧推荐</a></nav></details>
+    </div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">文化解码 · 数字生成 · 开放共创</p>
+        <h1 id="hero-title">蒙古族纹样</h1>
+        <p class="hero-lead">从纹样的文化寓意与构成规则出发，通过形状文法、粒子生成和手势交互，让传统视觉符号成为可以理解、创作与分享的数字体验。</p>
+        <div class="hero-actions"><a class="hero-action primary" href="explorer.html">先认识纹样 <span aria-hidden="true">→</span></a><a class="hero-action" href="fingerweave.html">直接开始创作</a></div>
+        <ul class="hero-tags" aria-label="平台方法标签"><li>三类纹样知识</li><li>传统五色体系</li><li>形状文法推演</li><li>体感交互共创</li></ul>
+      </div>
+      <div class="hero-visual" aria-label="草原星空与蒙古包视觉场景">
+        <div class="hero-media" id="heroMediaWrap" aria-hidden="true"><video id="heroVideo" muted loop playsinline></video><div class="hero-carousel" id="heroCarousel"></div></div>
+        <div class="hero-caption">传统纹样 × 草原意象 × 数字媒介</div>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="modules-title">
+      <div class="section-heading"><h2 id="modules-title">四条体验路径</h2><p>按“理解—组合—生成—应用”的顺序进入，也可以直接选择最感兴趣的模块。</p></div>
+      <div class="module-grid">
+        <a class="module-card" href="explorer.html" aria-label="进入纹样探索，了解纹样的文化语义与使用规范" style="--card-art:url('lib/images/slices/card_explorer.png?v=1.1')"><span class="module-art" aria-hidden="true"></span><span class="module-tag">语义解码</span><span class="module-copy"><strong class="module-title">纹样探索</strong><span class="module-description">探索千年纹样，解读文化密码</span><span class="module-rule" aria-hidden="true"></span></span><span class="module-cta" aria-hidden="true">→</span></a>
+        <a class="module-card" href="fingerweave.html" aria-label="进入指尖纹韵，使用形状文法组合纹样" style="--card-art:url('lib/images/slices/card_fingerweave.png?v=1.1')"><span class="module-art" aria-hidden="true"></span><span class="module-tag">语构实验</span><span class="module-copy"><strong class="module-title">形状文法创作</strong><span class="module-description">构建纹样文法，创作无限可能</span><span class="module-rule" aria-hidden="true"></span></span><span class="module-cta" aria-hidden="true">→</span></a>
+    <a class="module-card" href="creator.html" aria-label="进入创意共创，体验粒子化、手势交互与草原火山共同景观" style="--card-art:url('lib/images/slices/card_creator.png?v=1.1')"><span class="module-art" aria-hidden="true"></span><span class="module-tag">数字共创</span><span class="module-copy"><strong class="module-title">创意共创</strong><span class="module-description">参数调形与手势创作，让个人纹样进入草原火山</span><span class="module-rule" aria-hidden="true"></span></span><span class="module-cta" aria-hidden="true">→</span></a>
+        <a class="module-card" href="recommend.html" aria-label="进入智慧推荐，按使用者特征匹配纹样" style="--card-art:url('lib/images/slices/card_recommend.png?v=1.1')"><span class="module-art" aria-hidden="true"></span><span class="module-tag">语用匹配</span><span class="module-copy"><strong class="module-title">智能推荐</strong><span class="module-description">智能匹配推荐，发现更多精彩</span><span class="module-rule" aria-hidden="true"></span></span><span class="module-cta" aria-hidden="true">→</span></a>
+      </div>
+    </section>
+    <section class="method-section" aria-labelledby="method-title">
+      <div class="method-inner">
+        <div class="section-heading"><h2 id="method-title">从符号理解到活化设计</h2><p>平台不是纹样素材库，而是一条将文化含义、形式规则与当代使用场景连接起来的设计路径。</p></div>
+        <div class="method-grid">
+          <article class="method-card"><div class="method-index" aria-hidden="true">01</div><h3>理解它意味着什么</h3><p>从表层图形、中层象征到深层文化观念，认识盘长纹、哈木尔纹、五畜纹等母题的文化语义。</p><a href="explorer.html">查看纹样档案 →</a></article>
+          <article class="method-card"><div class="method-index" aria-hidden="true">02</div><h3>拆解它如何构成</h3><p>观察对称、旋转、镜像、平移、连续与嵌套等构成规则，再通过参数和画布完成组合推演。</p><a href="fingerweave.html">进入形状文法创作 →</a></article>
+          <article class="method-card"><div class="method-index" aria-hidden="true">03</div><h3>让它进入当代场景</h3><p>将纹样与草原、火山、数字艺术和个体体验连接，在真实使用情境中完成新的意义表达。</p><a href="creator.html">体验数字共创 →</a></article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><span>蒙古族纹样数字化平台 · 非遗文化数字体验</span><span class="five-colors" aria-label="传统五色：蓝、白、红、黄、绿"><span style="background:#1a5aa6"></span><span style="background:#f5f0e8"></span><span style="background:#c0392b"></span><span style="background:#d4a017"></span><span style="background:#2e7d32"></span></span></footer>
+  <script>
+  (function () {
+    var canvas=document.getElementById('stars-canvas'),ctx=canvas.getContext('2d'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,stars=[],frame;
+    function resize(){var r=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(innerWidth*r);canvas.height=Math.round(innerHeight*r);canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.setTransform(r,0,0,r,0,0);stars=Array.from({length:Math.min(150,Math.round(innerWidth/8))},function(){return{x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.2+.2,a:Math.random()*.5+.12,s:(Math.random()-.5)*.006};});}
+    function draw(){ctx.clearRect(0,0,innerWidth,innerHeight);stars.forEach(function(s){if(!reduced){s.a+=s.s;if(s.a>.7||s.a<.1)s.s*=-1;}ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba(224,212,164,'+s.a+')';ctx.fill();});if(!reduced)frame=requestAnimationFrame(draw);}
+    addEventListener('resize',function(){cancelAnimationFrame(frame);resize();draw();});resize();draw();
+    var wrap=document.getElementById('heroMediaWrap'),video=document.getElementById('heroVideo'),carousel=document.getElementById('heroCarousel');
+    function showVideo(){video.src='hero_video/hero_video.mp4?v=1.0';video.style.display='block';wrap.style.display='block';video.play().catch(function(){video.controls=true;});}
+    fetch('hero_carousel/list.json?v=1.0').then(function(r){return r.ok?r.json():[];}).then(function(files){if(!files.length){showVideo();return;}files.forEach(function(file,i){var img=document.createElement('img');img.src='hero_carousel/'+file;img.alt='';if(i===0)img.className='active';carousel.appendChild(img);});carousel.style.display='block';wrap.style.display='block';if(files.length>1&&!reduced){var i=0;setInterval(function(){var imgs=carousel.querySelectorAll('img');imgs[i].classList.remove('active');i=(i+1)%imgs.length;imgs[i].classList.add('active');},5000);}}).catch(showVideo);
+  })();
+  </script>
+</body>
+</html>
