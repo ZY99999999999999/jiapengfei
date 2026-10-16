@@ -1,5 +1,5 @@
 import * as THREE from '../lib/three/three.module.js';
-import './co-create-sculptures.js?v=1';
+import './co-create-sculptures.js?v=2';
 
 // 五张设计图的图腾次序沿用 creator.html；这里生成可环看的粒子结构，而非图像平面。
 const SPECS = [
@@ -548,8 +548,8 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
       return mount;
     };
     if (index === 1) {
-      wings.push(...wingedFigure(anchor(-.94, spec.height * .78), [0, 0, 0], C.red, texture, { scale: 1.0 }));
-      wings.push(...wingedFigure(anchor(.94, spec.height * .78), [0, 0, 0], C.red, texture, { scale: 1.0 }));
+      wings.push(...wingedFigure(anchor(-.94, spec.height * .78, -1.2), [0, 0, 0], C.red, texture, { scale: 1.0 }));
+      wings.push(...wingedFigure(anchor(.94, spec.height * .78, -1.2), [0, 0, 0], C.red, texture, { scale: 1.0 }));
       crown(totem, spec, index, texture);
       for (let level = 0; level < 6; level++) {
         curve(totem, t => {
