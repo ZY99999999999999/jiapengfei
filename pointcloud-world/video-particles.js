@@ -2,7 +2,7 @@ import * as THREE from '../lib/three/three.module.js';
 
 // HTMLVideoElement 只用作本地解码器，从不加入画面；每一帧的亮度/色彩被重建为微纹样点。
 export function createVideoParticlePlayer(scene, atlas) {
-  const width = 160, height = 90, count = width * height;
+  const width = 384, height = 216, count = width * height;
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   for (let row = 0; row < height; row += 1) {
@@ -12,7 +12,7 @@ export function createVideoParticlePlayer(scene, atlas) {
       const v = 0.5 - row / (height - 1);
       positions[n] = u;
       positions[n + 1] = v;
-      positions[n + 2] = Math.cos(u * Math.PI) * 0.55 + Math.sin(col * 1.27 + row * 0.71) * 0.13;
+      positions[n + 2] = Math.cos(u * Math.PI) * 0.12;
     }
   }
   const geometry = new THREE.BufferGeometry();
@@ -23,7 +23,7 @@ export function createVideoParticlePlayer(scene, atlas) {
   geometry.computeBoundingSphere();
   const material = new THREE.ShaderMaterial({
     vertexColors: true, transparent: true, depthTest: false, depthWrite: false,
-    uniforms: { uAtlas: { value: atlas }, uGlyph: { value: 2 }, uMotifMix: { value: 1 }, uTime: { value: 0 } },
+    uniforms: { uAtlas: { value: atlas }, uGlyph: { value: 2 }, uMotifMix: { value: 0 }, uTime: { value: 0 } },
     vertexShader: `
       varying vec3 vColor;
       varying float vLight;
@@ -32,10 +32,10 @@ export function createVideoParticlePlayer(scene, atlas) {
         vColor = color;
         vLight = max(max(color.r, color.g), color.b);
         vec3 p = position;
-        p.z += sin(uTime * 2.4 + position.x * 18.0 + position.y * 13.0) * .035;
+        // The source frame supplies the motion; no synthetic jitter is added.
         vec4 view = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * view;
-        gl_PointSize = clamp(105.0 / max(1.0, -view.z), 2.2, 8.7);
+        gl_PointSize = clamp(31.0 / max(1.0, -view.z), .9, 3.0);
       }
     `,
     fragmentShader: `
@@ -51,7 +51,7 @@ export function createVideoParticlePlayer(scene, atlas) {
         float circle = 1.0 - smoothstep(.25, .49, length(gl_PointCoord - vec2(.5)));
         float shape = mix(circle, max(motif, circle * .38), uMotifMix);
         if (shape < .14) discard;
-        vec3 bright = pow(vColor, vec3(.48)) * (1.05 + shape * .38);
+        vec3 bright = vColor;
         gl_FragColor = vec4(bright, shape);
       }
     `
@@ -127,7 +127,8 @@ export function createVideoParticlePlayer(scene, atlas) {
     if (!points.visible || !activeForm || video.readyState < 2) return;
     material.uniforms.uTime.value = time;
     points.position.copy(activeForm.position);
-    if (video.currentTime - lastSample < 1 / 16 && video.currentTime >= lastSample) return;
+    points.rotation.copy(activeForm.rotation);
+    if (video.currentTime - lastSample < 1 / 24 && video.currentTime >= lastSample) return;
     lastSample = video.currentTime;
     const crop = activeForm.userData.videoCrop || [0, 0, 1, 1];
     context.drawImage(video, crop[0] * video.videoWidth, crop[1] * video.videoHeight,
@@ -163,12 +164,12 @@ export function createVideoParticlePlayer(scene, atlas) {
       const light = Math.max(image[from], image[from + 1], image[from + 2]);
       const fade = light < 24 ? 0 : 1;
       // 短时明暗交叉混合，保留动作连续性，但不会把原视频铺成一张贴图。
-      colors[to] = colors[to] * 0.22 + image[from] / 255 * fade * 0.78;
-      colors[to + 1] = colors[to + 1] * 0.22 + image[from + 1] / 255 * fade * 0.78;
-      colors[to + 2] = colors[to + 2] * 0.22 + image[from + 2] / 255 * fade * 0.78;
+      colors[to] = image[from] / 255 * fade;
+      colors[to + 1] = image[from + 1] / 255 * fade;
+      colors[to + 2] = image[from + 2] / 255 * fade;
     }
     colorAttribute.needsUpdate = true;
   }
-  return { play, stop, update, setMotifs(value) { material.uniforms.uMotifMix.value = value ? 1 : 0; },
+  return { play, stop, update, setMotifs(value) { material.uniforms.uMotifMix.value = 0; },
     get playing() { return points.visible && !video.paused; }, get currentTime() { return video.currentTime; } };
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" role="img" aria-labelledby="title">
+  <title id="title">卷云纹形态转译：相连云头与回旋云涡</title>
+  <g fill="none" stroke="#163a73" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 112 C43 111 51 95 61 82 C72 65 91 61 103 73 C114 84 109 101 96 103 C86 104 80 96 85 88 C88 84 95 84 98 88
+      C113 69 126 44 151 46 C176 48 184 78 168 91 C154 103 138 93 143 81 C147 72 158 73 161 81
+      C176 55 192 39 217 47 C244 55 246 87 226 97 C210 105 197 92 205 81 C211 74 220 78 221 84
+      C236 68 250 61 266 69 C281 76 288 96 301 105 C313 113 327 111 342 112" stroke-width="12"/>
+    <path d="M20 119 C89 128 125 126 180 119 C235 126 271 128 340 119" stroke-width="7"/>
+  </g>
+</svg>

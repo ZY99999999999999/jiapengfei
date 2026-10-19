@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" role="img" aria-labelledby="title">
+  <title id="title">赭红色沉积崖壁层理与散落岩块示意</title>
+  <rect width="360" height="150" rx="18" fill="#10182b"/>
+  <path d="M0 105 30 87 52 91 75 54 104 68 128 35 154 47 184 20 207 37 226 29 249 60 278 42 302 71 332 56 360 70V150H0Z" fill="#813c2c"/>
+  <path d="M0 113 43 97 70 101 98 77 128 88 157 65 185 72 214 53 243 76 276 64 305 87 338 72 360 82" fill="none" stroke="#cf7750" stroke-width="9"/>
+  <path d="M0 130 38 119 66 123 97 103 127 111 156 91 188 100 217 81 248 101 281 88 309 106 340 94 360 102" fill="none" stroke="#e5a16b" stroke-width="5" opacity=".9"/>
+  <g fill="#b76643"><path d="m29 132 10-16 18 1 8 14-13 11H37Z"/><path d="m272 132 12-19 19 3 7 14-14 12h-17Z"/></g>
+</svg>

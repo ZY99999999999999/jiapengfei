@@ -1,5 +1,15 @@
 # 蒙古族纹样数字化平台
 
+## 当前整理版本：v169（2026-10-19）
+
+本次提交整理桌面网页已完成的场景与交互代码。版本标识见 [version.json](version.json)，本次清单与验收边界见 [RELEASE-v169.md](RELEASE-v169.md)。
+
+- 创作入口：`http://localhost:8766/creator.html`
+- 粒子世界：`http://localhost:8766/pointcloud-world/index.html?v=169`
+- 启动：项目根目录运行 `node server.js 8766`，或双击 `start.bat`。
+
+
+
 以蒙古族传统纹样为核心的数字化展示与互动创作平台。项目从符号学的语义、语构与语用三个维度组织内容，让纹样不仅被观看，也能够被理解、重组与应用。
 
 ## 核心模块

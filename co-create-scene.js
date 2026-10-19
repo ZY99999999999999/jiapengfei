@@ -20,13 +20,14 @@
   document.body.appendChild(entry);
 
   const scene = document.createElement('section');
-  scene.className = 'co-scene';
+  scene.className = 'co-scene co-particle-embedded';
   scene.id = 'coCreateScene';
   scene.setAttribute('role', 'dialog');
   scene.setAttribute('aria-modal', 'true');
   scene.setAttribute('aria-label', '草原火山共同景观');
   scene.setAttribute('aria-hidden', 'true');
   scene.innerHTML = `
+    <iframe class="co-particle-world-frame" id="coParticleWorld" title="完整纹样粒子世界" allow="autoplay"></iframe>
     <canvas class="co-3d-canvas" id="co3dCanvas" aria-label="可拖拽环游的三维草原火山空间"></canvas>
     <div class="co-scene-art" aria-hidden="true">
       <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -98,30 +99,33 @@
     <div class="co-scene-noise" aria-hidden="true"></div>
     <button class="co-back" id="coBack" type="button"><span aria-hidden="true">←</span> 返回调整</button>
     <div class="co-live-counter"><i aria-hidden="true"></i><span id="coLiveCount">正在读取共同景观</span></div>
+    <button class="co-clear-contributions" id="coClearContributions" type="button" aria-label="清空所有已融入的纹样">清空融入纹样</button>
     <aside class="co-recent-names" aria-label="最近进入共同景观的命名作品">
       <small>最近命名</small>
       <div id="coRecentNames"><span>等待第一枚命名纹样</span></div>
     </aside>
-    <nav class="co-peak-rail" aria-label="探索五座纹样火山">
-      <span class="co-peak-kicker">FIVE LIVING PEAKS</span>
+    <button type="button" class="co-ui-sound" data-ui-sound aria-pressed="true">音效：开</button>
+    <button type="button" class="co-peak-toggle" id="coPeakToggle" aria-expanded="false" aria-controls="coPeakNav">五峰导览 ▾</button>
+    <nav class="co-peak-rail" id="coPeakNav" aria-label="探索五座纹样火山">
+      <span class="co-peak-kicker">ART PEAKS · 景区地名</span>
       <button type="button" class="co-peak-button active" data-peak="all" aria-pressed="true"><b>◎</b><span>五峰总览</span></button>
-      <button type="button" class="co-peak-button" data-peak="0" aria-pressed="false"><b>01</b><span>蝶莲焰</span></button>
-      <button type="button" class="co-peak-button" data-peak="1" aria-pressed="false"><b>02</b><span>双翼织</span></button>
-      <button type="button" class="co-peak-button" data-peak="2" aria-pressed="false"><b>03</b><span>龙凤日轮</span></button>
-      <button type="button" class="co-peak-button" data-peak="3" aria-pressed="false"><b>04</b><span>蝶火脉</span></button>
-      <button type="button" class="co-peak-button" data-peak="4" aria-pressed="false"><b>05</b><span>夜翼回纹</span></button>
+      <button type="button" class="co-peak-button" data-peak="0" aria-pressed="false"><b>01</b><span class="co-peak-label"><strong>黑脑包 <i>景区4号</i></strong><small>蝶莲焰 · 设计峰01</small></span></button>
+      <button type="button" class="co-peak-button" data-peak="1" aria-pressed="false"><b>02</b><span class="co-peak-label"><strong>北炼丹炉 <i>景区3号</i></strong><small>双翼宝石 · 设计峰02</small></span></button>
+      <button type="button" class="co-peak-button" data-peak="2" aria-pressed="false"><b>03</b><span class="co-peak-label"><strong>中炼丹炉 <i>景区5号</i></strong><small>龙凤日轮 · 设计峰03</small></span></button>
+      <button type="button" class="co-peak-button" data-peak="3" aria-pressed="false"><b>04</b><span class="co-peak-label"><strong>南炼丹炉 <i>景区6号</i></strong><small>蝶火脉 · 设计峰04</small></span></button>
+      <button type="button" class="co-peak-button" data-peak="4" aria-pressed="false"><b>05</b><span class="co-peak-label"><strong>北尖山 <i>景区7号</i></strong><small>夜翼回纹 · 设计峰05</small></span></button>
       <small id="coPeakHint">点击火山靠近观看；拖拽绕山看立体纹样</small>
     </nav>
     <header class="co-scene-header">
       <div class="co-scene-kicker">ULAN HADA · 3D LIVING PATTERN LANDSCAPE</div>
-      <h2>草原火山 · 共同生长</h2>
-      <p>五座火山，各有纹样的生命 · 拖拽环游 · 滚轮穿行</p>
+      <h2>纹样粒子世界 · 共创</h2>
+      <p id="coWorldGestureHint">手势已启用时：张掌左右/上下移动 · 握拳滑翔 · 捏合确认；也可用鼠标与键盘</p>
     </header>
     <div class="co-contributions" id="coContributions" aria-hidden="true"></div>
     <div class="co-pattern-orb" id="coPatternOrb"><img id="coPatternImage" alt="当前创作纹样"></div>
     <div class="co-pattern-caption" id="coPatternCaption">当前纹样</div>
     <div class="co-destination-panel" id="coDestinationPanel">
-      <div class="co-panel-intro"><strong>为作品命名，再选择去向</strong><span>这个名字会随纹样一起留在共同景观</span></div>
+      <div class="co-panel-intro"><strong>为作品命名，再选择去向</strong><span>作品名称会留在共同景观中</span></div>
       <label class="co-name-field">
         <span>作品名称</span>
         <input id="coPatternNameInput" type="text" maxlength="18" autocomplete="off" aria-label="为纹样作品命名" placeholder="例如：永恒的草原力量">
@@ -130,7 +134,7 @@
       <div class="co-destination-grid">
         <button class="co-destination" type="button" data-destination="grass">
           <span class="co-destination-icon" aria-hidden="true">〽</span>
-          <span class="co-destination-copy"><strong>融入草原</strong><small>沉入草浪、山坡与熔岩地貌，成为大地纹理</small></span>
+          <span class="co-destination-copy"><strong>融入场景</strong><small>选择一座火山或一种动物，让纹样贴合对象表面</small></span>
           <span class="co-recommend">推荐</span>
         </button>
         <button class="co-destination" type="button" data-destination="sky">
@@ -139,6 +143,26 @@
           <span class="co-recommend">推荐</span>
         </button>
       </div>
+      <label class="co-target-field" id="coTargetField">
+        <span>融入到</span>
+        <select id="coTargetSelect" aria-label="选择纹样融入对象">
+          <optgroup label="火山坡面">
+            <option value="volcano:0">设计峰01 · 黑脑包（景区4号）/ 蝶莲焰</option>
+            <option value="volcano:1">设计峰02 · 北炼丹炉（景区3号）/ 双翼宝石</option>
+            <option value="volcano:2" selected>设计峰03 · 中炼丹炉（景区5号）/ 龙凤日轮</option>
+            <option value="volcano:3">设计峰04 · 南炼丹炉（景区6号）/ 蝶火脉</option>
+            <option value="volcano:4">设计峰05 · 北尖山（景区7号）/ 夜翼回纹</option>
+          </optgroup>
+          <optgroup label="草原动物">
+            <option value="animal:蒙古马">蒙古马</option>
+            <option value="animal:蒙古牛">蒙古牛</option>
+            <option value="animal:绵羊">绵羊</option>
+            <option value="animal:山羊">山羊</option>
+            <option value="animal:骆驼">骆驼</option>
+          </optgroup>
+        </select>
+        <small>纹样会贴合所选对象，并随对象一起保留</small>
+      </label>
       <div class="co-action-row">
         <div class="co-preview-note" id="coPreviewNote">正在预览纹样与景观的融合关系</div>
         <div class="co-actions">
@@ -158,8 +182,8 @@
       <h3 id="coSuccessTitle">纹样已融入共同景观</h3>
       <p id="coSuccessText">它将和其他参与者的纹样一起，在草原火山中继续生长。</p>
       <div class="co-success-actions">
-        <button class="co-secondary" id="coStay" type="button">留在共同景观</button>
-        <button class="co-confirm" id="coContinue" type="button">继续创作</button>
+        <button class="co-secondary" id="coStay" type="button">继续漫游</button>
+        <button class="co-confirm" id="coContinue" type="button">返回纹样创作</button>
       </div>
     </div>`;
   document.body.appendChild(scene);
@@ -172,8 +196,20 @@
   const changeButton = scene.querySelector('#coChangeDestination');
   const contributionLayer = scene.querySelector('#coContributions');
   const liveCount = scene.querySelector('#coLiveCount');
+  const clearContributionsButton = scene.querySelector('#coClearContributions');
+  const targetSelect = scene.querySelector('#coTargetSelect');
   const recentNames = scene.querySelector('#coRecentNames');
   const peakButtons = Array.from(scene.querySelectorAll('.co-peak-button'));
+  const peakToggle = scene.querySelector('#coPeakToggle');
+  function setPeakNav(open) {
+    scene.classList.toggle('co-peak-open', open);
+    peakToggle.setAttribute('aria-expanded', String(open));
+    peakToggle.textContent = open ? '收起导览 ▴' : '五峰导览 ▾';
+  }
+  peakToggle.addEventListener('click', () => setPeakNav(!scene.classList.contains('co-peak-open')));
+  document.addEventListener('pointerdown', event => {
+    if (scene.classList.contains('co-peak-open') && !event.target.closest('#coPeakNav, #coPeakToggle')) setPeakNav(false);
+  });
   const peakHint = scene.querySelector('#coPeakHint');
   const success = scene.querySelector('#coSuccess');
   const successTitle = scene.querySelector('#coSuccessTitle');
@@ -181,6 +217,7 @@
   const stayButton = scene.querySelector('#coStay');
   const continueButton = scene.querySelector('#coContinue');
   const destinationButtons = Array.from(scene.querySelectorAll('.co-destination'));
+  const destinationPanel = scene.querySelector('#coDestinationPanel');
   const nameInput = scene.querySelector('#coPatternNameInput');
   const nameCount = scene.querySelector('#coNameCount');
   const flightHud = scene.querySelector('#coFlightHud');
@@ -201,13 +238,100 @@
   let worldFrame = 0;
   const orbit = { yaw: 0.025, pitch: 0.16, distance: 78, distanceGoal: 78, dragging: false, x: 0, y: 0, movedAt: 0 };
   const peakSpecs = [
-    { x: -38, z: -19, height: 7.0, radius: 7.2, lip: 2.08, motif: '蝶莲焰', image: 'volcano-motif-01.jpg', tint: [0.19, 0.47, 0.45] },
-    { x: -19, z: -37, height: 10.5, radius: 6.2, lip: 1.25, motif: '双翼织', image: 'volcano-motif-02.jpg', tint: [0.33, 0.28, 0.45] },
-    { x: 0, z: -22.5, height: 11.4, radius: 8.0, lip: 1.82, motif: '龙凤日轮', image: 'volcano-motif-03.jpg', tint: [0.26, 0.39, 0.43] },
-    { x: 19, z: -39, height: 9.6, radius: 7.2, lip: 1.36, motif: '蝶火脉', image: 'volcano-motif-04.jpg', tint: [0.30, 0.27, 0.43] },
-    { x: 38, z: -20, height: 10.8, radius: 5.6, lip: 1.02, motif: '夜翼回纹', image: 'volcano-motif-05.jpg', tint: [0.16, 0.44, 0.47] }
+    { x: -38, z: -19, height: 7.0, radius: 7.2, lip: 2.08, placeName: '黑脑包', siteNumber: 4, motif: '蝶莲焰', image: 'volcano-motif-01.jpg', tint: [0.19, 0.47, 0.45] },
+    { x: -19, z: -37, height: 10.5, radius: 6.2, lip: 1.25, placeName: '北炼丹炉', siteNumber: 3, motif: '双翼宝石', image: 'volcano-motif-02.jpg', tint: [0.33, 0.28, 0.45] },
+    { x: 0, z: -22.5, height: 11.4, radius: 8.0, lip: 1.82, placeName: '中炼丹炉', siteNumber: 5, motif: '龙凤日轮', image: 'volcano-motif-03.jpg', tint: [0.26, 0.39, 0.43] },
+    { x: 19, z: -39, height: 9.6, radius: 7.2, lip: 1.36, placeName: '南炼丹炉', siteNumber: 6, motif: '蝶火脉', image: 'volcano-motif-04.jpg', tint: [0.30, 0.27, 0.43] },
+    { x: 38, z: -20, height: 10.8, radius: 5.6, lip: 1.02, placeName: '北尖山', siteNumber: 7, motif: '夜翼回纹', image: 'volcano-motif-05.jpg', tint: [0.16, 0.44, 0.47] }
   ];
   let selectedPeakIndex = null;
+  const particleWorldFrame = scene.querySelector('#coParticleWorld');
+  let worldFrameReady = false;
+  let pendingWorldFlight = null;
+  let activeWorldFlightId = null;
+  let particleWorldLayoutMode = 'compose';
+  let worldFlightComplete = null;
+  let worldReadyTimer = null;
+
+  function particleWorldUrl() {
+    const path = 'pointcloud-world/index.html?embed=co-create';
+    return window.location.protocol === 'file:'
+      ? `http://localhost:8766/${path}`
+      : new URL(path, document.baseURI).href;
+  }
+
+  function postParticleWorld(message) {
+    if (!particleWorldFrame.contentWindow || !worldFrameReady) return false;
+    particleWorldFrame.contentWindow.postMessage({ channel: 'mongol-pattern-co-create', ...message }, '*');
+    return true;
+  }
+
+  function setParticleWorldLayoutMode(mode) {
+    particleWorldLayoutMode = mode === 'browse' ? 'browse' : 'compose';
+    postParticleWorld({ type: 'layout-mode', mode: particleWorldLayoutMode });
+    syncParticleWorldDock();
+  }
+
+  function syncParticleWorldDock() {
+    if (particleWorldLayoutMode !== 'compose') return;
+    const styles = window.getComputedStyle(destinationPanel);
+    const panelHeight = destinationPanel.getBoundingClientRect().height;
+    const panelBottom = Number.parseFloat(styles.bottom) || 0;
+    postParticleWorld({ type: 'compose-panel-height', offset: Math.ceil(panelHeight + panelBottom) });
+  }
+
+  if ('ResizeObserver' in window) {
+    const dockObserver = new ResizeObserver(syncParticleWorldDock);
+    dockObserver.observe(destinationPanel);
+  }
+
+  function loadParticleWorld() {
+    const nextUrl = particleWorldUrl();
+    if (particleWorldFrame.src !== nextUrl) {
+      worldFrameReady = false;
+      particleWorldFrame.src = nextUrl;
+    }
+  }
+
+  window.addEventListener('message', event => {
+    if (event.source !== particleWorldFrame.contentWindow || event.data?.channel !== 'mongol-pattern-co-create') return;
+    if (event.data.type === 'travel-ui') {
+      scene.classList.toggle('co-travel-active', !!event.data.active);
+      scene.classList.toggle('co-travel-expanded', !!event.data.expanded);
+    }
+    if (event.data.type === 'ready') {
+      worldFrameReady = true;
+      if (worldReadyTimer) window.clearTimeout(worldReadyTimer);
+      worldReadyTimer = null;
+      postParticleWorld({ type: 'focus', peakIndex: selectedPeakIndex });
+      postParticleWorld({ type: 'layout-mode', mode: particleWorldLayoutMode });
+      syncParticleWorldDock();
+      if (pendingWorldFlight) {
+        postParticleWorld({ type: 'flight', item: pendingWorldFlight });
+        activeWorldFlightId = pendingWorldFlight.id;
+        pendingWorldFlight = null;
+      }
+      const savedItems = getStoredContributions().map(item => ({
+        ...item,
+        thumb: item.thumb && !item.thumb.startsWith('data:') ? new URL(item.thumb, document.baseURI).href : item.thumb
+      }));
+      if (savedItems.length) postParticleWorld({ type: 'restore-contributions', items: savedItems });
+    }
+    if (event.data.type === 'flight-progress' && event.data.id === activeWorldFlightId) {
+      flightProgress.style.transform = `scaleX(${Math.max(0, Math.min(1, Number(event.data.progress) || 0))})`;
+    }
+    if (event.data.type === 'flight-complete' && event.data.id === activeWorldFlightId) {
+      activeWorldFlightId = null;
+      if (worldReadyTimer) window.clearTimeout(worldReadyTimer);
+      worldReadyTimer = null;
+      flightProgress.style.transform = 'scaleX(1)';
+      flightHud.classList.remove('show');
+      flightHud.setAttribute('aria-hidden', 'true');
+      scene.classList.remove('fpv-active');
+      if (worldFlightComplete) worldFlightComplete();
+      worldFlightComplete = null;
+    }
+  });
 
   function terrainHeight(x, z) {
     const wave = Math.sin(x * 0.22) * 0.38 + Math.cos(z * 0.18) * 0.32 + Math.sin((x + z) * 0.11) * 0.24;
@@ -1050,6 +1174,7 @@
   }
 
   function set3DFocus(destination) {
+    postParticleWorld({ type: 'destination', destination, peakIndex: selectedPeakIndex, targetId: targetSelect.value });
     if (!world) return;
     const spec = selectedPeakIndex == null ? null : peakSpecs[selectedPeakIndex];
     if (spec) {
@@ -1070,6 +1195,8 @@
   function focusPeak(index) {
     if (scene.classList.contains('flying')) return;
     selectedPeakIndex = index == null ? null : Math.max(0, Math.min(peakSpecs.length - 1, Number(index)));
+    if (selectedPeakIndex != null) targetSelect.value = `volcano:${selectedPeakIndex}`;
+    postParticleWorld({ type: 'focus', peakIndex: selectedPeakIndex });
     peakButtons.forEach(button => {
       const active = button.dataset.peak === (selectedPeakIndex == null ? 'all' : String(selectedPeakIndex));
       button.classList.toggle('active', active);
@@ -1219,6 +1346,51 @@
   }
 
   function startParticleFlight(item, onComplete) {
+    if (!worldFrameReady) {
+      pendingWorldFlight = item;
+      worldFlightComplete = onComplete;
+      const targetName = item.targetId?.startsWith('animal:') ? item.targetId.slice(7)
+        : item.targetId?.startsWith('volcano:') ? peakSpecs[Number(item.targetId.split(':')[1])]?.motif : '';
+      flightTitle.textContent = item.destination === 'grass'
+        ? `跟随《${item.workTitle}》融入${targetName || '火山坡面'}`
+        : `跟随《${item.workTitle}》冲入粒子天际`;
+      flightSubtitle.textContent = item.destination === 'grass'
+        ? `低空穿越 · 正前往${targetName || '所选目标'}，抵达后纹样会保留在对象上`
+        : '上升穿越 · 抵达后可继续漫游或返回纹样创作';
+      flightProgress.style.transform = 'scaleX(0)';
+      flightHud.classList.add('show');
+      flightHud.setAttribute('aria-hidden', 'false');
+      scene.classList.add('fpv-active');
+      if (worldReadyTimer) window.clearTimeout(worldReadyTimer);
+      worldReadyTimer = window.setTimeout(() => {
+        if (!pendingWorldFlight) return;
+        pendingWorldFlight = null;
+        activeWorldFlightId = null;
+        flightHud.classList.remove('show');
+        flightHud.setAttribute('aria-hidden', 'true');
+        scene.classList.remove('fpv-active');
+        confirmButton.disabled = false;
+        notify('粒子世界仍在载入，请稍后重试');
+      }, 15000);
+      return true;
+    }
+    activeWorldFlightId = item.id;
+    worldFlightComplete = onComplete;
+    postParticleWorld({ type: 'flight', item });
+    const targetName = item.targetId?.startsWith('animal:') ? item.targetId.slice(7)
+      : item.targetId?.startsWith('volcano:') ? peakSpecs[Number(item.targetId.split(':')[1])]?.motif : '';
+    flightTitle.textContent = item.destination === 'grass'
+      ? `跟随《${item.workTitle}》融入${targetName || '火山坡面'}`
+      : `跟随《${item.workTitle}》冲入粒子天际`;
+    flightSubtitle.textContent = item.destination === 'grass'
+      ? `低空穿越 · 正前往${targetName || '所选目标'}，抵达后纹样会保留在对象上`
+      : '上升穿越 · 抵达后可继续漫游或返回纹样创作';
+    flightProgress.style.transform = 'scaleX(0)';
+    flightHud.classList.add('show');
+    flightHud.setAttribute('aria-hidden', 'false');
+    scene.classList.add('fpv-active');
+    return true;
+    // Legacy standalone renderer retained as a fallback for non-embedded use.
     if (!world) return false;
     const start = world.camera.position.clone();
     const seed = String(item.id);
@@ -1243,7 +1415,7 @@
       flightTitle.textContent = item.peakIndex == null
         ? `跟随《${item.workTitle}》穿越粒子草原`
         : `跟随《${item.workTitle}》飞向${peakSpecs[item.peakIndex].motif}`;
-      flightSubtitle.textContent = 'FPV · LOW ALTITUDE PARTICLE FLIGHT';
+      flightSubtitle.textContent = '低空穿越 · 正飞向草原落点，途中可观察纹样变化';
     } else {
       end = new THREE.Vector3(-12 + seeded(seed, 3) * 24, 12 + seeded(seed, 7) * 7, -13 + seeded(seed, 11) * 10);
       points = [
@@ -1255,7 +1427,7 @@
         end
       ];
       flightTitle.textContent = `跟随《${item.workTitle}》冲入粒子天际`;
-      flightSubtitle.textContent = 'FPV · SKYWARD PARTICLE FLIGHT';
+      flightSubtitle.textContent = '上升穿越 · 纹样将留在火山天际';
     }
     const cloud = createFlightPatternCloud(item.thumb || currentPatternSource);
     cloud.scale.setScalar(window.innerWidth < 760 ? 0.82 : 1);
@@ -1465,6 +1637,8 @@
       if (name === 'patternImages') return patternImages;
       if (name === 'customImages') return customImages;
       if (name === 'currentTex') return currentTex;
+      if (name === 'particleCloud') return typeof window.__exportCoCreateParticleCloud === 'function'
+        ? window.__exportCoCreateParticleCloud(32000) : null;
       if (name === 'currentStart') return currentStart;
       if (name === 'currentEnd') return currentEnd;
       if (name === 'inputMode') return inputMode;
@@ -1503,7 +1677,7 @@
     if (texture && texture.image) {
       const image = texture.image;
       if (typeof image.toDataURL === 'function') {
-        const thumb = canvasToThumbnail(image, 180);
+        const thumb = canvasToThumbnail(image, 256);
         if (thumb) return thumb;
       }
       if (image.src) return image.src;
@@ -1527,7 +1701,10 @@
 
   function saveContribution(item) {
     const items = getStoredContributions();
-    items.push(item);
+    const persisted = { ...item };
+    // 粒子属性只随本次飞行发给世界，不写入 localStorage，避免数万粒子数组耗尽配额。
+    delete persisted.particleCloud;
+    items.push(persisted);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(-MAX_LOCAL_CONTRIBUTIONS)));
     return items.slice(-MAX_LOCAL_CONTRIBUTIONS);
   }
@@ -1564,6 +1741,10 @@
       contributionLayer.appendChild(image);
     });
     liveCount.textContent = `这片景观已留下 ${items.length} 个纹样`;
+    const integratedCount = items.filter(item => item.destination === 'grass').length;
+    clearContributionsButton.textContent = `清空融入纹样${integratedCount ? ` · ${integratedCount}` : ''}`;
+    clearContributionsButton.disabled = integratedCount === 0;
+    clearContributionsButton.hidden = integratedCount === 0;
     recentNames.innerHTML = '';
     const namedItems = items.slice(-3).reverse();
     if (!namedItems.length) {
@@ -1610,10 +1791,11 @@
     const title = document.createElement('strong');
     title.textContent = `《${workTitle}》`;
     if (destination === 'grass') {
-      confirmButton.textContent = '确认融入草原';
-      const destinationText = selectedPeakIndex == null
-        ? ' 将沉入草浪与火山地貌，成为大地的纹理记忆'
-        : ` 将飞入火山 ${String(selectedPeakIndex + 1).padStart(2, '0')} · ${peakSpecs[selectedPeakIndex].motif}，成为山体纹样的一部分`;
+      confirmButton.textContent = '确认融入对象';
+      const [targetType, targetValue] = targetSelect.value.split(':');
+      const destinationText = targetType === 'volcano'
+        ? ` 将贴合${peakSpecs[Number(targetValue)].placeName}（景区${peakSpecs[Number(targetValue)].siteNumber}号）的坡面`
+        : ` 将贴合${targetValue}的躯干，并随它一起保留`;
       previewNote.replaceChildren(title, document.createTextNode(destinationText));
     } else {
       confirmButton.textContent = '确认放飞天际';
@@ -1621,6 +1803,57 @@
     }
     set3DFocus(destination);
   }
+
+  targetSelect.addEventListener('change', () => {
+    const [type, value] = targetSelect.value.split(':');
+    if (type === 'volcano') {
+      focusPeak(Number(value));
+      return;
+    }
+    selectedPeakIndex = null;
+    peakButtons.forEach(button => {
+      const active = button.dataset.peak === 'all';
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    peakHint.textContent = `融入目标 · ${value} · 纹样将贴在动物躯干表面`;
+    postParticleWorld({ type: 'focus-animal', animalName: value });
+    if (selectedDestination) selectDestination(selectedDestination);
+  });
+
+  clearContributionsButton.addEventListener('click', () => {
+    const items = getStoredContributions();
+    const integrated = items.filter(item => item.destination === 'grass');
+    if (!integrated.length) return;
+    if (!window.confirm(`将清除已融入对象表面的 ${integrated.length} 个纹样，让这些对象恢复初始状态。空中放飞的纹样会保留。继续吗？`)) return;
+    const remaining = items.filter(item => item.destination !== 'grass');
+    if (remaining.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+    else localStorage.removeItem(STORAGE_KEY);
+    postParticleWorld({ type: 'clear-contributions' });
+    if (remaining.length) {
+      postParticleWorld({ type: 'restore-contributions', items: remaining.map(item => ({
+        ...item,
+        thumb: item.thumb && !item.thumb.startsWith('data:') ? new URL(item.thumb, document.baseURI).href : item.thumb
+      })) });
+    }
+    renderContributions(remaining);
+    success.classList.remove('show');
+    notify('融入纹样已清空，场景已恢复初始状态');
+  });
+
+  window.addEventListener('storage', event => {
+    if (event.key !== STORAGE_KEY) return;
+    const items = getStoredContributions();
+    if (worldFrameReady) {
+      postParticleWorld({ type: 'clear-contributions' });
+      if (items.length) postParticleWorld({ type: 'restore-contributions', items: items.map(item => ({
+        ...item,
+        thumb: item.thumb && !item.thumb.startsWith('data:') ? new URL(item.thumb, document.baseURI).href : item.thumb
+      })) });
+    }
+    renderContributions(items);
+    success.classList.remove('show');
+  });
 
   function canEnterScene() {
     if (readGlobal('morphAnimating', false)) {
@@ -1649,6 +1882,7 @@
     nameInput.classList.remove('invalid');
     patternCaption.textContent = `待命名作品 · ${currentPatternName}`;
     scene.classList.remove('flying', 'flying-grass', 'flying-sky', 'browse');
+    setParticleWorldLayoutMode('compose');
     success.classList.remove('show');
     clearDestination();
     orbit.yaw = 0.025;
@@ -1661,7 +1895,7 @@
     document.body.classList.add('co-scene-open');
     scene.classList.add('open');
     scene.setAttribute('aria-hidden', 'false');
-    set3DActive(true);
+    loadParticleWorld();
     renderContributions(getStoredContributions());
     window.setTimeout(() => back.focus(), 420);
   }
@@ -1669,6 +1903,13 @@
   function exitScene() {
     if (animationTimer) window.clearTimeout(animationTimer);
     animationTimer = null;
+    if (worldReadyTimer) window.clearTimeout(worldReadyTimer);
+    worldReadyTimer = null;
+    pendingWorldFlight = null;
+    activeWorldFlightId = null;
+    worldFlightComplete = null;
+    worldFrameReady = false;
+    particleWorldFrame.src = 'about:blank';
     if (world && world.flight) {
       world.flight.cloud.userData.disposed = true;
       world.scene.remove(world.flight.cloud);
@@ -1678,7 +1919,7 @@
     }
     flightHud.classList.remove('show');
     flightHud.setAttribute('aria-hidden', 'true');
-    scene.classList.remove('open', 'flying', 'flying-grass', 'flying-sky', 'browse');
+    scene.classList.remove('open', 'flying', 'flying-grass', 'flying-sky', 'browse', 'co-travel-active', 'co-travel-expanded');
     scene.classList.remove('fpv-active');
     scene.removeAttribute('data-destination');
     scene.setAttribute('aria-hidden', 'true');
@@ -1703,7 +1944,7 @@
       try {
         const source = readGlobal('currentTex', null);
         if (source && source.image && typeof source.image.toDataURL === 'function') {
-          return canvasToThumbnail(source.image, 96) || currentPatternSource;
+          return canvasToThumbnail(source.image, 256) || currentPatternSource;
         }
       } catch (error) { /* fall through */ }
     }
@@ -1713,6 +1954,9 @@
   function confirmDestination() {
     if (!selectedDestination || scene.classList.contains('flying')) return;
     const destination = selectedDestination;
+    const targetId = destination === 'grass' ? targetSelect.value : null;
+    const targetName = targetId?.startsWith('animal:') ? targetId.slice(7)
+      : targetId?.startsWith('volcano:') ? peakSpecs[Number(targetId.split(':')[1])]?.placeName : '';
     const meta = getPatternMeta();
     const workTitle = (nameInput.value || '').trim().replace(/[<>]/g, '').slice(0, 18);
     if (!workTitle) {
@@ -1728,8 +1972,11 @@
       patternName: meta.name,
       workTitle,
       destination,
-      peakIndex: destination === 'grass' ? selectedPeakIndex : null,
-      thumb: makePersistedThumb(),
+      targetId,
+      targetName,
+      peakIndex: targetId?.startsWith('volcano:') ? Number(targetId.split(':')[1]) : null,
+      thumb: (() => { const thumb = makePersistedThumb(); return thumb.startsWith('data:') ? thumb : new URL(thumb, document.baseURI).href; })(),
+      particleCloud: readGlobal('particleCloud', null),
       colorStart: readGlobal('currentStart', '#0066cc'),
       colorEnd: readGlobal('currentEnd', '#cc0000'),
       parameters: currentParameters(),
@@ -1743,11 +1990,17 @@
       renderContributions(saved, item.id);
       successTitle.textContent = destination === 'grass' ? `《${workTitle}》已融入草原火山` : `《${workTitle}》已放飞至火山天际`;
       successText.textContent = destination === 'grass'
-        ? (item.peakIndex == null
-          ? '谢谢你为这片草原火山贡献自己的纹样。它已融入草浪与岩层，和大家的作品一起生长。'
-          : `谢谢你为这片草原火山贡献自己的纹样。它已在「${peakSpecs[item.peakIndex].motif}」山坡上留下属于你的印记。`)
+        ? `谢谢你为这片草原火山贡献自己的纹样。它已贴合「${targetName || '火山坡面'}」，并会随共同景观保留；点击“清空融入纹样”可恢复初始状态。`
         : '谢谢你为这片草原火山贡献自己的纹样。它已随风飞向天际，将在火山与星光之间继续闪耀。';
       success.classList.add('show');
+      // Return to browse mode as soon as the pattern lands so scene actions
+      // and the exit control do not depend on finding a secondary button.
+      scene.classList.remove('flying', 'flying-grass', 'flying-sky', 'fpv-active');
+      scene.classList.add('browse');
+      setParticleWorldLayoutMode('browse');
+      scene.removeAttribute('data-destination');
+      back.style.opacity = '';
+      back.style.pointerEvents = '';
       confirmButton.disabled = false;
       animationTimer = null;
     };
@@ -1758,7 +2011,10 @@
 
   entry.addEventListener('click', enterScene);
   back.addEventListener('click', exitScene);
-  peakButtons.forEach(button => button.addEventListener('click', () => focusPeak(button.dataset.peak === 'all' ? null : Number(button.dataset.peak))));
+  peakButtons.forEach(button => button.addEventListener('click', () => {
+    focusPeak(button.dataset.peak === 'all' ? null : Number(button.dataset.peak));
+    if (window.matchMedia('(min-width:821px)').matches) setPeakNav(false);
+  }));
   destinationButtons.forEach(button => button.addEventListener('click', () => selectDestination(button.dataset.destination)));
   changeButton.addEventListener('click', clearDestination);
   confirmButton.addEventListener('click', confirmDestination);
@@ -1767,6 +2023,7 @@
     success.classList.remove('show');
     scene.classList.remove('flying', 'flying-grass', 'flying-sky');
     scene.classList.add('browse');
+    setParticleWorldLayoutMode('browse');
     scene.removeAttribute('data-destination');
     back.style.opacity = '';
     back.style.pointerEvents = '';

@@ -5,7 +5,10 @@ html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background:
 #world.is-pickable { cursor: pointer; }
 #world:active { cursor: grabbing; }
 .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 52% 53%, transparent 38%, rgba(0,0,0,.39) 100%); }
-.masthead { position: fixed; top: 28px; left: 32px; max-width: 390px; padding: 6px 26px 22px 0; pointer-events: none; text-shadow: 0 2px 15px #000, 0 0 24px #000; }
+.masthead { position: fixed; top: 18px; left: 18px; max-width: 440px; padding: 7px 20px 9px 10px; border-radius: 12px; background: linear-gradient(100deg, rgba(3,9,17,.76), rgba(3,9,17,.34) 74%, transparent); backdrop-filter: blur(5px); pointer-events: none; text-shadow: 0 2px 15px #000, 0 0 24px #000; }
+.world-links { display: flex; gap: 8px; margin: 0 0 8px; pointer-events: auto; }
+.world-links a { padding: 7px 10px; border: 1px solid rgba(227,193,127,.28); border-radius: 8px; color: #ead3a5; background: rgba(5,12,22,.76); text-decoration: none; font-size: 10px; letter-spacing: .04em; backdrop-filter: blur(10px); }
+.world-links a:hover, .world-links a:focus-visible { border-color: #dfc77f; color: #fff4d5; }
 .eyebrow { color: #c5ad79; font-size: 10px; letter-spacing: .22em; }
 h1 { margin: 9px 0 3px; font: 400 clamp(24px, 2.8vw, 42px)/1.2 'STKaiti', 'KaiTi', serif; letter-spacing: .18em; }
 .masthead p { margin: 0; color: #afa99f; font-size: 11px; line-height: 1.7; }
@@ -14,6 +17,7 @@ h1 { margin: 9px 0 3px; font: 400 clamp(24px, 2.8vw, 42px)/1.2 'STKaiti', 'KaiTi
 .guide b { font-weight: 400; }
 .sightlines { position: fixed; top: 70px; right: 30px; width: 208px; z-index: 3; border: 1px solid rgba(227,193,127,.3); border-radius: 11px; background: rgba(5,12,22,.83); box-shadow: 0 8px 26px #0008; backdrop-filter: blur(12px); }
 .sightlines summary { padding: 11px 13px; color: #ead3a5; font-size: 11px; cursor: pointer; }
+.sightlines[open] { z-index: 25; }
 .sightlines #sightline-list { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-height: min(57vh, 460px); overflow-y: auto; padding: 0 9px 10px; }
 .sightlines #sightline-list span { grid-column: 1 / -1; color: #a9b0b7; font-size: 10px; }
 .sightlines button { min-height: 30px; padding: 3px 5px; border-color: #594c35; background: rgba(14,24,34,.8); color: #eadfc8; font-size: 10px; font-weight: 400; white-space: normal; }
@@ -41,6 +45,9 @@ h1 { margin: 9px 0 3px; font: 400 clamp(24px, 2.8vw, 42px)/1.2 'STKaiti', 'KaiTi
 .focus-panel button { flex: 1; padding: 0 7px; border-color: #548d99; background: #0b2838; color: #d8f8ff; font-size: 10px; }
 .gesture-view { position: fixed; z-index: 4; right: 30px; bottom: 130px; width: 178px; padding: 7px; border: 1px solid #5cbdc5; border-radius: 12px; background: #081b27e8; box-shadow: 0 0 23px #08b9d62b; }
 .gesture-view[hidden], .gaze[hidden] { display: none; }
+.gesture-camera { position: relative; width: 100%; }
+.gesture-camera::after { content: ''; position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border: 1px solid #d8faffa8; border-radius: 50%; box-shadow: 0 0 12px #37d9e870; transform: translate(-50%, -50%); pointer-events: none; }
+.gesture-camera span { position: absolute; top: calc(50% + 17px); left: 50%; transform: translateX(-50%); color: #e6fcffcc; font-size: 8px; text-shadow: 0 1px 4px #000; pointer-events: none; }
 .gesture-view video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 7px; transform: scaleX(-1); }
 .gesture-view p { margin: 7px 3px 3px; color: #d4faff; font-size: 10px; line-height: 1.4; }
 .gaze { position: fixed; z-index: 2; top: 50%; left: 50%; display: grid; place-items: center; transform: translate(-50%, -50%); pointer-events: none; color: #b8faff; text-shadow: 0 0 15px #32e7fd; }
@@ -53,20 +60,86 @@ h1 { margin: 9px 0 3px; font: 400 clamp(24px, 2.8vw, 42px)/1.2 'STKaiti', 'KaiTi
 .discovery h2 { margin: 4px 0; font-size: 15px; font-weight: 500; color: #fff1d1; }
 .discovery p { margin: 0; color: #c0c6c6; font-size: 10px; line-height: 1.55; }
 .discovery-close { position: absolute; right: 8px; top: 7px; min-height: 23px; padding: 0 7px; border: 0; background: transparent; color: #c8c3b4; font-size: 18px; }
-.controls { position: fixed; left: 50%; bottom: 31px; display: flex; align-items: center; gap: 11px; width: min(960px, calc(100vw - 40px)); min-height: 62px; padding: 10px 15px; border: 1px solid rgba(230,210,170,.2); border-radius: 17px; background: rgba(6,7,8,.75); backdrop-filter: blur(14px); transform: translateX(-50%); box-shadow: 0 8px 38px #0009; }
-button { min-height: 39px; padding: 0 16px; border: 1px solid #be9e66; border-radius: 10px; background: #d5b47a; color: #181611; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.controls { position: fixed; left: 50%; bottom: 31px; display: flex; align-items: center; gap: 10px; width: min(760px, calc(100vw - 40px)); min-height: 58px; padding: 8px 12px; border: 1px solid rgba(230,210,170,.2); border-radius: 17px; background: rgba(6,7,8,.82); backdrop-filter: blur(14px); transform: translateX(-50%); box-shadow: 0 8px 38px #0009; }
+button { min-height: 37px; padding: 0 13px; border: 1px solid #be9e66; border-radius: 10px; background: #d5b47a; color: #181611; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; }
 button:hover, button:focus-visible { background: #f3d69d; }
-#restart, #free, #glide, #gesture, #motifs, #palette { border-color: #6c6252; background: transparent; color: #dfd5c0; }
-#restart:hover, #restart:focus-visible, #free:hover, #free:focus-visible, #glide:hover, #glide:focus-visible, #gesture:hover, #gesture:focus-visible, #motifs:hover, #motifs:focus-visible, #palette:hover, #palette:focus-visible { border-color: #d8ba81; color: #fff; }
+#free, #glide, .control-settings-menu button { border-color: #6c6252; background: transparent; color: #dfd5c0; }
+#free:hover, #free:focus-visible, #glide:hover, #glide:focus-visible, .control-settings-menu button:hover, .control-settings-menu button:focus-visible { border-color: #d8ba81; color: #fff; }
+.control-primary { display: flex; flex: none; align-items: center; gap: 7px; }
+.control-settings { position: relative; flex: none; }
+.control-settings > summary { display: flex; align-items: center; gap: 6px; min-height: 37px; padding: 0 12px; border: 1px solid rgba(230,210,170,.2); border-radius: 10px; color: #dfd5c0; background: rgba(255,255,255,.035); font-size: 11px; cursor: pointer; list-style: none; white-space: nowrap; }
+.control-settings > summary::-webkit-details-marker { display: none; }
+.control-settings[open] > summary, .control-settings > summary:hover, .control-settings > summary:focus-visible { border-color: #d8ba81; color: #fff3d8; background: rgba(216,186,129,.11); }
+.control-settings-menu { position: absolute; right: 0; bottom: calc(100% + 9px); display: grid; grid-template-columns: 1fr 1fr; gap: 7px; width: 286px; padding: 10px; border: 1px solid rgba(230,210,170,.24); border-radius: 14px; background: rgba(7,12,19,.96); box-shadow: 0 12px 35px #000b; backdrop-filter: blur(16px); }
+.control-settings-menu button { width: 100%; min-height: 36px; padding: 0 9px; font-size: 10px; }
+.control-settings-menu #gesture[aria-pressed="true"] { border-color: #65d7e1; background: #0e3844; color: #d4fbff; }
+.control-settings-menu #motifs[aria-pressed="false"], .control-settings-menu #palette[aria-pressed="false"] { opacity: .62; }
+.route-status { display: flex; flex: 1; align-items: center; gap: 11px; min-width: 108px; }
 #free[aria-pressed="true"] { border-color: #d8ba81; background: #423623; color: #fff3d8; }
 #glide { border-color: #65d7e1; color: #d4fbff; }
-#gesture[aria-pressed="true"] { border-color: #65d7e1; background: #0e3844; color: #d4fbff; }
 #glide[hidden] { display: none; }
-#motifs[aria-pressed="false"], #palette[aria-pressed="false"] { opacity: .62; }
 .progress { flex: 1; min-width: 45px; height: 3px; overflow: hidden; background: #4a4740; }
 .progress i { display: block; width: 100%; height: 100%; transform: scaleX(0); transform-origin: left; background: linear-gradient(90deg,#bdbbb5,#fff,#d8b370); }
 #status { width: 76px; color: #b6afa2; font-size: 10px; text-align: right; white-space: nowrap; }
 .meta { position: fixed; right: 29px; bottom: 114px; color: #c6c0b2; font-size: 10px; letter-spacing: .08em; text-shadow: 0 2px 8px #000; pointer-events: none; }
 .error { position: fixed; top: 50%; left: 50%; width: min(470px, 88vw); padding: 20px; border: 1px solid #a34b3e; border-radius: 12px; background: #161012; color: #ffe4d9; transform: translate(-50%,-50%); }
-@media (max-width: 700px) { .masthead { top: 17px; left: 18px; } .masthead p, .meta, .guide { display: none; } .sightlines { top: 25px; right: 17px; } .volcano-shortcut { top: 74px; right: 17px; } .controls { bottom: 14px; flex-wrap: wrap; justify-content: center; gap: 7px; padding: 8px; } button { min-height: 34px; padding: 0 9px; } .progress { flex-basis: 60%; } #status { flex: 1; } }
-@media (max-width: 900px) { .focus-panel.volcano-focus { top: 112px; left: 22px; right: auto; } }
+@media (max-width: 700px) { .masthead { top: 17px; left: 18px; } .masthead p, .meta, .guide { display: none; } .world-links { margin-bottom: 8px; } .sightlines { top: 25px; right: 17px; } .volcano-shortcut { top: 74px; right: 17px; } .controls { bottom: 14px; flex-wrap: wrap; justify-content: center; gap: 7px; padding: 8px; } .route-status { min-width: 100%; order: 2; } button { min-height: 34px; padding: 0 9px; } .control-settings-menu { right: 0; width: min(286px, calc(100vw - 28px)); } }
+@media (max-width: 900px) { .focus-panel.volcano-focus { top: 112px; left: 16px; right: auto; width: 232px; max-height: 220px; padding: 12px; } }
+html.co-create-embedded,
+html.co-create-embedded body { overflow: hidden; background: #06142a; }
+html.co-create-embedded body > :not(#world):not(.controls):not(.focus-panel):not(.gesture-view):not(.gaze):not(.travel-menu-toggle) { display: none !important; }
+html.co-create-embedded #world { position: fixed; inset: 0; width: 100vw; height: 100vh; touch-action: none; }
+html.co-create-embedded .controls {
+  z-index: 5; left: 50%; bottom: var(--co-compose-panel-offset, 284px); width: min(760px, calc(100vw - 40px));
+  min-height: 52px; flex-wrap: nowrap; justify-content: center; gap: 9px; padding: 7px 10px;
+  border-radius: 18px 18px 0 0; border-bottom: 0;
+  background: linear-gradient(100deg, rgba(5, 13, 24, .92), rgba(12, 18, 22, .9));
+}
+html.co-create-embedded .control-primary { gap: 6px; }
+html.co-create-embedded .controls button,
+html.co-create-embedded .control-settings > summary { min-height: 34px; padding: 0 10px; font-size: 10px; }
+html.co-create-embedded .control-settings-menu button { min-height: 34px; }
+html.co-create-embedded:not(.co-layout-browse) .control-settings-menu { left: 0; right: auto; }
+html.co-create-embedded.co-layout-browse .controls { left: 50%; bottom: clamp(18px, 2.5vh, 30px); width: min(760px, calc(100vw - 40px)); border: 1px solid rgba(230,210,170,.2); border-radius: 17px; }
+html.co-create-embedded .controls .progress { min-width: 54px; }
+html.co-create-embedded .controls #status { width: auto; min-width: 66px; }
+html.co-create-embedded .focus-panel { z-index: 8; }
+html.co-create-embedded .focus-panel.volcano-focus {
+  top: 136px; right: 20px; max-height: min(350px, calc(100vh - 390px));
+  width: min(314px, calc(100vw - 40px));
+  background: linear-gradient(140deg, rgba(4,16,32,.97), rgba(17,16,35,.94));
+}
+html.co-create-embedded .gesture-view { z-index: 8; right: 18px; bottom: clamp(238px, 35vh, 270px); }
+html.co-create-embedded .gaze { z-index: 6; }
+html.co-create-embedded.co-flight-active .controls,
+html.co-create-embedded.co-flight-active .focus-panel,
+html.co-create-embedded.co-flight-active .gesture-view,
+html.co-create-embedded.co-flight-active .gaze {
+  opacity: 0 !important; visibility: hidden !important; pointer-events: none !important;
+}
+@media (max-width: 700px) {
+  html.co-create-embedded:not(.co-layout-browse) .controls { left: 50%; bottom: var(--co-compose-panel-offset, 300px); width: calc(100vw - 20px); flex-wrap: wrap; gap: 6px; padding: 7px; }
+  html.co-create-embedded.co-layout-browse .controls { bottom: 10px; width: calc(100vw - 24px); }
+  html.co-create-embedded.co-layout-browse .controls { width: calc(100vw - 24px); }
+  html.co-create-embedded .controls button,
+  html.co-create-embedded .control-settings > summary { min-height: 32px; padding: 0 8px; font-size: 9px; }
+  html.co-create-embedded .route-status { min-width: 100%; order: 2; }
+  html.co-create-embedded .controls .progress { flex-basis: auto; }
+  html.co-create-embedded .focus-panel.volcano-focus { top: 126px; left: auto; right: 12px; max-height: 270px; width: min(292px, calc(100vw - 24px)); }
+  html.co-create-embedded .gesture-view { right: 12px; bottom: 246px; width: 150px; }
+}
+.travel-menu-toggle { display: none; }
+.travel-exit { display: none; }
+@media (min-width: 821px) {
+  html.travel-active.travel-expanded .travel-exit { display: inline-block; background: transparent; color: #dfd5c0; border-color: #6c6252; }
+  html.travel-active body > :not(#world):not(.vignette):not(.travel-menu-toggle):not(.controls):not(.error) { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+  html.travel-active .controls { opacity: 0; visibility: hidden; pointer-events: none; }
+  html.travel-active.travel-expanded .controls { opacity: 1; visibility: visible; pointer-events: auto; bottom: 84px !important; border: 1px solid #e6d2aa33; border-radius: 17px; }
+  html.travel-active .travel-menu-toggle:not([hidden]) { display: block; position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 20; min-height: 38px; padding: 0 20px; border: 1px solid #d8ba8155; border-radius: 22px; background: #09121bcc; backdrop-filter: blur(12px); color: #e8d6af; font-size: 11px; font-weight: 400; box-shadow: 0 5px 20px #0005; }
+  html.travel-active .travel-menu-toggle:focus-visible { outline: 2px solid #e8d6af; outline-offset: 3px; }
+}
+
+.control-settings-menu .effect-study-link { display:grid;place-items:center;min-height:36px;border:1px solid #6c6252;border-radius:8px;color:#dfd5c0;font-size:10px;text-decoration:none; }
+.control-settings-menu .effect-study-link:hover,.control-settings-menu .effect-study-link:focus-visible {border-color:#d8ba81;color:#fff;}
+
+.scene-brightness-label{display:grid;grid-template-columns:1fr auto;gap:9px;color:#eee1c3;font:13px sans-serif;padding:12px;min-width:180px}.scene-brightness-label input{grid-column:1/-1;width:100%;accent-color:#d8b979}.scene-brightness-label output{color:#d8b979}

@@ -3,9 +3,9 @@ import * as THREE from '../lib/three/three.module.js';
 // 从平台已经核对过的本地纹样资产提取可见像素，生成空间点云；原图片不会作为平面贴图显示。
 const sources = {
   knot: '../wenyang_svg/rel/盘长结变体F1.svg',
-  hamuur: '../pattern_visuals/hamuur-modern-v1.svg',
+  cloud: '../pattern_visuals/cloud-scroll-modern-v1.svg',
   herd: '../pattern_visuals/five-livestock-modern-v1.png',
-  grass: '../wenyang_svg/bio/卷草纹变体F1.svg'
+  grass: '../pattern_visuals/grass-scroll-modern-v1.svg'
 };
 
 function loadImage(url) {
@@ -58,13 +58,13 @@ function pointCloud(points, color, size = 0.1) {
 }
 
 // 同一批平台素材组成微纹样图集。远看是地貌点，靠近时每一点可读作纹样单元。
-function makeAtlas(knotImage, hamuurImage, herdImage, grassImage) {
+function makeAtlas(knotImage, cloudImage, herdImage, grassImage) {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
   const entries = [
-    [knotImage, [0, 0, 1, 1]], [hamuurImage, [0, 0, 1, 1]],
+    [knotImage, [0, 0, 1, 1]], [cloudImage, [0, 0, 1, 1]],
     [herdImage, [0.005, 0, 0.255, 1]], [herdImage, [0.215, 0, 0.205, 1]],
     [herdImage, [0.42, 0, 0.215, 1]], [herdImage, [0.625, 0, 0.19, 1]],
     [herdImage, [0.80, 0, 0.195, 1]], [grassImage, [0, 0, 1, 1]]
@@ -108,10 +108,10 @@ export async function installLibraryMotifs(scene, terrainHeight) {
   const group = new THREE.Group();
   group.name = 'source-library-pattern-particles';
   scene.add(group);
-  const [knotImage, hamuurImage, herdImage, grassImage] = await Promise.all([
-    loadImage(sources.knot), loadImage(sources.hamuur), loadImage(sources.herd), loadImage(sources.grass)
+  const [knotImage, cloudImage, herdImage, grassImage] = await Promise.all([
+    loadImage(sources.knot), loadImage(sources.cloud), loadImage(sources.herd), loadImage(sources.grass)
   ]);
-  const atlas = makeAtlas(knotImage, hamuurImage, herdImage, grassImage);
+  const atlas = makeAtlas(knotImage, cloudImage, herdImage, grassImage);
   let pointCount = 0;
 
   const knot = sample(knotImage);
@@ -124,16 +124,6 @@ export async function installLibraryMotifs(scene, terrainHeight) {
     });
     pointCount += positions.length / 3;
     group.add(pointCloud(positions, 0xf3ce83, 0.11));
-  }
-
-  const hamuur = sample(hamuurImage);
-  for (const [cx, cy, cz, scale] of [[-25, 39, -21, 8.4], [26, 43, -58, 7.2]]) {
-    const positions = [];
-    hamuur.forEach(([u, v], i) => {
-      positions.push(cx + u * scale, cy + (v - 0.5) * scale, cz + Math.sin(u * Math.PI) * 0.4 + Math.sin(i * 1.7) * 0.13);
-    });
-    pointCount += positions.length / 3;
-    group.add(pointCloud(positions, 0xf6f2e8, 0.12));
   }
 
   return { group, count: pointCount, sources: Object.values(sources), atlas };

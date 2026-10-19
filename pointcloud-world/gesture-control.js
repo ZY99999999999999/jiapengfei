@@ -13,7 +13,13 @@ function handGesture(hand) {
   const span = Math.hypot(hand[5].x - hand[17].x, hand[5].y - hand[17].y);
   const pinch = Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y) < span * 0.37;
   if (pinch) return 'pinch';
-  const raised = [8, 12, 16, 20].filter(tip => hand[tip].y < hand[tip - 2].y - 0.018).length;
+  const wrist = hand[0];
+  const fingerJoints = [[8, 6], [12, 10], [16, 14], [20, 18]];
+  const raised = fingerJoints.filter(([tip, pip]) => {
+    const tipReach = Math.hypot(hand[tip].x - wrist.x, hand[tip].y - wrist.y);
+    const jointReach = Math.hypot(hand[pip].x - wrist.x, hand[pip].y - wrist.y);
+    return tipReach > jointReach + span * 0.14;
+  }).length;
   if (raised >= 4) return 'open';
   if (raised <= 1) return 'fist';
   return 'neutral';
@@ -30,6 +36,7 @@ export function createGestureControl(video, callbacks) {
   let cooldownUntil = 0;
   let lastStatus = '';
   let frameId = 0;
+  let lastMoveSent = 0;
   const report = message => {
     if (message === lastStatus) return;
     lastStatus = message;
@@ -39,11 +46,24 @@ export function createGestureControl(video, callbacks) {
   function onResults(result) {
     if (!active) return;
     const hand = result.multiHandLandmarks?.[0];
-    if (!hand) { candidate = ''; report('镜头中未检测到手'); return; }
+    if (!hand) { candidate = ''; callbacks.onMove?.(0, 0); report('镜头中未检测到手'); return; }
     const gesture = handGesture(hand);
     const now = performance.now();
+    // Preview is mirrored for the user, so invert MediaPipe's camera-space X.
+    // The central dead zone prevents small tracking jitter from moving the camera.
+    if (now - lastMoveSent >= 80) {
+      lastMoveSent = now;
+      const screenX = 1 - hand[9].x;
+      const screenY = hand[9].y;
+      const axis = (value, center, deadZone = 0.15) => {
+        const offset = value - center;
+        if (Math.abs(offset) <= deadZone) return 0;
+        return Math.max(-1, Math.min(1, (offset - Math.sign(offset) * deadZone) / (0.5 - deadZone)));
+      };
+      callbacks.onMove?.(gesture === 'open' ? axis(screenX, 0.5) : 0, gesture === 'open' ? axis(0.5 - screenY, 0) : 0);
+    }
     if (gesture !== candidate) { candidate = gesture; candidateSince = now; }
-    const labels = { open: '张开手掌 · 停止', fist: '握拳 · 继续', pinch: '捏合 · 确认', neutral: '请张掌、握拳或捏合' };
+    const labels = { open: '张掌移动 · 手掌左右/上下平移', fist: '握拳 · 继续滑翔', pinch: '捏合 · 确认', neutral: '手掌移出中心死区平移 · 捏合确认' };
     report(labels[gesture]);
     if (gesture === 'neutral' || now < cooldownUntil || now - candidateSince < 680) return;
     cooldownUntil = now + 1550;
@@ -77,7 +97,7 @@ export function createGestureControl(video, callbacks) {
       video.srcObject = stream;
       await video.play();
       active = true;
-      report('已开启：张掌停、握拳走、捏合确认');
+      report('已开启：手掌四向移动 · 握拳滑翔 · 捏合确认');
       frameId = requestAnimationFrame(process);
     } catch (error) {
       stop();
@@ -95,6 +115,7 @@ export function createGestureControl(video, callbacks) {
     if (hands?.close) hands.close();
     hands = null;
     candidate = '';
+    callbacks.onMove?.(0, 0);
     report('手势已关闭，摄像头已停止');
   }
 

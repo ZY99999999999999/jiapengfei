@@ -191,9 +191,12 @@
     .five-color-bar span { flex: 1; display: block; }
   </style>
   <link rel="stylesheet" href="platform-ui.css?v=1.1">
-  <link rel="stylesheet" href="co-create-scene.css?v=6.0">
+  <link rel="stylesheet" href="co-create-scene.css?v=6.9">
+<link rel="stylesheet" href="experience-desktop.css?v=1">
+<script defer src="experience-feedback.js?v=1"></script>
+<script src="hand-draw-guard.js?v=1"></script>
 </head>
-<body>
+<body data-feedback-scope="co">
   <canvas id="c"></canvas>
 
   <!-- 导航与常用动作：桌面为左侧工具轨道，窄屏为底部横向工具条 -->
@@ -1413,13 +1416,20 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
       },
       vertexShader: `
         attribute float aSize; attribute vec3 color; attribute vec2 aUV;
-        varying vec3 vColor; varying vec2 vUV; varying float vMorph;
+        varying vec3 vColor; varying vec2 vUV; varying float vMorph; varying float vLifePulse;
         uniform float uSize, uPixelRatio, uHalfH, uTime, uWaveSpeed, uHeartbeatSpeed, uMorph;
         void main() {
           vColor = color; vUV = aUV; vMorph = uMorph;
           vec3 pos = position;
           float wave = sin(pos.x*0.2+uTime*uWaveSpeed)*cos(pos.y*0.2+uTime*uWaveSpeed);
           pos.z += wave*0.6; pos.x += cos(pos.z*0.4+uTime)*0.15; pos.y += sin(pos.z*0.4+uTime)*0.15;
+          // 低幅局部流场：沿纹样坐标缓慢传递，让粒子有轻微体积呼吸，不改变纹样轮廓与配色。
+          float lifePhase = aUV.x*8.0 + aUV.y*6.5 + uTime*(0.55+uWaveSpeed*0.25);
+          float lifeWave = sin(lifePhase)*0.045 + sin(lifePhase*0.47-uTime*0.3)*0.025;
+          pos.x += cos(lifePhase)*lifeWave*0.55;
+          pos.y += sin(lifePhase)*lifeWave*0.55;
+          pos.z += lifeWave*1.2;
+          vLifePulse = 0.94 + 0.12*(0.5+0.5*sin(lifePhase));
           float beat = 0.0;
           if(uHeartbeatSpeed > 0.0) {
             float rawBeat = sin(uTime*3.0*uHeartbeatSpeed);
@@ -1431,7 +1441,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
           // 聚合态粒子缩小0.6倍，让细节更清晰
           float sizeMorph = 0.6 + 0.4 * uMorph;
           float rawSize = uSize*aSize*sizeMorph*uPixelRatio*(uHalfH / -mvPos.z)*(1.0+beat*1.5);
-          gl_PointSize = clamp(rawSize, 2.0, 80.0);
+          gl_PointSize = clamp(rawSize*(1.0+0.035*sin(lifePhase)), 2.0, 80.0);
           // 聚合态亮度提高(0.5起步)，防止过暗看不清
           float densityDim = 0.5 + 0.5 * uMorph;
           vColor *= clamp(100.0 / -mvPos.z, 0.5, 2.0) * densityDim;
@@ -1439,7 +1449,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
         }`,
       fragmentShader: `
         uniform sampler2D uTex; uniform float uOpacity, uMorph;
-        varying vec3 vColor; varying vec2 vUV; varying float vMorph;
+        varying vec3 vColor; varying vec2 vUV; varying float vMorph; varying float vLifePulse;
         void main() {
           vec4 texel = texture2D(uTex, gl_PointCoord);
           if(texel.a < 0.05) discard;
@@ -1449,6 +1459,8 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
           // 扩散态：用渐变混合色
           vec3 scatterColor = texel.rgb * vColor;
           vec3 finalColor = mix(gatherColor, scatterColor, vMorph);
+          // 聚合时保留原图采样色；散开时加入沿轮廓流动的柔和体积明暗。
+          finalColor *= mix(1.0, vLifePulse, vMorph);
           float opaDim = 0.6 + 0.4 * vMorph;
           gl_FragColor = vec4(finalColor, texel.a * uOpacity * opaDim);
         }`,
@@ -1647,6 +1659,34 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
     geo.setDrawRange(0, N_MAX);
     const mainPoints = new THREE.Points(geo, mat);
     scene.add(mainPoints);
+
+    // 共创空间直接接收创作画布正在使用的粒子属性，避免把作品先压成缩略图再重采样。
+    window.__exportCoCreateParticleCloud = function(maxPoints = 32000) {
+      const visibleCount = Math.max(1, Math.min(N, N_MAX));
+      const count = Math.min(visibleCount, Math.max(4000, Math.floor(maxPoints)));
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+      const uvs = new Float32Array(count * 2);
+      for (let i = 0; i < count; i++) {
+        const source = Math.min(visibleCount - 1, Math.floor((i + 0.5) * visibleCount / count));
+        positions.set(curPos.subarray(source * 3, source * 3 + 3), i * 3);
+        colors.set(colData.subarray(source * 3, source * 3 + 3), i * 3);
+        sizes[i] = sizeData[source];
+        uvs.set(uvData.subarray(source * 2, source * 2 + 2), i * 2);
+      }
+      let image = '';
+      try {
+        const source = currentTex && currentTex.image;
+        if (source && typeof source.toDataURL === 'function') image = source.toDataURL('image/png');
+      } catch (error) { console.warn('共创纹样原图导出失败', error); }
+      return {
+        positions, colors, sizes, uvs, image, morph: mat.uniforms.uMorph.value,
+        size: mat.uniforms.uSize.value, wave: mat.uniforms.uWaveSpeed.value,
+        heartbeat: mat.uniforms.uHeartbeatSpeed.value, rotate: currentRotateSpeed,
+        pixelRatio: mat.uniforms.uPixelRatio.value
+      };
+    };
 
     // 底部光晕平面
     const baseUniforms = { uTime:{value:0}, uColor:{value:new THREE.Color(currentStart)}, uColorEnd:{value:new THREE.Color(currentEnd)}, uOpacity:{value:0.6} };
@@ -2244,12 +2284,42 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
     // 校准状态：用于映射手位置到相机角度的偏移（来自 standalone 增强版）
     let handCalibratedCenter = { x: 0.5, y: 0.5 }; // 默认正中
     let handCalibrating = false;
+    let handSmoothedCenter = null;
+    let lastWorldGestureSent = 0;
+    function sendWorldGestureFrame(active, hand = null, flags = {}) {
+      const coScene = document.getElementById('coCreateScene');
+      const frame = document.getElementById('coParticleWorld');
+      if (!coScene?.classList.contains('open') || !frame?.contentWindow) return;
+      const now = performance.now();
+      if (now - lastWorldGestureSent < 90) return;
+      lastWorldGestureSent = now;
+      const x = hand ? 1 - (hand[0].x + hand[9].x) / 2 : 0.5;
+      const y = hand ? (hand[0].y + hand[9].y) / 2 : 0.5;
+      const hint = document.getElementById('coWorldGestureHint');
+      if (hint) {
+        if (!active) hint.textContent = '未检测到手掌 · 请回到镜头中央';
+        else if (flags.pinch) hint.textContent = '捏合 · 确认画面中心的形体';
+        else if (flags.fist) hint.textContent = '握拳 · 正在自动滑翔';
+        else if (flags.open) {
+          const dx = x - 0.5, dy = 0.5 - y;
+          const horizontal = Math.abs(dx) > 0.15 ? dx < 0 ? '左' : '右' : '';
+          const vertical = Math.abs(dy) > 0.15 ? dy < 0 ? '下' : '上' : '';
+          hint.textContent = horizontal || vertical ? `张掌移动 · 向${[vertical, horizontal].filter(Boolean).join('')}` : '张掌移动 · 停在中心即停止';
+        } else hint.textContent = '手势识别中 · 张掌并移动手掌进行平移';
+      }
+      frame.contentWindow.postMessage({
+        channel: 'mongol-pattern-co-create', type: 'gesture-frame', active,
+        x, y, open: !!flags.open, fist: !!flags.fist, pinch: !!flags.pinch
+      }, '*');
+    }
 
     // ============ 指尖轨迹绘制系统 ============
     let isDrawing = false;        // 是否正在绘制（食指竖起）
     let drawLines = [];           // 保存所有绘制线条的三维坐标数组
     let lineCount = 0;            // 当前线条索引
     let drawAccX = 0, drawAccY = 0; // 累计坐标（用于平滑）
+    const drawGuard=window.PatternDrawGuard.create();
+    let drawRawTip=null;
     const DRAW_SMOOTH = 2;       // 平滑因子
     let drawConfirmed = false;    // 绘制是否已确认完成
     
@@ -2960,6 +3030,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
         }
 
         const landmarks = results.multiHandLandmarks[0];
+        if (inputMode !== 'gesture') sendWorldGestureFrame(false);
 
         // 镜像翻转 x 坐标
         const mirrored = landmarks.map(lm => ({ x: 1 - lm.x, y: lm.y, z: lm.z }));
@@ -2983,14 +3054,8 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
           if (drawConfirmed) {
             // 确认后不再绘制（正在走 morph 流程）
           } else {
-            // 判断哪个手指是竖起的
-            const fingerTips = [8, 12, 16, 20], fingerMcps = [5, 9, 13, 17];
-            let raisedTips = [];
-            for (let i = 0; i < 4; i++) {
-              if (landmarks[fingerTips[i]].y < landmarks[fingerMcps[i]].y) raisedTips.push(i);
-            }
-            const onlyIndexRaised = raisedTips.length === 1 && raisedTips[0] === 0;
-
+            const drawState=drawGuard.update(landmarks,performance.now(),drawLines.some(line=>line.positions.length>=9));
+            const onlyIndexRaised=drawState.draw;
             // 食指指尖的 3D 世界坐标（z 固定为 0，在平面上绘制）
             // 可视范围：FOV55 + r24 → 高约±12, 宽按宽高比缩放
             const tipLm = landmarks[8];
@@ -3005,16 +3070,13 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
             drawAccX += (S_X - drawAccX) / DRAW_SMOOTH;
             drawAccY += (S_Y - drawAccY) / DRAW_SMOOTH;
 
-            // --- 5指全张开悬停2秒自动确认（无需对准按钮）---
-            const allFingersUp = raisedTips.length === 4; // 4指（食中无小）全竖起
-            const thumbTipLm = landmarks[4], thumbIpLm = landmarks[3];
-            const thumbUp = thumbTipLm.x < thumbIpLm.x; // 拇指也张开（左手镜像后）
-            const fiveOpen = allFingersUp && thumbUp;
+            const fiveOpen=drawState.open;
 
             if (drawLines.length > 0 && !drawConfirmed && fiveOpen && !onlyIndexRaised) {
               // 在五个指尖位置显示粉色点，然后立即确认
               const tipIndices = [4, 8, 12, 16, 20]; // 拇指、食指、中指、无名指、小指指尖
               const dotsContainer = document.getElementById('fingertipDots');
+              clearTimeout(fingertipHideTimer);
               if (dotsContainer) dotsContainer.style.display = 'block';
               tipIndices.forEach((ti, i) => {
                 const lm = landmarks[ti];
@@ -3026,19 +3088,14 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
                 }
               });
               gestureIcon.textContent = '🖐';
-              gestureText.textContent = '确认生成纹样!';
-              // 短暂延迟让粉色点可见，然后触发确认
-              if (!drawConfirmed) {
-                drawConfirmed = true;
-                isDrawing = false;
-                setTimeout(() => {
-                  hideFingertipDots();
-                  playConfirmEffect();
-                }, 350);
-              }
-            }
+              gestureText.textContent = '保持张掌 · 确认纹样';
+              if(drawState.confirm){drawConfirmed=true;isDrawing=false;hideFingertipDots();playConfirmEffect();}
+            } else if(!drawConfirmed){hideFingertipDots();}
 
+            if(drawConfirmed)return;
             if (onlyIndexRaised) {
+              if(!drawRawTip||Math.hypot(tipLm.x-drawRawTip.x,tipLm.y-drawRawTip.y)>.12){isDrawing=false;drawAccX=S_X;drawAccY=S_Y;}
+              drawRawTip={x:tipLm.x,y:tipLm.y};
               if (!isDrawing) {
                 isDrawing = true;
                 drawLines.push({ positions: [], color: currentStart, lineMesh: null, trail: null });
@@ -3059,7 +3116,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
                 addTrailParticles(drawLines[lineCount].trail, drawAccX, drawAccY, S_Z, currentStart, currentEnd, colorT);
               }
             } else {
-              if (isDrawing) {
+              if (isDrawing && !drawState.continueStroke) {
                 isDrawing = false;
                 gestureIcon.textContent = '✋';
                 gestureText.textContent = '线条完成 · 继续画或🖐五指张开确认';
@@ -3067,21 +3124,8 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
                 if (drawLines.length > 0 && !confirmBtnVisible) showConfirmBtn();
               }
 
-              // 握拳 → 清屏重新开始
-              if (raisedTips.length === 0) {
-                if (!gestureDebounce) gestureDebounce = { open: 0, fist: 0 };
-                gestureDebounce.fist = Math.min((gestureDebounce.fist || 0) + 1, 3);
-                if (gestureDebounce.fist >= 3 && drawLines.length > 0) {
-                  clearDrawLines();
-                  drawConfirmed = false;
-                  
-                  hideConfirmBtn();
-                  showDrawReference();
-                  gestureDebounce.fist = 0;
-                  gestureIcon.textContent = '🧹';
-                  gestureText.textContent = '已清空 · 重新开始描摹';
-                }
-              }
+              if(drawState.clearProgress>0){gestureIcon.textContent='✊';gestureText.textContent='持续握拳约1秒清空 · 松手取消';}
+              if(drawState.clear){clearDrawLines();drawGuard.reset();drawRawTip=null;drawConfirmed=false;hideConfirmBtn();showDrawReference();gestureText.textContent='已清空 · 用食指重新描摹';}
 
             }
           }
@@ -3091,8 +3135,15 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
         if (inputMode === 'gesture') {
           // 计算手部中心（用 wrist(0) 和 midMcp(9) 的加权中点）
           const wrist = landmarks[0], midMcp = landmarks[9];
-          const handXCenter = (wrist.x + midMcp.x) / 2;
-          const handYCenter = (wrist.y + midMcp.y) / 2;
+          const rawHandX = 1 - (wrist.x + midMcp.x) / 2; // 与镜像预览方向一致
+          const rawHandY = (wrist.y + midMcp.y) / 2;
+          if (!handSmoothedCenter) handSmoothedCenter = { x: rawHandX, y: rawHandY };
+          else {
+            handSmoothedCenter.x += (rawHandX - handSmoothedCenter.x) * 0.24;
+            handSmoothedCenter.y += (rawHandY - handSmoothedCenter.y) * 0.24;
+          }
+          const handXCenter = handSmoothedCenter.x;
+          const handYCenter = handSmoothedCenter.y;
 
           // 计算手掌开合程度 (0~1) — 加权算法
           const openRatio = computeOpenRatio(landmarks);
@@ -3115,6 +3166,11 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
           else { gestureDebounce.open = 0; gestureDebounce.fist = 0; }
           const stableOpen = gestureDebounce.open >= CONFIRM_FRAMES;
           const stableFist = gestureDebounce.fist >= CONFIRM_FRAMES;
+          const palmWidth = Math.hypot(landmarks[5].x - landmarks[17].x, landmarks[5].y - landmarks[17].y);
+          const pinching = Math.hypot(landmarks[4].x - landmarks[8].x, landmarks[4].y - landmarks[8].y) < palmWidth * 0.37;
+          gestureDebounce.pinch = pinching ? Math.min((gestureDebounce.pinch || 0) + 1, CONFIRM_FRAMES) : 0;
+          const stablePinch = gestureDebounce.pinch >= CONFIRM_FRAMES;
+          sendWorldGestureFrame(true, landmarks, { open: stableOpen, fist: stableFist, pinch: stablePinch });
 
           // 校准：如果正在校准，将当前手位置记为校准中心
           if (handCalibrating) {
@@ -3135,17 +3191,22 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
           // 2) 手的位置 → 粒子模型的旋转
           //    将手的绝对坐标映射到相机旋转角度
           //    先计算相对于校准中心的偏移
-          const cx = handXCenter - handCalibratedCenter.x;
-          const cy = handYCenter - handCalibratedCenter.y;
-          // handX 是归一化的 0~1，映射到旋转
+          const deadZone = (offset) => {
+            const threshold = 0.035;
+            if (Math.abs(offset) <= threshold) return 0;
+            return Math.sign(offset) * Math.min(0.5, (Math.abs(offset) - threshold) * 1.12);
+          };
+          const cx = deadZone(handXCenter - handCalibratedCenter.x);
+          const cy = deadZone(handYCenter - handCalibratedCenter.y);
+          // 手部位置先平滑并通过中心死区，再映射到旋转，减少摄像头微抖。
           const rotRange = Math.PI * 1.2;
           orb.tTh = orb.th + cx * rotRange;
           // handY: y=0(顶)→向上(小角度phi), y=1(底)→向下(大角度phi)
           orb.tPh = Math.max(Math.PI*0.15, Math.min(Math.PI*0.85, Math.PI/2 - cy * 0.6));
 
           // 3) 手张开时推近（加大视觉冲击力）
-          if (stableOpen) orb.tR = Math.max(10, orb.tR - 0.15);
-          else if (stableFist) orb.tR = Math.min(50, orb.tR + 0.15);
+          const radiusTarget = 42 - openRatio * 20;
+          orb.tR += (radiusTarget - orb.tR) * 0.10;
 
           // ========== UI 反馈 ==========
           const morphLabel = morphT < 0.25 ? '收缩 · 纹样凝聚' : (morphT > 0.75 ? '扩散 · 星云绽放' : '过渡中');
@@ -3161,13 +3222,15 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
         prevHandX = handX;
         prevHandY = handY;
       } else {
+        if(inputMode==='draw'){
+          const lost=drawGuard.update(null,performance.now(),drawLines.length>0).lost;
+          if(lost){isDrawing=false;drawRawTip=null;hideFingertipDots();gestureText.textContent='手部暂时离开 · 笔画已保留，食指继续 / 张掌确认';}
+        }
         // 无手检测到
+        sendWorldGestureFrame(false);
         gCtx.clearRect(0, 0, w, h);
         prevHandX = null; prevHandY = null;
-        isDrawing = false;
-        drawAccX = drawAccY = 0;
-        gestureIcon.textContent = '👀';
-        gestureText.textContent = '未检测到手 · 请伸出手';
+        if(inputMode!=='draw'){isDrawing=false;drawAccX=drawAccY=0;gestureIcon.textContent='👀';gestureText.textContent='未检测到手 · 请伸出手';}
       }
     }
 
@@ -3214,6 +3277,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
       prevHandX = null; prevHandY = null;
       gestureDebounce = null;
       handCalibrating = false;
+      handSmoothedCenter = null;
       stopCamera();
     }
 
@@ -3247,7 +3311,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
       } else {
         guide.innerHTML = `
           <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
-            <span style="color:rgba(255,255,255,0.4); font-family:monospace;">🤚 手位置</span><span style="color:rgba(255,255,255,0.7);">控制粒子旋转视角</span>
+            <span style="color:rgba(255,255,255,0.4); font-family:monospace;">🤚 手位置</span><span style="color:rgba(255,255,255,0.7);">校准后平滑控制粒子视角</span>
           </div>
           <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;">
             <span style="color:rgba(255,255,255,0.4); font-family:monospace;">✊→🖐 张开</span><span style="color:rgba(255,255,255,0.7);">粒子扩散成星云</span>
@@ -3283,19 +3347,22 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
 
     // 五指确认 - 指尖粉色点
     let confirmBtnVisible = false;
+    let fingertipHideTimer=0;
 
     function hideFingertipDots() {
+      clearTimeout(fingertipHideTimer);
       const dotsContainer = document.getElementById('fingertipDots');
       for (let i = 0; i < 5; i++) {
         const dot = document.getElementById('ftDot' + i);
         if (dot) dot.classList.remove('show');
       }
-      setTimeout(() => { if (dotsContainer) dotsContainer.style.display = 'none'; }, 300);
+      fingertipHideTimer=setTimeout(() => { if (dotsContainer) dotsContainer.style.display = 'none'; }, 300);
     }
     function showConfirmBtn() { confirmBtnVisible = true; }
     function hideConfirmBtn() { confirmBtnVisible = false; hideFingertipDots(); }
 
     function startDrawMode() {
+      drawGuard.reset();drawRawTip=null;
       drawLineGroup.clear();
       drawLines = [];
       lineCount = 0;
@@ -3313,6 +3380,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
       if (!gestureActive) startGestureMode();
     }
     function stopDrawMode() {
+      drawGuard.reset();drawRawTip=null;
       isDrawing = false;
       drawConfirmed = false;
       
@@ -3359,7 +3427,7 @@ uWaveSpeed: { value: 0.5 }, uHeartbeatSpeed: { value: 1.0 },
     });
   </script>
   <script src="co-create-sculptures.js?v=8.3"></script>
-  <script src="co-create-scene.js?v=8.3"></script>
+  <script src="co-create-scene.js?v=9.7"></script>
 
   <!-- 底部五色色条 -->
   <div class="five-color-bar">

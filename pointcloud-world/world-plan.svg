@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1540" role="img" aria-labelledby="title desc">
+  <title id="title">纹样粒子世界 · 全景构图平面位置图</title>
+  <desc id="desc">独立的粒子世界俯视位置参考图。北方与远景为负 Z，横向为 X；标出五座火山、五畜、河流、步道、岩石和红层崖体。</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#071426"/><stop offset="1" stop-color="#0a1c27"/></linearGradient>
+    <linearGradient id="field" x2="0" y2="1"><stop stop-color="#132b32"/><stop offset="1" stop-color="#173527"/></linearGradient>
+    <pattern id="grid" width="70" height="87.5" patternUnits="userSpaceOnUse"><path d="M70 0H0V87.5" fill="none" stroke="#9ab0af" stroke-opacity=".16" stroke-width="1"/><circle cx="0" cy="0" r="1.7" fill="#cad6cd" fill-opacity=".36"/></pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#dfc77f"/></marker>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <style>
+      text{font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;fill:#e9e7dc}.muted{fill:#9baeb2}.tiny{font-size:12px;letter-spacing:.06em}.small{font-size:14px}.label{font-size:16px;font-weight:600}.heading{font-size:20px;font-weight:600;letter-spacing:.08em}.coord{font:12px ui-monospace,Consolas,monospace;fill:#8ea7ae}.panel{fill:#0d1d2b;stroke:#c8ab69;stroke-opacity:.25}.volcano{cursor:move}.volcano circle{fill:#17293d;fill-opacity:.9;stroke-width:2.5;stroke-dasharray:7 5}.volcano text{paint-order:stroke;stroke:#08121d;stroke-width:4px;stroke-linejoin:round}.movehint{fill:#dfc77f}
+    </style>
+  </defs>
+  <rect width="1320" height="1540" fill="url(#bg)"/>
+  <text x="56" y="55" class="tiny" fill="#d5ba7a">MOTIF PARTICLE WORLD · PLAN VIEW</text>
+  <text x="56" y="100" font-size="34" font-family="STKaiti,KaiTi,serif" fill="#f3dfaa">纹样粒子世界｜全景构图平面图</text>
+  <text x="56" y="132" class="small muted">俯视 · X 横向 / Z 纵向 · 按参考画面的横向山群与近景留白调整，坐标与场景代码同步</text>
+  <rect x="56" y="160" width="820" height="1312" rx="20" fill="#0a1724" stroke="#9eb0a4" stroke-opacity=".28"/>
+  <rect x="126" y="192" width="700" height="1225" rx="5" fill="url(#field)"/>
+  <rect x="126" y="192" width="700" height="1225" fill="url(#grid)"/>
+  <!-- Land zones: these broad areas are visual guides, not survey boundaries. -->
+  <path d="M126 930 C285 902 355 925 470 908 C620 887 720 919 826 887 L826 1417 L126 1417Z" fill="#315a34" fill-opacity=".25"/>
+  <path d="M126 192H826V785 C710 762 620 800 498 779 C351 756 240 802 126 768Z" fill="#142846" fill-opacity=".18"/>
+  <text x="145" y="220" class="tiny muted">火山远景区 · Z 为负值</text>
+  <text x="145" y="1395" class="tiny" fill="#87bb7c">草原活动区</text>
+  <!-- Equal-unit grid ticks -->
+  <g class="coord" text-anchor="middle">
+    <text x="126" y="1440">-100</text><text x="196" y="1440">-80</text><text x="266" y="1440">-60</text><text x="336" y="1440">-40</text><text x="406" y="1440">-20</text><text x="476" y="1440">0</text><text x="546" y="1440">20</text><text x="616" y="1440">40</text><text x="686" y="1440">60</text><text x="756" y="1440">80</text><text x="826" y="1440">100  X →</text>
+  </g>
+  <g class="coord" text-anchor="end">
+    <text x="116" y="197">-300</text><text x="116" y="284">-275</text><text x="116" y="372">-250</text><text x="116" y="459">-225</text><text x="116" y="547">-200</text><text x="116" y="634">-175</text><text x="116" y="722">-150</text><text x="116" y="809">-125</text><text x="116" y="897">-100</text><text x="116" y="984">-75</text><text x="116" y="1072">-50</text><text x="116" y="1159">-25</text><text x="116" y="1247">0</text><text x="116" y="1334">25</text><text x="116" y="1422">50</text>
+  </g>
+  <path d="M851 260V200" stroke="#dfc77f" stroke-width="2" marker-end="url(#arrow)"/><text x="851" y="185" text-anchor="middle" class="label" fill="#dfc77f">北 / 远景</text>
+  <text x="851" y="282" text-anchor="middle" class="tiny muted">−Z</text>
+  <!-- Red-bed cliffs: approximate extents from the point-cloud generation region. -->
+  <path d="M355 370 C300 475 279 584 327 705 C355 777 342 865 297 947 C265 1020 290 1102 336 1170" fill="none" stroke="#b45332" stroke-width="36" stroke-opacity=".16"/>
+  <path d="M355 370 C300 475 279 584 327 705 C355 777 342 865 297 947 C265 1020 290 1102 336 1170" fill="none" stroke="#ca6840" stroke-width="2" stroke-dasharray="8 8" stroke-opacity=".8"/>
+  <path d="M596 360 C650 454 676 568 635 691 C611 766 631 871 675 943 C711 1024 690 1103 650 1164" fill="none" stroke="#b45332" stroke-width="36" stroke-opacity=".16"/>
+  <path d="M596 360 C650 454 676 568 635 691 C611 766 631 871 675 943 C711 1024 690 1103 650 1164" fill="none" stroke="#ca6840" stroke-width="2" stroke-dasharray="8 8" stroke-opacity=".8"/>
+  <text x="210" y="610" transform="rotate(-72 210 610)" class="tiny" fill="#d78458">西侧红层崖体 · 示意范围</text>
+  <text x="737" y="610" transform="rotate(72 737 610)" class="tiny" fill="#d78458">东侧红层崖体 · 示意范围</text>
+  <!-- Current route and stream. Formula sources: scene.js pathCentreAt / riverCentreAt. -->
+  <path d="M472 1417 C470 1325 494 1270 493 1202 C492 1128 473 1078 477 1002 C480 925 498 865 495 788 C491 706 475 642 477 579" fill="none" stroke="#bf8851" stroke-width="17" stroke-opacity=".72" stroke-linecap="round"/>
+  <path d="M472 1417 C470 1325 494 1270 493 1202 C492 1128 473 1078 477 1002 C480 925 498 865 495 788 C491 706 475 642 477 579" fill="none" stroke="#eed2a0" stroke-width="1.5" stroke-dasharray="3 9" stroke-opacity=".85"/>
+  <path d="M526 1417 C531 1338 524 1292 529 1220 C535 1155 548 1099 538 1026 C527 954 516 904 525 833 C535 761 547 705 535 638 C527 597 530 566 533 535" fill="none" stroke="#39bde5" stroke-width="12" stroke-opacity=".78" stroke-linecap="round"/>
+  <path d="M526 1417 C531 1338 524 1292 529 1220 C535 1155 548 1099 538 1026 C527 954 516 904 525 833 C535 761 547 705 535 638 C527 597 530 566 533 535" fill="none" stroke="#a7edfa" stroke-width="1.2" stroke-dasharray="2 9" stroke-opacity=".72"/>
+  <text x="557" y="1184" class="small" fill="#7de0f3">河流 · 宽约 3.6</text>
+  <text x="429" y="1098" class="small" fill="#f1c98e" transform="rotate(-69 429 1098)">盘长结步道 · 宽约 5</text>
+  <!-- Main herd / motif forms: center marks carry exact X,Z labels. -->
+  <g fill="#d7e6d1" stroke="#16231e" stroke-width="2">
+    <circle cx="388.5" cy="1049.5" r="8"/><circle cx="574" cy="990" r="8"/><circle cx="577.5" cy="920" r="8"/><circle cx="374.5" cy="864" r="8"/><circle cx="567" cy="804" r="8"/>
+  </g>
+  <g class="tiny" fill="#e8e5d8"><text x="352" y="1063">马 −25, −55</text><text x="585" y="1004">牛 28, −72</text><text x="588" y="934">羊 29, −92</text><text x="331" y="878">山羊 −29, −108</text><text x="577" y="818">骆驼 26, −125</text></g>
+  <!-- Ambient grazing groups -->
+  <!-- Ambient herd positions as editable individually named markers -->
+  <g aria-label="远景牧群点位">
+    <circle cx="336" cy="1158" r="5" fill="#a9cf91"/><text x="306" y="1151" class="tiny">牧羊</text>
+    <circle cx="616" cy="1116" r="5" fill="#a9cf91"/><text x="622" y="1121" class="tiny">牧牛</text>
+    <circle cx="332.5" cy="1056.5" r="5" fill="#a9cf91"/><text x="303" y="1051" class="tiny">牧羊</text>
+    <circle cx="619.5" cy="997" r="5" fill="#a9cf91"/><text x="627" y="1001" class="tiny">山羊</text>
+    <circle cx="616" cy="934" r="5" fill="#a9cf91"/><text x="622" y="928" class="tiny">骆驼</text>
+    <circle cx="336" cy="874.5" r="5" fill="#a9cf91"/><text x="306" y="879" class="tiny">牧牛</text>
+    <circle cx="619.5" cy="801" r="5" fill="#a9cf91"/><text x="627" y="796" class="tiny">牧羊</text>
+    <circle cx="336" cy="766" r="5" fill="#a9cf91"/><text x="306" y="771" class="tiny">牧马</text>
+  </g>
+  <!-- Boulders. Circle size is a diagram symbol, not an exact terrain footprint. -->
+  <g fill="#a95032" fill-opacity=".55" stroke="#e18a58" stroke-width="1.5">
+    <circle cx="360.5" cy="1325" r="12"/><circle cx="588" cy="1270" r="11"/><circle cx="350" cy="1214" r="13"/><circle cx="598.5" cy="1112.5" r="14"/><circle cx="346.5" cy="1021.5" r="11"/>
+    <circle cx="399" cy="1298" r="6"/><circle cx="553" cy="1249" r="6"/><circle cx="399" cy="1179" r="7"/><circle cx="553" cy="1116" r="6"/><circle cx="399" cy="1056.5" r="7"/><circle cx="553" cy="997" r="6"/>
+  </g>
+  <g class="tiny" fill="#e4a276"><text x="334" y="1306">岩</text><text x="603" y="1270">岩</text></g>
+  <!-- Three small river crossings, exact z values from scene.js. -->
+  <g fill="#d5cab2" stroke="#45575c" stroke-width="2"><ellipse cx="525" cy="885" rx="9" ry="5"/><ellipse cx="529" cy="884" rx="9" ry="5"/><ellipse cx="533" cy="883" rx="9" ry="5"/><ellipse cx="527" cy="745" rx="9" ry="5"/><ellipse cx="531" cy="744" rx="9" ry="5"/><ellipse cx="535" cy="743" rx="9" ry="5"/><ellipse cx="526" cy="605" rx="9" ry="5"/><ellipse cx="530" cy="604" rx="9" ry="5"/><ellipse cx="534" cy="603" rx="9" ry="5"/></g>
+  <text x="569" y="751" class="tiny muted">三处踏石</text>
+  <!-- Volcano markers sized by artistic base radius (MONUMENT_SCALE=3), with editable centers. -->
+  <g class="volcano" id="peak-01" data-x="-62" data-z="-153">
+    <circle cx="259" cy="706.5" r="35.7" stroke="#f1c26c"/><path d="M259 690l14 16-14 16-14-16z" fill="#f1c26c" fill-opacity=".8"/><text x="259" y="711" text-anchor="middle" class="label">01</text><text x="259" y="659" text-anchor="middle" class="tiny">−62, −153</text>
+  </g>
+  <g class="volcano" id="peak-02" data-x="75" data-z="-200">
+    <circle cx="738.5" cy="542" r="31.9" stroke="#e56d69"/><path d="M738.5 525.5l14 16-14 16-14-16z" fill="#e56d69" fill-opacity=".8"/><text x="738.5" y="546.5" text-anchor="middle" class="label">02</text><text x="738.5" y="497" text-anchor="middle" class="tiny">75, −200</text>
+  </g>
+  <g class="volcano" id="peak-03" data-x="0" data-z="-250">
+    <circle cx="476" cy="367" r="44.8" stroke="#f5d48b"/><path d="M476 349l16 18-16 18-16-18z" fill="#f5d48b" fill-opacity=".82"/><text x="476" y="372" text-anchor="middle" class="label">03</text><text x="476" y="312" text-anchor="middle" class="tiny">0, −250</text>
+  </g>
+  <g class="volcano" id="peak-04" data-x="110" data-z="-100">
+    <circle cx="861" cy="892" r="30.8" stroke="#ed9b53"/><path d="M861 877l13 15-13 15-13-15z" fill="#ed9b53" fill-opacity=".8"/><text x="861" y="896.5" text-anchor="middle" class="label">04</text><text x="861" y="846" text-anchor="middle" class="tiny">110, −100</text>
+  </g>
+  <g class="volcano" id="peak-05" data-x="-85" data-z="-52">
+    <circle cx="178.5" cy="1060" r="29.8" stroke="#69c9b8"/><path d="M178.5 1044.5l13 15-13 15-13-15z" fill="#69c9b8" fill-opacity=".8"/><text x="178.5" y="1064.5" text-anchor="middle" class="label">05</text><text x="178.5" y="1014" text-anchor="middle" class="tiny">−85, −52</text>
+  </g>
+  <!-- Notes panel -->
+  <rect x="910" y="160" width="354" height="1312" rx="20" class="panel"/>
+  <text x="944" y="211" class="heading" fill="#f3dfaa">全景构图坐标</text>
+  <text x="944" y="242" class="tiny muted">环形虚线是火山艺术底座占地示意，按当前模型半径绘制。</text>
+  <g font-size="15">
+    <text x="944" y="292" fill="#f1c26c">设计峰01 黑脑包（景区4号）</text><text x="944" y="316" class="coord">X −62  /  Z −153  /  底径≈61</text>
+    <text x="944" y="358" fill="#e56d69">设计峰02 北炼丹炉（景区3号）</text><text x="944" y="382" class="coord">X 75  /  Z −200  /  底径≈55</text>
+    <text x="944" y="424" fill="#f5d48b">设计峰03 中炼丹炉（景区5号）</text><text x="944" y="448" class="coord">X 0  /  Z −250  /  底径≈77</text>
+    <text x="944" y="490" fill="#ed9b53">设计峰04 南炼丹炉（景区6号）</text><text x="944" y="514" class="coord">X 110  /  Z −100  /  底径≈53</text>
+    <text x="944" y="556" fill="#69c9b8">设计峰05 北尖山（景区7号）</text><text x="944" y="580" class="coord">X −85  /  Z −52  /  底径≈51</text>
+  </g>
+  <path d="M944 614H1230" stroke="#9db0aa" stroke-opacity=".2"/>
+  <text x="944" y="655" class="heading" fill="#f3dfaa">图例与说明</text>
+  <circle cx="956" cy="696" r="8" fill="#d7e6d1"/><text x="977" y="701" class="small">五畜主形位置</text>
+  <circle cx="956" cy="730" r="5" fill="#a9cf91"/><text x="977" y="735" class="small">散布牧群</text>
+  <circle cx="956" cy="764" r="8" fill="#a95032" stroke="#e18a58"/><text x="977" y="769" class="small">岩石 / 岩簇</text>
+  <path d="M944 806H974" stroke="#39bde5" stroke-width="7"/><text x="986" y="811" class="small">河流（不叠纹样）</text>
+  <path d="M944 840H974" stroke="#bf8851" stroke-width="8"/><text x="986" y="845" class="small">盘长结步道</text>
+  <path d="M944 875H974" stroke="#ca6840" stroke-width="3" stroke-dasharray="6 5"/><text x="986" y="880" class="small">两侧红层崖体</text>
+  <path d="M944 910H974" stroke="#a9cf91" stroke-width="1" stroke-dasharray="3 4"/><text x="986" y="915" class="small">20 X / 25 Z 坐标网格</text>
+  <rect x="940" y="958" width="292" height="164" rx="12" fill="#152638" stroke="#dfc77f" stroke-opacity=".34"/>
+  <text x="960" y="992" class="label movehint">你可以这样改图</text>
+  <text x="960" y="1024" class="small muted">1. 在图上圈出或标记 01–05 的新位置。</text>
+  <text x="960" y="1053" class="small muted">2. 附上新坐标，格式：X / Z。</text>
+  <text x="960" y="1082" class="small muted">3. 标记河道、牧群、岩石是否跟着移。</text>
+  <text x="944" y="1162" class="small" fill="#e4c98d">当前判读</text>
+  <text x="944" y="1192" class="tiny muted">五峰位于 Z −45 至 −250；草原与动物</text>
+  <text x="944" y="1215" class="tiny muted">集中在 Z −78 至 50。艺术峰底座较大，</text>
+  <text x="944" y="1238" class="tiny muted">虚线相交表示现有位置可能发生遮挡，</text>
+  <text x="944" y="1261" class="tiny muted">不代表地貌测量或真实火山位置。</text>
+  <text x="944" y="1350" class="tiny" fill="#d5ba7a">编辑建议</text>
+  <text x="944" y="1378" class="tiny muted">图中留白可用绘图软件圈画并回传</text>
+  <text x="944" y="1400" class="tiny muted">供你圈画；以中心十字/菱形为坐标点。</text>
+  <text x="944" y="1448" class="tiny muted">源坐标：scene.js / living-motifs.js / volcano-world.js</text>
+  <text x="56" y="1510" class="tiny muted">说明：地貌边界与点状符号为平面示意；位置来自当前代码。请按你的总体构图调整后回传这张 SVG 或写出新坐标。</text>
+</svg>

@@ -136,18 +136,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404);
-      res.end('Not Found');
-      return;
+  fs.stat(filePath,(error,stat)=>{
+    if(error||!stat.isFile()){res.writeHead(404);res.end('Not Found');return;}
+    const headers={'Content-Type':MIME[path.extname(filePath).toLowerCase()]||'application/octet-stream','Cache-Control':'no-store','Accept-Ranges':'bytes'};
+    let start=0,end=stat.size-1,status=200;
+    if(req.headers.range){
+      const match=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+      if(!match||(!match[1]&&!match[2])){res.writeHead(416,{'Content-Range':`bytes */${stat.size}`});res.end();return;}
+      if(!match[1])start=Math.max(0,stat.size-Number(match[2]));
+      else{start=Number(match[1]);if(match[2])end=Math.min(end,Number(match[2]));}
+      if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start>end||start>=stat.size){res.writeHead(416,{'Content-Range':`bytes */${stat.size}`});res.end();return;}
+      status=206;headers['Content-Range']=`bytes ${start}-${end}/${stat.size}`;
     }
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, {
-      'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Cache-Control': 'no-store',
-    });
-    res.end(data);
+    headers['Content-Length']=Math.max(0,end-start+1);
+    res.writeHead(status,headers);
+    if(req.method==='HEAD'||stat.size===0){res.end();return;}
+    const stream=fs.createReadStream(filePath,{start,end});
+    stream.on('error',()=>res.destroy());res.on('close',()=>stream.destroy());stream.pipe(res);
   });
 });
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" role="img" aria-labelledby="title">
+  <title id="title">蓝青色河流与浅色踏石示意</title>
+  <rect width="360" height="150" rx="18" fill="#071a35"/>
+  <path d="M0 39 C55 25 83 54 139 42 S229 27 282 42 334 54 360 42 V150 H0Z" fill="#106992"/>
+  <path d="M0 72 C53 57 89 85 143 72 S236 59 286 73 337 85 360 73" fill="none" stroke="#42d2e8" stroke-width="7" opacity=".82"/>
+  <path d="M0 109 C52 95 88 122 142 110 S236 97 286 111 337 123 360 110" fill="none" stroke="#76eaff" stroke-width="5" opacity=".68"/>
+  <g fill="#d8d1bd" stroke="#f2e7ce" stroke-width="3">
+    <path d="M55 75 72 65 91 70 96 84 81 93 61 90Z"/><path d="M117 76 133 66 152 72 157 86 139 95 121 90Z"/>
+    <path d="M182 76 198 66 216 72 221 87 204 95 186 91Z"/><path d="M248 76 265 65 283 71 289 85 271 94 253 90Z"/>
+  </g>
+</svg>

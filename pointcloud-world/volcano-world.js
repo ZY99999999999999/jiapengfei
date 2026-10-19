@@ -1,24 +1,26 @@
 import * as THREE from '../lib/three/three.module.js';
-import './co-create-sculptures.js?v=2';
+import { makeLuminousSurface } from './luminous-surface.js?v=8';
+import './co-create-sculptures.js?v=4';
+import { closePaintedSilhouette, localStrokeRadii, makeRoundedReferenceCloud } from './rounded-reference.js?v=8';
 
 // 五张设计图的图腾次序沿用 creator.html；这里生成可环看的粒子结构，而非图像平面。
 const SPECS = [
-  { name: '01 · 蝶莲焰', x: 0, z: -247, height: 11.6, radius: 10.2, lip: 1.55, tint: [0.10, 0.23, 0.46], glyph: 7,
+  { name: '设计峰01 · 黑脑包（景区4号）· 蝶莲焰', x: -62, z: -153, height: 11.6, radius: 10.2, lip: 1.55, tint: [0.10, 0.23, 0.46], glyph: 7,
     art: { top: 408, bottom: 806, half: 550 }, profile: [[0, 10.2], [.48, 7.8], [.82, 4.25], [1, 1.55]],
-    note: '双蝶绕山、莲焰从火口升起；云纹、回纹持续沿山身流转。' },
-  { name: '02 · 双翼宝石', x: 45, z: -212, height: 14.5, radius: 9.1, lip: 1.95, tint: [0.10, 0.17, 0.39], glyph: 0,
+    note: '黑脑包 · 宽肩低缓的艺术峰，以双蝶与莲焰表现早期火山风化后圆浑、沉静的视觉感受。' },
+  { name: '设计峰02 · 北炼丹炉（景区3号）· 双翼宝石', x: 75, z: -200, height: 14.5, radius: 9.1, lip: 1.95, tint: [0.10, 0.17, 0.39], glyph: 0,
     art: { top: 356, bottom: 865, half: 480 }, profile: [[0, 9.1], [.48, 6.0], [.83, 3.0], [1, 1.95]],
-    note: '两翼与宝石围绕菱格山坡，红金与青蓝纹样构成空间节奏。' },
-  { name: '03 · 龙凤日轮', x: -45, z: -188, height: 16.2, radius: 10.4, lip: 2.80, tint: [0.08, 0.21, 0.43], glyph: 1,
-    art: { top: 310, bottom: 1022, half: 530 }, profile: [[0, 10.4], [.46, 7.6], [.79, 4.1], [1, 2.80]],
-    note: '参考原画轮廓雕刻厚层彩色粒子，叠加空间曲线与翼面骨架；龙凤在日轮两侧环山汇聚。' },
-  { name: '04 · 蝶火脉', x: 39, z: -139, height: 13.6, radius: 8.8, lip: 1.28, tint: [0.04, 0.12, 0.37], glyph: 0,
+    note: '北炼丹炉 · 锥体较完整、顶部火口清晰；艺术峰以收束的锥坡、双翼和宝石回应其挺拔轮廓。' },
+  { name: '设计峰03 · 中炼丹炉（景区5号）· 龙凤日轮', x: 0, z: -250, height: 16.2, radius: 12.8, lip: 3.44, tint: [0.08, 0.21, 0.43], glyph: 1,
+    art: { top: 310, bottom: 1000, half: 510 }, profile: [[0, 12.8], [.46, 9.35], [.79, 5.04], [1, 3.44]],
+    note: '中炼丹炉 · 火山群中代表性的炼丹炉火山之一；本峰以五峰中最高、最宽的艺术尺度呈现日轮与云纹装饰。' },
+  { name: '设计峰04 · 南炼丹炉（景区6号）· 蝶火脉', x: 110, z: -100, height: 13.6, radius: 8.8, lip: 1.28, tint: [0.04, 0.12, 0.37], glyph: 0,
     art: { top: 258, bottom: 978, half: 625 }, profile: [[0, 8.8], [.12, 8.1], [.12, 7.3], [.27, 7.0], [.27, 6.2],
       [.43, 5.8], [.43, 5.1], [.59, 4.8], [.59, 4.0], [.76, 3.5], [.76, 2.8], [.91, 2.0], [1, 1.28]],
-    note: '四蝶浮游，几何纹带与炽红火脉贯穿阶梯状山体。' },
-  { name: '05 · 夜翼回纹', x: -38, z: -118, height: 14.1, radius: 8.5, lip: 1.35, tint: [0.07, 0.18, 0.40], glyph: 0,
+    note: '南炼丹炉 · 属北、中、南炼丹炉火山序列；阶梯状坡面与红色火脉是本峰的艺术表达，四只蝶纹取自原稿并贴坡错层展开，不把设计纹理说成真实裂缝。' },
+  { name: '设计峰05 · 北尖山（景区7号）· 夜翼回纹', x: -85, z: -52, height: 14.1, radius: 8.5, lip: 1.35, tint: [0.07, 0.18, 0.40], glyph: 0,
     art: { top: 452, bottom: 1022, half: 355 }, profile: [[0, 8.5], [.35, 6.3], [.70, 3.5], [1, 1.35]],
-    note: '四只青色夜翼环绕回纹山坡，花形纹样悬于火口上方。' }
+    note: '北尖山 · 属于研究资料列出的较晚一期锥体；本峰以尖收的山顶、原稿中的四只青色夜翼和连续回纹呼应名称意象。' }
 ];
 
 const C = {
@@ -34,6 +36,17 @@ const halton = (index, base) => {
   while (index > 0) { result += (index % base) * fraction; index = Math.floor(index / base); fraction /= base; }
   return result;
 };
+function roundedParticles(p, c, x, y, z, color, radius, seed, count = 5) {
+  // 原图只规定母形的位置与颜色；体块由球域内分布的粒子重新搭建。
+  for (let i = 0; i < count; i++) {
+    const n = seed + i * 17 + 1;
+    const vertical = halton(n, 2) * 2 - 1;
+    const angle = halton(n, 3) * TAU;
+    const r = radius * Math.cbrt(halton(n, 5));
+    const radial = Math.sqrt(Math.max(0, 1 - vertical * vertical)) * r;
+    push(p, c, x + Math.cos(angle) * radial, y + vertical * r, z + Math.sin(angle) * radial, color);
+  }
+}
 const radiusAt = (spec, _index, t) => {
   const height = Math.min(.999, Math.max(0, t));
   const profile = spec.profile;
@@ -63,23 +76,52 @@ function motifTile(atlas, index) {
   return texture;
 }
 
+function makeRoundParticleTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 32;
+  const context = canvas.getContext('2d');
+  const gradient = context.createRadialGradient(16, 16, 5, 16, 16, 16);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(.68, 'rgba(255,255,255,.94)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 32, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  return texture;
+}
+
 export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
   const textures = [0, 1, 7].map(i => motifTile(atlas, i));
+  const roundParticle = makeRoundParticleTexture();
   const textureFor = glyph => glyph === 1 ? textures[1] : glyph === 7 ? textures[2] : textures[0];
   const peaks = [];
   let pointCount = 0;
 
-  function cloud(p, c, { size = .19, texture = textures[0], opacity = .82, additive = false, depthWrite = false, solid = false } = {}) {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(c, 3));
-    geometry.computeBoundingSphere();
-    const material = new THREE.PointsMaterial({ size: size * MONUMENT_SCALE, map: solid ? null : texture, vertexColors: true, transparent: !solid,
-      opacity, alphaTest: solid ? 0 : .075, sizeAttenuation: true, depthTest: true, depthWrite: solid || depthWrite,
-      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, fog: false });
+  function cloud(p, c, { size = .19, texture = textures[0], opacity = .82, additive = false, depthWrite = false, solid = false, round = false } = {}) {
+    const normals = new Float32Array(p.length);
+    const sizes = new Float32Array(p.length / 3);
+    for (let i = 0; i < p.length; i += 3) {
+      const length = Math.hypot(p[i], .42, p[i + 2]) || 1;
+      normals[i] = p[i] / length; normals[i + 1] = .42 / length; normals[i + 2] = p[i + 2] / length;
+      sizes[i / 3] = Math.max(.45, Math.min(1.3, size / .19));
+    }
+    const points = makeLuminousSurface(p, c, normals, sizes, MONUMENT_SCALE);
+    points.material.opacity = opacity;
+    points.material.depthWrite=solid;
+    points.userData.surfaceRole=solid?'body':'ornament';
+    points.layers.disable(1);
+    points.material.uniforms.uCore.value=solid?.72:.68;
+    points.material.uniforms.uFlow.value = .035;
+    points.material.uniforms.uBrightness.value = 1.08;
+    points.material.uniforms.uSurfaceFill.value = 1.4;
+    points.material.uniforms.uColorRetention.value = 1;
+    points.material.uniforms.uRim.value=.55;points.material.uniforms.uGlow.value=.16;points.material.uniforms.uSpeed.value=.35;
+    points.material.uniforms.uSize.value = .86;
     pointCount += p.length / 3;
-    const points = new THREE.Points(geometry, material);
-    points.frustumCulled = false;
     return points;
   }
 
@@ -88,17 +130,35 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     for (let i = 0; i < count; i++) {
       const t = i / (count - 1);
       const [x, y, z] = fn(t);
-      for (const side of [-1, 0, 1]) push(p, c, x + side * width, y + Math.sin(t * 37 + side) * width * .3,
-        z + Math.cos(t * 29 + side) * width, i % 9 === 0 ? C.cream : color);
+      const before = fn(Math.max(0, t - .004)), after = fn(Math.min(1, t + .004));
+      const tx = after[0] - before[0], ty = after[1] - before[1], tz = after[2] - before[2];
+      const length = Math.hypot(tx, ty, tz) || 1;
+      let nx = -ty, ny = tx, nz = 0;
+      let nLength = Math.hypot(nx, ny, nz);
+      if (nLength < .0001) { nx = 1; ny = 0; nz = 0; nLength = 1; }
+      nx /= nLength; ny /= nLength; nz /= nLength;
+      let bx = ty * nz - tz * ny, by = tz * nx - tx * nz, bz = tx * ny - ty * nx;
+      const bLength = Math.hypot(bx, by, bz) || 1;
+      bx /= bLength; by /= bLength; bz /= bLength;
+      const tone = i % 9 === 0 ? C.cream : color;
+      // 中心粒子加环绕粒子构成圆截面，不再用一根扁平、单层的点线表示纹带。
+      push(p, c, x, y, z, tone);
+      for (let bead = 0; bead < 6; bead++) {
+        const a = bead / 6 * TAU;
+        const r = width * .72;
+        push(p, c, x + (nx * Math.cos(a) + bx * Math.sin(a)) * r,
+          y + (ny * Math.cos(a) + by * Math.sin(a)) * r,
+          z + (nz * Math.cos(a) + bz * Math.sin(a)) * r, tone);
+      }
     }
-    const object = cloud(p, c, { texture, size, opacity: .92, additive });
+    const object = cloud(p, c, { texture, size: size * .82, opacity: .96, additive, round: true });
     parent.add(object);
     return object;
   }
 
   function shell(group, spec, index, texture) {
     const p = [], c = [], glyphP = [];
-    const n = dense ? 16000 : 10000;
+    const n = dense ? 12500 : 7800;
     for (let i = 0; i < n; i++) {
       // 高度与方位分别取互不相关的低差异序列，避免退化成一条螺旋线。
       const t = Math.pow(halton(i + 1, 2), .9);
@@ -111,8 +171,8 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
       glyphP.push(Math.sin(a) * (r + .09), t * spec.height, Math.cos(a) * (r + .09));
     }
     // 不透明粒点先读出完整锥体，外移的微纹样再呈现山身表层。
-    group.add(cloud(p, c, { size: .19, opacity: 1, solid: true }));
-    group.add(cloud(glyphP, c, { texture, size: .30, opacity: .86 }));
+    group.add(cloud(p, c, { size: .17, opacity: 1, solid: true }));
+    // The original-reference relief supplies surface motifs; avoid a second glyph coating.
     const bands = new THREE.Group();
     group.add(bands);
     const bandLevels = index === 0 ? [[.17, 18], [.32, 15], [.49, 21], [.67, 13], [.79, 16]]
@@ -193,6 +253,109 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     return patterns;
   }
 
+  function referenceOrnaments(parent, spec, index, pixels, width, height) {
+    // 装饰只从各峰自己的原画取样：以黑底分割独立纹样，再把像素投到坡面并沿法线补出圆截面。
+    const layouts = index === 1 ? [
+      { rect: [214, 7, 86, 103], angle: 0, y: .985, w: 2.15, h: 2.6 },
+      { rect: [8, 111, 195, 101], angle: -.62, y: .71, w: 5.6, h: 2.9 },
+      { rect: [309, 111, 195, 101], angle: .62, y: .71, w: 5.6, h: 2.9 }
+    ] : index === 3 ? [
+      { rect: [218, 4, 76, 91], angle: 0, y: .985, w: 1.9, h: 2.35 },
+      { rect: [8, 12, 170, 148], angle: -.58, y: .73, w: 5.0, h: 4.2 },
+      { rect: [334, 12, 174, 148], angle: .58, y: .73, w: 5.0, h: 4.2 },
+      { rect: [7, 142, 170, 185], angle: -.72, y: .43, w: 5.6, h: 4.8 },
+      { rect: [334, 142, 174, 185], angle: .72, y: .43, w: 5.6, h: 4.8 }
+    ] : [
+      { rect: [205, 75, 102, 91], angle: 0, y: .985, w: 2.2, h: 2.15 },
+      { rect: [79, 50, 157, 92], angle: -.78, y: .70, w: 4.2, h: 2.45 },
+      { rect: [278, 50, 155, 92], angle: .78, y: .70, w: 4.2, h: 2.45 },
+      { rect: [68, 171, 169, 132], angle: -.92, y: .40, w: 4.6, h: 3.15 },
+      { rect: [277, 171, 164, 132], angle: .92, y: .40, w: 4.6, h: 3.15 }
+    ];
+    const positions = [], colors = [];
+    const srgb = value => { const v = value / 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+    const step = dense ? 2 : 3;
+    layouts.forEach((layout, layoutIndex) => {
+      const [x0, y0, rw, rh] = layout.rect;
+      const regionW = Math.min(rw, width - x0), regionH = Math.min(rh, height - y0);
+      if (regionW <= 0 || regionH <= 0) return;
+      const active = new Uint8Array(regionW * regionH), visited = new Uint8Array(regionW * regionH);
+      for (let y = 0; y < regionH; y++) for (let x = 0; x < regionW; x++) {
+        const offset = ((y0 + y) * width + x0 + x) * 4;
+        const r = pixels[offset], g = pixels[offset + 1], b = pixels[offset + 2];
+        const visible = Math.max(r, g, b) > 48;
+        // 火口图形与山体在原稿里相连；按原图主色隔离花心/火焰，避免把山坡尖端误采成顶饰。
+        const topMotif = layoutIndex === 0;
+        const topColor = (r > 78 && r > g * 1.08 && r > b * 1.08)
+          || (g > 52 && g > r * 1.12 && g >= b * .82)
+          || (r > 145 && g > 128 && b > 90);
+        active[y * regionW + x] = visible && (!topMotif || topColor) ? 1 : 0;
+      }
+      let largest = [];
+      for (let start = 0; start < active.length; start++) {
+        if (!active[start] || visited[start]) continue;
+        const queue = [start], component = [];
+        visited[start] = 1;
+        for (let head = 0; head < queue.length; head++) {
+          const at = queue[head], x = at % regionW, y = Math.floor(at / regionW);
+          component.push(at);
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            if (!dx && !dy) continue;
+            const xx = x + dx, yy = y + dy;
+            if (xx < 0 || yy < 0 || xx >= regionW || yy >= regionH) continue;
+            const next = yy * regionW + xx;
+            if (!active[next] || visited[next]) continue;
+            visited[next] = 1; queue.push(next);
+          }
+        }
+        if (component.length > largest.length) largest = component;
+      }
+      // 每个手工裁切框对应一个主体装饰。小型分离云点、边框碎片不再被当成翼兽采样，避免远处漂浮粒团。
+      const selected = largest;
+      if (selected.length < 40) return;
+      let minX = regionW, maxX = 0, minY = regionH, maxY = 0;
+      for (const at of selected) {
+        const x = at % regionW, y = Math.floor(at / regionW);
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+      }
+      const mask = new Uint8Array(active.length);
+      selected.forEach(at => { mask[at] = 1; });
+      const normalX = Math.sin(layout.angle), normalZ = Math.cos(layout.angle);
+      const tangentX = Math.cos(layout.angle), tangentZ = -Math.sin(layout.angle);
+      for (let y = minY; y <= maxY; y += step) for (let x = minX; x <= maxX; x += step) {
+        if (!mask[y * regionW + x]) continue;
+        const sourceX = x0 + x, sourceY = y0 + y;
+        const across = ((x - minX) / Math.max(1, maxX - minX) - .5) * layout.w;
+        const levelY = spec.height * layout.y + (.5 - (y - minY) / Math.max(1, maxY - minY)) * layout.h;
+        const level = Math.max(.025, Math.min(.975, levelY / spec.height));
+        const radius = radiusAt(spec, index, level);
+        if (Math.abs(across) > radius * .94) continue;
+        const pixel = (sourceY * width + sourceX) * 4;
+        const base = [srgb(pixels[pixel]), srgb(pixels[pixel + 1]), srgb(pixels[pixel + 2])];
+        const seed = layoutIndex * 17011 + sourceY * 733 + sourceX * 37;
+        // 前后截面按球域收束，既保留原图边缘与色块，也避免做成单层彩色纸片。
+        for (let slice = -2; slice <= 2; slice++) {
+          const depth = slice / 2, thickness = .26 + (slice === 0 ? .12 : 0);
+          const angle = halton(seed + slice + 4, 3) * TAU;
+          const swell = thickness * Math.sqrt(Math.max(0, 1 - depth * depth));
+          const along = across + Math.cos(angle) * swell;
+          const y = levelY + Math.sin(angle) * swell;
+          const t = Math.max(.025, Math.min(.975, y / spec.height));
+          const r = radiusAt(spec, index, t);
+          const radial = Math.sqrt(Math.max(.03, r * r - along * along)) + .42 + depth * thickness;
+          const shade = depth < 0 ? .52 + (depth + 1) * .22 : .86 + depth * .14;
+          push(positions, colors,
+            normalX * radial + tangentX * along,
+            y,
+            normalZ * radial + tangentZ * along,
+            base.map(value => Math.min(1, value * shade)));
+        }
+      }
+    });
+    if (positions.length) parent.add(cloud(positions, colors, { size: dense ? .16 : .18, opacity: 1, round: true }));
+  }
+
   function sculptFromReference(group, spec, index, texture, onReady) {
     // 参考画只提供颜色/纹样坐标：按山坡半径重新放置为前后两侧的凸起粒子。
     // 不把整张 JPG 作为材质贴图、图片平面或正面点阵铺在镜头前。
@@ -215,7 +378,10 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
         const t = (spec.art.bottom - artY) / (spec.art.bottom - spec.art.top);
         if (t < .02 || t > .98) continue;
         const r = radiusAt(spec, index, t);
-        const maxPx = half * r / spec.radius / scaleX * (index === 2 ? .90 : .98);
+        // 03原画里的蓝色山身是上窄下宽的梯形；逐行按原画轮廓取样，
+        // 不把两侧龙凤和外框误吸到火山坡面上。
+        const sourceHalf = index === 2 ? 230 + (510 - 230) * (1 - t) : half * r / spec.radius;
+        const maxPx = sourceHalf / scaleX * (index === 2 ? .99 : .98);
         const center = canvas.width * .5;
         for (let col = Math.max(1, Math.floor(center - maxPx)); col < Math.min(canvas.width - 1, center + maxPx); col += 2) {
           const offset = (row * canvas.width + col) * 4;
@@ -224,7 +390,7 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
             ? red > 125 && green > 115 && blue > 82
             : red > 105 || green > 105 || (red > 62 && green > 74 && blue > 70);
           if (!brightMotif) continue;
-          const x = (col - center) * scaleX / half * spec.radius;
+          const x = index === 2 ? (col - center) / maxPx * r : (col - center) * scaleX / half * spec.radius;
           if (Math.abs(x) > r * .96) continue;
           const a = Math.asin(x / r);
           const rgb = [Math.min(1, red / 220), Math.min(1, green / 220), Math.min(1, blue / 220)];
@@ -232,15 +398,14 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
           for (const sign of [-1, 1]) {
             const extra = .33 + ((col * 13 + row * 19) % 7) * .024;
             const factor = (r + extra) / r;
-            push(p, c, x * factor, t * spec.height, sign * z * factor, rgb);
-            if ((row + col) % 5 === 0) {
-              const outer = (r + extra + .28) / r;
-              push(p, c, x * outer, t * spec.height + .035, sign * z * outer, rgb);
-            }
+            const shade = sign > 0 ? 1 : .58;
+            roundedParticles(p, c, x * factor, t * spec.height, sign * z * factor,
+              rgb.map(value => value * shade), .14 + ((col * 13 + row * 19) % 5) * .018,
+              row * 733 + col * 37, 3);
           }
         }
       }
-      if (p.length) relief.add(cloud(p, c, { texture, size: .29, opacity: .97 }));
+      if (p.length) relief.add(cloud(p, c, { texture, size: .17, opacity: 1, round: true }));
       group.userData.referenceReliefPoints = p.length / 3;
       onReady?.({ pixels, width: canvas.width, height: canvas.height });
     };
@@ -268,7 +433,7 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
 
   function crown(parent, spec, index, texture) {
     const emblem = new THREE.Group();
-    emblem.position.y = spec.height + (index === 2 ? 4.3 : 3.0);
+    emblem.position.y = spec.height + (index === 2 ? 4.3 : index === 1 ? .55 : .82);
     parent.add(emblem);
     if (index === 4) {
       // 第五张原画的八瓣花：轮廓由实体粒子瓣构成，正反面和侧面均可见。
@@ -284,10 +449,12 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
           const bulge = Math.sin(u * Math.PI) * (1 - Math.abs(lateral) / .78);
           const tone = Math.abs(lateral) > Math.sin(u * Math.PI) * .59 ? C.cream
             : petal % 2 ? C.orange : C.red;
-          for (const side of [-1, 1]) push(petals, colors, x, y, side * (.16 + bulge * .48), tone);
+          const depth = .18 + bulge * .66;
+          for (const side of [-1, 1]) roundedParticles(petals, colors, x, y, side * depth * .42,
+            tone, .10 + bulge * .10, petal * 13007 + j * 19 + (side > 0 ? 1 : 2), 3);
         }
       }
-      emblem.add(cloud(petals, colors, { texture, size: .27, opacity: .99 }));
+      emblem.add(cloud(petals, colors, { texture, size: .13, opacity: 1, solid: true }));
       const coreP = [], coreC = [];
       for (let j = 0; j < 900; j++) {
         const h = halton(j + 1, 2) * 2 - 1, a = halton(j + 1, 3) * TAU;
@@ -332,227 +499,189 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     return emblem;
   }
 
-  function wingedFigure(parent, center, color, texture, { bat = false, scale = 1 } = {}) {
-    const figure = new THREE.Group();
-    figure.position.set(...center);
-    figure.scale.setScalar(scale);
-    parent.add(figure);
-    const bodyP = [], bodyC = [];
-    for (let i = 0; i < 330; i++) {
-      const t = i / 329;
-      const a = i * 2.39996323;
-      const r = .25 * Math.sqrt(Math.max(.02, 1 - (t * 2 - 1) ** 2));
-      push(bodyP, bodyC, Math.cos(a) * r, (t - .5) * (bat ? 2.5 : 3.0), Math.sin(a) * r,
-        i % 6 === 0 ? C.cream : color);
-    }
-    figure.add(cloud(bodyP, bodyC, { texture, size: .18, opacity: .95 }));
-    const wings = [];
-    for (const sign of [-1, 1]) {
-      const wing = new THREE.Group();
-      figure.add(wing);
-      wings.push({ object: wing, sign });
-      const p = [], c = [];
-      const rows = dense ? 56 : 36, cols = dense ? 21 : 15;
-      for (let i = 0; i < rows; i++) {
-        const u = i / (rows - 1);
-        const span = bat
-          ? Math.max(.07, (u < .53 ? .20 + u * 2.65 : 1.60 - (u - .53) * 3.15))
-            * (1 - .13 * Math.abs(Math.sin(u * Math.PI * 5)))
-          : Math.max(.06, u < .42 ? .24 + u * 2.9 : 1.46 - (u - .42) * 2.35);
-        for (let j = 0; j < cols; j++) {
-          const v = j / (cols - 1) * 2 - 1;
-          const x = sign * (.15 + u * (bat ? 3.8 : 4.3));
-          const y = u * (bat ? .35 : .8) + v * span + (bat ? 0 : Math.abs(v) * u * .10);
-          const z = Math.sin(u * Math.PI) * .72 * (1 - v * v) + u * .42 + v * v * .13;
-          const outline = j === 0 || j === cols - 1 || i === rows - 1 || Math.abs(v) < .06;
-          push(p, c, x, y, z, outline ? C.cream : bat && u > .63 ? C.cyan : color);
-          if ((i + j) % 7 === 0) push(p, c, x, y, z - .28, color);
+  function volcanoCompositeRelief(parent, spec, index, texture) {
+    // 保留 image_3 原稿的构图和纹样细节，把每个图形像素映射成有起伏的三维粒子表面。
+    // 01的采样思路用于点云分布；参考图只负责形状与颜色，不重新设计日轮、云纹或龙凤。
+    const relief = new THREE.Group();
+    relief.name = '03 原稿曲面粒子：日轮与卷云';
+    parent.add(relief);
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      const width = image.naturalWidth || image.width, height = image.naturalHeight || image.height;
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.drawImage(image, 0, 0, width, height);
+      const pixels = context.getImageData(0, 0, width, height).data;
+      const luminance = (r, g, b) => .2126 * r + .7152 * g + .0722 * b;
+      const linear = value => { const v = value / 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+      const peakScale = spec.height / 690; // 原稿山体从火口 y≈310 到山脚 y≈1000。
+      const stride = dense ? 3 : 6;
+      const regions = [
+        { name: '顶部日轮与卷云', x0: 530, x1: 1006, y0: 0, y1: 310, kind: 'sun' }
+      ];
+      let total = 0;
+      for (const region of regions) {
+        const x0 = Math.max(0, Math.floor(region.x0)), x1 = Math.min(width, Math.ceil(region.x1));
+        const y0 = Math.max(0, Math.floor(region.y0)), y1 = Math.min(height, Math.ceil(region.y1));
+        const w = x1 - x0, h = y1 - y0;
+        const mask = new Uint8Array(w * h), distance = new Float32Array(w * h);
+        const mountainHalf = y => 230 + Math.max(0,Math.min(1,(y-310)/690))*315;
+        const mountainLeft = y => 768-mountainHalf(y);
+        const mountainRight = y => 768+mountainHalf(y);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const sx = x0 + x, sy = y0 + y, pixel = (sy * width + sx) * 4;
+          const r = pixels[pixel], g = pixels[pixel + 1], b = pixels[pixel + 2];
+          const visible = luminance(r, g, b) > 21;
+          const outsideMountain = region.kind === 'dragon' ? sx < mountainLeft(sy) - 7
+            : region.kind === 'phoenix' ? sx > mountainRight(sy) + 7 : true;
+          const selected = visible && outsideMountain;
+          const at = y * w + x;
+          if (selected) mask[at] = 1;
         }
-      }
-      wing.add(cloud(p, c, { texture, size: .20, opacity: .92 }));
-    }
-    if (!bat) for (const sign of [-1, 1]) curve(figure, t => [sign * (.05 + t * .32),
-      1.3 + t * .65, .16 + Math.sin(t * Math.PI) * .18], 28, C.gold, texture, .17, .025);
-    return wings;
-  }
-
-  function dragon(parent, x, y, z, texture) {
-    const group = new THREE.Group();
-    group.position.set(x, y, z);
-    parent.add(group);
-    // 横向盘绕的脊柱从左向右抬升，避免原先竖直蛇身读成一根悬空立柱。
-    const spine = t => [(t - .5) * 7.2,
-      .10 + Math.sin(t * TAU * 1.05) * .52 + Math.sin(t * Math.PI) * .25,
-      Math.sin(t * TAU * 1.55) * .95];
-    const p = [], c = [];
-    const sections = dense ? 270 : 175, sides = dense ? 14 : 10;
-    for (let i = 0; i < sections; i++) {
-      const t = i / (sections - 1);
-      const [cx, cy, cz] = spine(t);
-      const radius = (.18 + Math.sin(t * Math.PI) * .25) * (t < .12 ? t / .12 : 1);
-      for (const layer of [.48, 1]) for (let j = 0; j < sides; j++) {
-        const a = j / sides * TAU;
-        push(p, c, cx, cy + Math.cos(a) * radius * layer,
-          cz + Math.sin(a) * radius * layer, layer > .9 && j % 5 === 0 ? C.cream : i % 5 ? C.teal : C.cyan);
-      }
-    }
-    for (let k = 2; k < 19; k++) {
-      const t = k / 20;
-      const [cx, cy, cz] = spine(t);
-      curve(group, u => [cx - .10 + u * (.3 + Math.sin(k * 2.2) * .13), cy + u * (.32 + t * .17),
-        cz + .18 + Math.sin(u * Math.PI) * .18], 20, k % 3 ? C.cream : C.gold, texture, .21, .04);
-    }
-    for (const t of [.31, .58, .80]) {
-      const [cx, cy, cz] = spine(t);
-      for (const side of [-1, 1]) {
-        curve(group, u => [cx + Math.sin(u * Math.PI) * .10, cy - u * .92,
-          cz + side * (.22 + u * .48)], 35, C.teal, texture, .22, .04);
-        for (let claw = 0; claw < 3; claw++) curve(group, u => [cx - .14 + claw * .14 + u * .32,
-          cy - .92 - u * .23, cz + side * (.68 + u * .25)], 13, C.cream, texture, .19, .02);
-      }
-    }
-    const [hx, hy, hz] = spine(1);
-    for (let i = 0; i < (dense ? 480 : 260); i++) {
-      const a = halton(i + 1, 2) * TAU, h = halton(i + 1, 3) * 2 - 1;
-      const r = Math.sqrt(Math.max(0, 1 - h * h));
-      push(p, c, hx + .28 + Math.cos(a) * r * .68, hy + h * .43,
-        hz + Math.sin(a) * r * .39, i % 6 ? C.teal : C.cream);
-    }
-    group.add(cloud(p, c, { texture, size: .21, opacity: .98 }));
-    // 头部前伸的吻、鹿角与眼点，让龙在侧面也有可辨认的结构。
-    curve(group, u => [hx + .55 + u * 1.05, hy - .15 - Math.sin(u * Math.PI) * .19,
-      hz + .1 + u * .15], 75, C.cream, texture, .26, .09);
-    for (const side of [-1, 1]) curve(group, u => [hx + side * .35 + u * side * .45,
-      hy + .33 + u * 1.18, hz + .12 + Math.sin(u * Math.PI) * .15], 52, C.gold, texture, .21, .05);
-    group.add(cloud([hx + .62, hy + .12, hz + .42, hx + .62, hy + .12, hz - .42],
-      [...C.cream, ...C.cream], { texture, size: .46, opacity: 1 }));
-    return group;
-  }
-
-  function phoenix(parent, x, y, z, texture) {
-    const bird = new THREE.Group();
-    bird.position.set(x, y, z);
-    parent.add(bird);
-    const bodyP = [], bodyC = [];
-    for (let i = 0; i < (dense ? 600 : 330); i++) {
-      const h = halton(i + 1, 2) * 2 - 1, a = halton(i + 1, 3) * TAU;
-      const r = Math.sqrt(Math.max(0, 1 - h * h));
-      push(bodyP, bodyC, Math.cos(a) * r * .55, h * 1.55,
-        Math.sin(a) * r * .52, i % 7 ? C.orange : C.cream);
-    }
-    bird.add(cloud(bodyP, bodyC, { texture, size: .22, opacity: .98 }));
-    const wings = [];
-    for (const sign of [-1, 1]) {
-      const wing = new THREE.Group();
-      bird.add(wing);
-      wings.push({ object: wing, sign });
-      const p = [], c = [];
-      const rows = dense ? 62 : 42, cols = dense ? 19 : 13;
-      for (let i = 0; i < rows; i++) {
-        const u = i / (rows - 1);
-        for (let j = 0; j < cols; j++) {
-          const v = j / (cols - 1) * 2 - 1;
-          const feather = Math.sin(u * Math.PI * 6) * .10;
-          const x = sign * (.32 + u * 4.2);
-          const y = .35 + u * 1.48 + v * (.14 + Math.sin(u * Math.PI) * .72) + feather;
-          const z = .18 + Math.sin(u * Math.PI) * (1 - v * v) * 1.12 + v * .24;
-          push(p, c, x, y, z, j < 2 || j > cols - 3 || i === rows - 1 ? C.cream : i % 7 ? C.orange : C.red);
-          if ((i + j) % 4 === 0) push(p, c, x, y - .04, z - .36, C.red);
+        const paintedMask = mask.slice();
+        if (region.kind !== 'sun') closePaintedSilhouette(mask,w,h);
+        // Distances follow the anatomical silhouette, including the small dark gaps between painted details.
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const at = y * w + x;
+          if (!mask[at]) { distance[at] = 0; continue; }
+          const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1
+            || !mask[at - 1] || !mask[at + 1] || !mask[at - w] || !mask[at + w];
+          distance[at] = edge ? 1 : 1e6;
         }
+        // 由边缘向形体内部传播距离，让宽轮廓形成丰满的截面、细线保持较小的圆截面。
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+          const at = y * w + x;
+          if (!mask[at]) continue;
+          let d = distance[at];
+          if (x) d = Math.min(d, distance[at - 1] + 1);
+          if (y) d = Math.min(d, distance[at - w] + 1);
+          if (x && y) d = Math.min(d, distance[at - w - 1] + 1.414);
+          if (x + 1 < w && y) d = Math.min(d, distance[at - w + 1] + 1.414);
+          distance[at] = d;
+        }
+        for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+          const at = y * w + x;
+          if (!mask[at]) continue;
+          let d = distance[at];
+          if (x + 1 < w) d = Math.min(d, distance[at + 1] + 1);
+          if (y + 1 < h) d = Math.min(d, distance[at + w] + 1);
+          if (x + 1 < w && y + 1 < h) d = Math.min(d, distance[at + w + 1] + 1.414);
+          if (x && y + 1 < h) d = Math.min(d, distance[at + w - 1] + 1.414);
+          distance[at] = d;
+        }
+        const volumeP = [], volumeC = [], volumeN = [], volumeSize = [];
+        const radii = localStrokeRadii(distance,w,h,region.kind==='sun'?14:40);
+        const bulge = Float32Array.from(distance,(d,i)=>Math.sqrt(Math.max(0,(d-.65)*(2*radii[i]-d)))*peakScale);
+        const atDistance = (x,y) => bulge[Math.max(0,Math.min(h-1,y))*w+Math.max(0,Math.min(w-1,x))];
+        const bodyAt = (sx,sy,d,farWing=false) => {
+          let x=(sx-768)*peakScale, y=(1000-sy)*peakScale;
+          const wing = region.kind==='phoenix' && sx>=1205 && sy<560;
+          let radius=d*1.05;
+          let centre;
+          if(region.kind==='sun') {
+            y=spec.height+(310-sy)*peakScale;
+            const solarRadius=Math.hypot(sx-768,sy-200);
+            // The central sun is an ellipsoid; individual rays and cloud strokes
+            // keep their own rounded cross sections instead of a capped slab.
+            radius=solarRadius<68?Math.sqrt(Math.max(0,1-(solarRadius/68)**2))*1.65:Math.max(0,d*.85);
+            const arch=Math.sin(Math.max(0,Math.min(1,(sx-530)/476))*Math.PI);
+            centre=radiusAt(spec,index,.995)+1.6+(solarRadius>115?arch*1.35:0);
+
+          } else {
+            const t=(sy-108)/900;
+            x+=region.kind==='dragon'?-1.25:1.25;
+            centre=region.kind==='dragon'?4.4+Math.sin(t*TAU*1.25+.25)*1.8:4.5+Math.sin(t*Math.PI)*.9;
+            if(wing) {
+              const spread=Math.max(0,(sx-1195)/340);
+              centre+=Math.sin(spread*Math.PI*.85)*3.1+(500-sy)*.002;
+              radius=Math.min(.58,radius*.42);
+              if(farWing) {
+                const shoulder=(1195-768)*peakScale+1.25;
+                x=shoulder-(x-shoulder)*.72-.6;
+                y+=.55+spread*.5;
+                centre-=3.0+spread*.9;
+              }
+            } else radius=Math.min(2.5,radius*(sy>640?.85:1));
+            const level=Math.max(.015,Math.min(.995,y/spec.height));
+            const slope=radiusAt(spec,index,level)+.8;
+            centre=Math.max(centre,Math.sqrt(Math.max(0,slope*slope-x*x))+radius+.45);
+          }
+          return {x,y,centre,radius};
+        };
+        for (let y = 0; y < h; y += stride) for (let x = 0; x < w; x += stride) {
+          const at = y * w + x;
+          if (!mask[at]) continue;
+          const sx = x0 + x, sy = y0 + y, pixel = (sy * width + sx) * 4;
+          const r = pixels[pixel], g = pixels[pixel + 1], b = pixels[pixel + 2];
+          const baseColor = paintedMask[at] ? [linear(r),linear(g),linear(b)]
+            : region.kind==='dragon'?[.015,.11,.075]:[.12,.012,.008];
+          const emitSurface = farWing => {
+            const body=bodyAt(sx,sy,bulge[at],farWing);
+            const neighbours=[bodyAt(sx-1,sy,atDistance(x-1,y),farWing),bodyAt(sx+1,sy,atDistance(x+1,y),farWing),
+              bodyAt(sx,sy-1,atDistance(x,y-1),farWing),bodyAt(sx,sy+1,atDistance(x,y+1),farWing)];
+            for(const side of [1,-1]) {
+              const zOf = v=>v.centre+side*v.radius;
+              const nx=-(zOf(neighbours[1])-zOf(neighbours[0]))/(2*peakScale);
+              const ny=(zOf(neighbours[3])-zOf(neighbours[2]))/(2*peakScale);
+              const normal=new THREE.Vector3(nx,ny,1).normalize().multiplyScalar(side);
+              const seed=at*7+(side>0?3:11);
+              push(volumeP,volumeC,body.x+(halton(seed,2)-.5)*peakScale*1.2,
+                body.y+(halton(seed,3)-.5)*peakScale*1.2,zOf(body),baseColor);
+              volumeN.push(normal.x,normal.y,normal.z);
+              volumeSize.push(.72+Math.min(1,distance[at]/10)*.38);
+            }
+            // Sparse continuous core points close grazing-angle gaps without repeating flat slices.
+            if(at%7<2) {
+              push(volumeP,volumeC,body.x,body.y,body.centre+(halton(at+1,5)*2-1)*body.radius,baseColor.map(v=>v*.55));
+              volumeN.push(0,0,1);volumeSize.push(.78);
+            }
+          };
+          emitSurface(false);
+          if(region.kind==='phoenix'&&sx>=1210&&sy<=500)emitSurface(true);
+        }
+        if(volumeP.length) {
+          const rounded=makeRoundedReferenceCloud(volumeP,volumeC,volumeN,volumeSize,MONUMENT_SCALE);
+          rounded.name=region.name;relief.add(rounded);pointCount+=volumeP.length/3;
+        }
+        total += volumeP.length / 3;
       }
-      wing.add(cloud(p, c, { texture, size: .23, opacity: .98 }));
-    }
-    for (let tail = 0; tail < 7; tail++) {
-      curve(bird, t => [Math.sin(t * 2.2 + tail * .32) * (1 + t * 1.9) + tail * .11 - .35,
-        -1.2 - t * 3.9, Math.sin(t * 2.7 + tail) * .8 + .3], dense ? 100 : 55,
-      tail % 2 ? C.gold : C.red, texture, .20, .04, true);
-    }
-    curve(bird, t => [.12 + t * .15, 1.3 + t * .75, .05 + t * .22], 55, C.cream, texture, .23, .06);
-    curve(bird, t => [.25 + t * .55, 2.03 - t * .21, .2 + t * .14], 35, C.gold, texture, .26, .07);
-    for (let plume = -1; plume <= 1; plume++) curve(bird, t => [.13 + plume * t * .32,
-      2.00 + t * (1.1 + plume * .11), .19 + Math.sin(t * Math.PI) * .2], 38, C.red, texture, .18, .04);
-    return wings;
+      relief.userData.pointCount = total;
+      relief.userData.source = 'reference-frames/volcano-3.jpg';
+    };
+    image.onerror = () => console.warn('03 原稿粒子采样失败：reference-frames/volcano-3.jpg 未能读取');
+    image.src = './reference-frames/volcano-3.jpg';
+    return relief;
   }
 
   function buildTotem(group, spec, index, texture) {
     const totem = new THREE.Group();
     group.add(totem);
-    const wings = [];
-    const actors = [];
-    const anchor = (angle, y, distance = 3.2) => {
-      const mount = new THREE.Group();
-      const r = spec.radius + distance;
-      mount.position.set(Math.sin(angle) * r, y, Math.cos(angle) * r);
-      mount.rotation.y = angle;
-      totem.add(mount);
-      actors.push({ mount, baseY: y, angle });
-      return mount;
-    };
-    if (index === 1) {
-      wings.push(...wingedFigure(anchor(-.94, spec.height * .78, -1.2), [0, 0, 0], C.red, texture, { scale: 1.0 }));
-      wings.push(...wingedFigure(anchor(.94, spec.height * .78, -1.2), [0, 0, 0], C.red, texture, { scale: 1.0 }));
-      crown(totem, spec, index, texture);
-      for (let level = 0; level < 6; level++) {
-        curve(totem, t => {
-          const a = t * TAU + level * .22;
-          const h = .22 + level * .105;
-          const r = radiusAt(spec, index, h) + .42;
-          return [Math.sin(a) * r, h * spec.height + Math.sin(a * 12) * .11, Math.cos(a) * r];
-        }, dense ? 350 : 170, level % 2 ? C.gold : C.cream, texture, .20, .03);
-      }
-    } else if (index === 2) {
-      const nearDragon = anchor(-.08, spec.height * .71, 3.8);
-      nearDragon.rotation.y = 0;
-      dragon(nearDragon, 0, 0, 0, texture);
-      const farDragon = dragon(anchor(2.3, spec.height * .68, 3.7), 0, 0, 0, texture);
-      farDragon.scale.setScalar(.73);
-      const nearPhoenix = anchor(.54, spec.height * .71, 3.8);
-      nearPhoenix.rotation.y = Math.PI;
-      wings.push(...phoenix(nearPhoenix, 0, 0, 0, texture));
-      const farPhoenix = anchor(-2.3, spec.height * .69, 3.7);
-      farPhoenix.scale.setScalar(.75);
-      wings.push(...phoenix(farPhoenix, 0, 0, 0, texture));
-      crown(totem, spec, index, texture);
-    } else if (index === 3) {
-      for (const [a, y, s] of [[-.8, spec.height * .98, .8], [.8, spec.height * .98, .8],
-        [-.8, spec.height * .43, .72], [.8, spec.height * .43, .72]]) {
-        wings.push(...wingedFigure(anchor(a, y, y > spec.height * .8 ? -1.2 : 1.2), [0, 0, 0], C.orange, texture, { scale: s }));
-      }
-      for (const side of [-1, 1]) curve(totem, t => {
-        const h = 1 - t;
-        const a = side * .32 + Math.sin(t * 18) * .085;
-        const r = radiusAt(spec, index, h) + .5;
-        return [Math.sin(a) * r, h * spec.height, Math.cos(a) * r];
-      }, dense ? 460 : 220, C.red, texture, .29, .11, true);
-      crown(totem, spec, index, texture);
-    } else if (index === 4) {
-      for (const [a, y, s] of [[-.8, spec.height * .85, .69], [.8, spec.height * .85, .69],
-        [-2.3, spec.height * .39, .62], [2.3, spec.height * .39, .62]]) {
-        wings.push(...wingedFigure(anchor(a, y), [0, 0, 0], C.teal, texture, { bat: true, scale: s }));
-      }
-      crown(totem, spec, index, texture);
-      for (let level = 0; level < 7; level++) curve(totem, t => {
-        const a = t * TAU;
-        const h = .13 + level * .10;
-        const r = radiusAt(spec, index, h) + .32;
-        return [Math.sin(a) * r, h * spec.height + Math.abs(Math.sin(a * 8)) * .11,
-          Math.cos(a) * r];
-      }, dense ? 360 : 180, level % 2 ? C.cream : C.teal, texture, .18, .035);
+    if (index === 2) {
+      volcanoCompositeRelief(totem, spec, index, texture);
+
     }
-    return { totem, wings, actors };
+    // 02/04/05 的火口与翼纹均由原稿像素重建；不再叠加与原画无关的通用环线和火脉。
+    return { totem };
   }
 
   SPECS.forEach((spec, index) => {
     const group = new THREE.Group();
     group.name = spec.name;
-    group.position.set(spec.x, terrainHeight(spec.x, spec.z) - .4, spec.z);
+    // Put the particle-built base just above the sampled terrain. The previous
+    // -.4 placed the volcano roots below the ground substrate and exposed a
+    // large triangular-looking cut when the camera orbited.
+    group.position.set(spec.x, terrainHeight(spec.x, spec.z) + .12, spec.z);
     group.scale.setScalar(MONUMENT_SCALE);
-    group.userData = { kind: 'volcano', width: spec.radius * 2 * MONUMENT_SCALE, height: spec.height * MONUMENT_SCALE, note: spec.note, index,
+    group.userData = { kind: 'volcano', width: spec.radius * 2 * MONUMENT_SCALE, height: spec.height * MONUMENT_SCALE,
+      localRadius: spec.radius, localHeight: spec.height, radiusProfile: spec.profile, monumentScale: MONUMENT_SCALE, note: spec.note, index,
       baseY: group.position.y };
     scene.add(group);
     const texture = textureFor(spec.glyph);
     const shellMotion = shell(group, spec, index, texture);
-    const slopeMotion = index === 0 ? null : sculptedSlope(group, spec, index, texture);
+    shellMotion.orbit.visible=false;
+    const slopeMotion = null; // Original-reference relief is the single slope ornament layer.
     let sculpture = null;
     let totemMotion = null;
     if (index === 0) {
@@ -563,33 +692,28 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
     // 远峰先读作山体，接近时才逐渐显露悬浮图腾；不隐藏原画山身纹样。
     const ornamentOpacities = new WeakMap();
     let lastOrnamentFade = -Infinity;
-    const referenceRelief = sculptFromReference(group, spec, index, texture, () => {
+    const referenceRelief = sculptFromReference(group, spec, index, texture, sample => {
+      if (totemMotion && (index === 1 || index === 3 || index === 4)) {
+        referenceOrnaments(totemMotion.totem, spec, index, sample.pixels, sample.width, sample.height);
+      }
       // 原画浮雕给颜色与形态，程序纹带补足环山的真实三维走势和持续旋转。
       if (index !== 0) shellMotion.bands.visible = false;
-      if (index === 2 && totemMotion) {
-        const fallback = [...totemMotion.actors];
-        fallback.forEach(({ mount }, i) => {
-          // 使用横向的程序化立体龙凤，避免把参考画的二维色块挤成悬空厚片。
-          mount.visible = i === 0 || i === 2;
-          if (mount.visible) mount.scale.setScalar(.88);
-        });
-      }
     });
     peaks.push(group);
     group.userData.update = (seconds, camera) => {
-      group.position.y = group.userData.baseY + Math.sin(seconds * .79 + index * 1.3) * .10;
+      group.position.y = group.userData.baseY + Math.sin(seconds * .79 + index * 1.3) * .035;
       shellMotion.bands.rotation.y = seconds * (.09 + index * .013);
       shellMotion.orbit.rotation.y = -seconds * (.20 + index * .018);
       sculpture?.update(seconds, 1);
       if (sculpture) sculpture.group.rotation.y = Math.sin(seconds * .11) * .36;
       if (slopeMotion) slopeMotion.rotation.y = seconds * (.09 + index * .008);
-      referenceRelief.rotation.y = seconds * (.055 + index * .009);
+      referenceRelief.rotation.y = 0; // Motifs stay registered to the mountain; the viewer orbits the form.
       if (totemMotion) {
         if (camera && seconds - lastOrnamentFade > .12) {
           const distance = Math.hypot(camera.position.x - group.position.x, camera.position.z - group.position.z);
           const near = 90, far = 210;
           const t = Math.max(0, Math.min(1, (distance - near) / (far - near)));
-          const fade = 1 - (t * t * (3 - 2 * t)) * .58;
+          const fade = 1 - (t * t * (3 - 2 * t)) * .18;
           totemMotion.totem.traverse(object => {
             const material = object.material;
             if (!material || !('opacity' in material)) return;
@@ -598,15 +722,6 @@ export function installFiveVolcanoes(scene, terrainHeight, atlas, dense) {
           });
           lastOrnamentFade = seconds;
         }
-        totemMotion.totem.position.y = Math.sin(seconds * .78 + index) * .15;
-        totemMotion.totem.rotation.y = index === 2 ? 0 : Math.sin(seconds * (.23 + index * .025)) * .16;
-        totemMotion.actors.forEach(({ mount, baseY, angle }, i) => {
-          mount.position.y = baseY + Math.sin(seconds * (1.14 + index * .07) + i * 1.8) * .27;
-          mount.rotation.z = Math.sin(seconds * 1.53 + angle * 2) * .07;
-        });
-        totemMotion.wings.forEach(({ object, sign }, i) => {
-          object.rotation.y = sign * (Math.sin(seconds * 2.0 + Math.floor(i / 2) * .8) * .22);
-        });
       }
     };
   });

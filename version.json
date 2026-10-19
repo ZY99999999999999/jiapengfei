@@ -1,0 +1,13 @@
+{
+  "version": "v169",
+  "date": "2026-10-19",
+  "scope": "desktop",
+  "entry": "creator.html",
+  "world": "pointcloud-world/index.html?v=169",
+  "reviewStatus": {
+    "pageAndScriptChecks": "completed",
+    "realCameraGesture": "pending",
+    "quest2": "pending",
+    "deviceFrameRate": "pending"
+  }
+}

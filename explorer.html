@@ -740,6 +740,9 @@
     }
   </style>
   <link rel="stylesheet" href="platform-ui.css?v=1.1">
+  <link rel="stylesheet" href="explorer-exhibit.css?v=1.2">
+<link rel="stylesheet" href="experience-desktop.css?v=1">
+<script defer src="experience-feedback.js?v=1"></script>
 </head>
 <body>
 
@@ -771,6 +774,28 @@
   </div>
 
   <!-- 主内容区：三栏布局 -->
+  <section class="explorer-exhibit" id="explorerExhibit" aria-label="纹样粒子展台">
+    <div class="exhibit-stage" id="exhibitStage">
+      <div class="exhibit-eyebrow">LIVING ORNAMENTS <span>纹样的另一种生命</span></div>
+      <canvas id="exhibitCanvas" tabindex="0" aria-label="可拖拽或使用方向键旋转的纹样粒子展示"></canvas>
+      <img id="exhibitReference" alt="当前纹样原图对照" hidden>
+      <div class="exhibit-message" id="exhibitMessage" role="status">正在聚合纹样粒子…</div>
+      <div class="exhibit-caption"><span id="exhibitIndex">01 / 12</span><h2 id="exhibitName">哈木尔纹</h2><p id="exhibitStructure"></p></div>
+      <div class="exhibit-stepper" role="group" aria-label="切换展出纹样"><button type="button" id="exhibitPrevious" aria-label="上一个纹样">←</button><button type="button" id="exhibitNext" aria-label="下一个纹样">→</button></div>
+      <div class="exhibit-toolbar" role="group" aria-label="纹样展示操作">
+        <div class="exhibit-mode"><button type="button" id="exhibitParticle" aria-pressed="true">粒子形态</button><button type="button" id="exhibitOriginal" aria-pressed="false">原图对照</button></div>
+        <button type="button" id="exhibitPause" aria-pressed="false">暂停动效</button>
+        <button type="button" class="experience-sound" data-ui-sound aria-pressed="true">音效：开</button><button type="button" id="exhibitReset">重置视角</button>
+      </div>
+      <p class="exhibit-hint" id="exhibitHint">拖拽观察体积 · 滚轮缩放 · 双击复位</p>
+    </div>
+    <aside class="exhibit-reading" aria-label="纹样文化解读">
+      <div class="exhibit-reading-top"><span>纹样解读</span><a href="#patternLibrary">浏览图录 ↓</a></div>
+      <div id="exhibitDetailMount"></div>
+      <div class="exhibit-reading-footer"><span>从认识纹样，到创作纹样</span><a href="creator.html">进入创意共创 ↗</a></div>
+    </aside>
+  </section>
+  <div class="library-heading" id="patternLibrary"><div><span>PATTERN COLLECTION</span><h2>从一个纹样，读懂一片草原</h2></div><p>选择纹样，在上方展台观察与探索</p></div>
   <div class="content-layout">
 
     <!-- 左侧分类面板 -->
@@ -969,7 +994,7 @@
         <!-- 默认占位 -->
         <div class="detail-placeholder" id="detail-placeholder">
           <div class="icon-large">纹</div>
-          <p>将鼠标悬停在左侧纹样卡片上<br>即可查看详细文化信息</p>
+          <p>选择下方图录中的纹样<br>即可查看详细文化信息</p>
         </div>
         <!-- 详情内容 -->
         <div class="detail-content" id="detail-content"></div>
@@ -1667,15 +1692,14 @@
             '<div class="desc">' + p.description + '</div>' +
           '</div>';
 
-        // 悬停事件 -> 右侧面板（300ms 防抖，防止误触）
-        card.addEventListener('mouseenter', function() {
-          clearTimeout(window._hoverTimer);
-          window._hoverTimer = setTimeout(function() {
-            showDetailPanel(p.id);
-          }, 300);
-        });
-        card.addEventListener('mouseleave', function() {
-          clearTimeout(window._hoverTimer);
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', '探索' + p.name);
+        card.setAttribute('aria-pressed', 'false');
+        card.addEventListener('click', function() { selectExplorerPattern(p.id, true); });
+        card.addEventListener('keydown', function(e) {
+          if (e.target !== card) return;
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectExplorerPattern(p.id, true); }
         });
 
         // 右键菜单 -> 切换分类
@@ -1688,12 +1712,40 @@
 
         grid.appendChild(card);
       });
+      window.dispatchEvent(new CustomEvent('explorer:catalog', { detail: { category: category } }));
+    }
+
+    function getExplorerImageSource(patternId) {
+      return customImages[patternId] || patternImages[patternId] || '';
+    }
+
+    function selectExplorerPattern(patternId, scrollToExhibit) {
+      document.querySelectorAll('.pattern-card').forEach(function(card) {
+        var selected = card.getAttribute('data-pattern-id') === patternId;
+        card.classList.toggle('selected', selected);
+        card.setAttribute('aria-pressed', String(selected));
+      });
+      showDetailPanel(patternId);
+      window.dispatchEvent(new CustomEvent('explorer:select', { detail: { id: patternId } }));
+      if (scrollToExhibit) document.getElementById('explorerExhibit').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
     }
 
     // ===== 右侧详情面板逻辑 =====
     function showDetailPanel(patternId) {
-      var data = patternCulturalData[patternId];
+      var original = patternCulturalData[patternId];
+      var data = original && Object.assign({}, original);
       if (!data) return;
+      var edit = customEdits[patternId];
+      if (edit) ['name', 'structure', 'principle'].forEach(function(key) { if (edit[key]) data[key] = edit[key]; });
+      if (edit && edit.usage) data.usage = edit.usage.split(/[,，、]/).map(function(item) { return item.trim(); }).filter(Boolean);
+      var catalog = getPatternData();
+      Object.keys(catalog).some(function(cat) {
+        var pattern = catalog[cat].patterns.find(function(p) { return p.id === patternId; });
+        if (!pattern) return false;
+        data.name = pattern.name;
+        data.category = catalog[cat].name;
+        return true;
+      });
 
       var placeholder = document.getElementById('detail-placeholder');
       var content = document.getElementById('detail-content');
@@ -1745,6 +1797,9 @@
             '<li><span class="label">法则</span><span class="value">' + data.principle + '</span></li>' +
           '</ul>' +
         '</div>';
+      content.querySelectorAll('.detail-section').forEach(function(section, index) {
+        section.dataset.reading = ['meaning', 'meaning', 'usage', 'usage', 'structure'][index];
+      });
     }
 
     // ===== 分类切换 =====
@@ -1755,9 +1810,6 @@
       document.querySelectorAll('.sidebar-item').forEach(function(b) { b.classList.remove('active'); });
       document.getElementById('btn-' + cat).classList.add('active');
       renderPatterns(cat);
-      // 重置右侧面板
-      document.getElementById('detail-placeholder').style.display = 'flex';
-      document.getElementById('detail-content').style.display = 'none';
     }
 
     // ===== 图片替换 =====
@@ -1770,11 +1822,13 @@
     function handleReplaceImage(e) {
       var file = e.target.files[0];
       if (file && replacingPatternId) {
+        var replacedId = replacingPatternId;
+        var replacedCategory = editingCategory || currentCategory;
         var reader = new FileReader();
         reader.onload = function(ev) {
-          customImages[replacingPatternId] = ev.target.result;
+          customImages[replacedId] = ev.target.result;
           saveImages();
-          renderPatterns(editingCategory || currentCategory);
+          renderPatterns(replacedCategory);
         };
         reader.readAsDataURL(file);
       }
@@ -2056,6 +2110,7 @@
     loadCustomPatterns();
     renderPatterns('geometric');
   </script>
+  <script type="module" src="explorer-exhibit.js?v=1.4"></script>
 
 </body>
 </html>

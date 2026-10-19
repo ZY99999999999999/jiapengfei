@@ -15,14 +15,49 @@
     const blue = [0.12, 0.22, 0.52];
     const orange = [1.0, 0.38, 0.10];
     const gold = [0.98, 0.59, 0.13];
+    const roundCanvas = document.createElement('canvas');
+    roundCanvas.width = roundCanvas.height = 32;
+    const roundContext = roundCanvas.getContext('2d');
+    const roundGradient = roundContext.createRadialGradient(16, 16, 5, 16, 16, 16);
+    roundGradient.addColorStop(0, 'rgba(255,255,255,1)');
+    roundGradient.addColorStop(.68, 'rgba(255,255,255,.94)');
+    roundGradient.addColorStop(1, 'rgba(255,255,255,0)');
+    roundContext.fillStyle = roundGradient;
+    roundContext.fillRect(0, 0, 32, 32);
+    const roundParticle = new THREE.CanvasTexture(roundCanvas);
+    roundParticle.colorSpace = THREE.SRGBColorSpace;
+    roundParticle.minFilter = THREE.LinearFilter;
+    roundParticle.magFilter = THREE.LinearFilter;
+    roundParticle.generateMipmaps = false;
 
-    function cloud(parent, positions, colors, size, opacity, glow) {
-      const points = makePointCloud(positions, colors, {
+    function cloud(parent, positions, colors, size, opacity, glow, volumeRadius = 0) {
+      let pointPositions = positions, pointColors = colors;
+      const rounded = volumeRadius > 0;
+      if (rounded) {
+        pointPositions = []; pointColors = [];
+        const samples = mobile ? 3 : 4;
+        const halton = (index, base) => {
+          let value = 0, fraction = 1 / base;
+          while (index > 0) { value += (index % base) * fraction; index = Math.floor(index / base); fraction /= base; }
+          return value;
+        };
+        for (let i = 0; i < positions.length; i += 3) for (let j = 0; j < samples; j++) {
+          const seed = (i / 3) * samples + j + 1;
+          const vertical = halton(seed, 2) * 2 - 1, angle = halton(seed, 3) * Math.PI * 2;
+          const radius = volumeRadius * Math.cbrt(halton(seed, 5));
+          const ring = Math.sqrt(Math.max(0, 1 - vertical * vertical)) * radius;
+          pointPositions.push(positions[i] + Math.cos(angle) * ring, positions[i + 1] + vertical * radius,
+            positions[i + 2] + Math.sin(angle) * ring);
+          pointColors.push(colors[i], colors[i + 1], colors[i + 2]);
+        }
+      }
+      const points = makePointCloud(pointPositions, pointColors, {
         size: mobile ? size * 1.25 : size,
-        texture,
+        texture: rounded ? roundParticle : texture,
         opacity,
         additive: glow,
-        depthWrite: !glow
+        depthWrite: !glow,
+        round: rounded
       });
       points.material.fog = false;
       points.userData.baseOpacity = opacity;
@@ -84,7 +119,7 @@
         pushPoint(pathPositions, pathColors, ...slopePoint(a, t, 0.46), i % 7 === 0 ? teal : cream);
       }
     }
-    const mountainPatterns = cloud(group, pathPositions, pathColors, 0.14, 0.86, false);
+    const mountainPatterns = cloud(group, pathPositions, pathColors, 0.095, 0.92, false, 0.10);
 
     // Short luminous arcs make the orbit legible even from a fixed front view.
     // They follow the cone instead of forming a flat halo in front of it.
@@ -100,7 +135,7 @@
         pushPoint(orbitPositions, orbitColors, ...slopePoint(angle, t, 0.62), i % 6 === 0 ? gold : cream);
       }
     }
-    const orbitTraces = cloud(group, orbitPositions, orbitColors, 0.18, 0.72, true);
+    const orbitTraces = cloud(group, orbitPositions, orbitColors, 0.12, 0.82, true, 0.11);
 
     // Lotus petals form radial, curved shells around the crater. Every petal
     // has a coloured outer face, a second inner layer, and a raised vein.
@@ -135,7 +170,7 @@
         }
       }
     }
-    const lotus = cloud(group, petalPositions, petalColors, 0.19, 0.97, false);
+    const lotus = cloud(group, petalPositions, petalColors, 0.12, 1, false, 0.13);
 
     const emberPositions = [];
     const emberColors = [];
@@ -189,7 +224,7 @@
             Math.sin(a) * u * 1.1, 1.27 + u * 1.4, 0.15 - u * 0.42, cream);
         }
       }
-      cloud(body, torsoPositions, torsoColors, 0.13, 0.96, true);
+      cloud(body, torsoPositions, torsoColors, 0.11, 0.96, true, 0.08);
 
       for (let side = -1; side <= 1; side += 2) {
         const wing = new THREE.Group();
@@ -224,7 +259,7 @@
             }
           }
         }
-        cloud(wing, positions, colors, 0.16, 0.95, false);
+        cloud(wing, positions, colors, 0.13, 0.98, false, 0.17);
       }
     }
 
